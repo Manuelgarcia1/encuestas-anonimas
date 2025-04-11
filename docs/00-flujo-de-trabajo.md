@@ -90,8 +90,8 @@ main
 │
 └── develop
     ├── feature/dev-manuel-encuestas
-    ├── feature/dev-juan-respuestas
-    ├── feature/dev-luisa-docs
+    ├── feature/dev-Enrique-respuestas
+    ├── feature/dev-Fernanda-docs
 ```
 
 ---
