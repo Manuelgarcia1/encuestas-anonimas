@@ -104,3 +104,18 @@ main
 - No dejar ramas viejas colgadas (borrarlas luego del merge).
 
 ---
+
+## 🔁 ¿Cuándo crear una nueva rama?
+
+Cada vez que vayas a implementar una **nueva funcionalidad**, trabajar en un **módulo diferente** o hacer una mejora importante, **debés pararte sobre la rama `develop` y crear una nueva rama `feature/...`** desde ahí.
+
+### 📌 Ejemplo:
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b feature/dev-nombre-modulo-nuevo
+```
+
+Esto garantiza que trabajás con la última versión integrada del sistema y evitás conflictos con otros desarrolladores.
+
+> **Nunca desarrolles directamente sobre `develop` o `main`.** Usá tu rama `feature/` y luego hacé Pull Request hacia `develop`. Cuando todo esté probado y aprobado, se mergeará a `main` para entrega final.
