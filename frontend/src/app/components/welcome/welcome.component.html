@@ -1,5 +1,10 @@
-<!-- Header (ya existente) -->
 <app-header-welcome></app-header-welcome>
+
+<!-- Modal -->
+@if (showModal) {
+  <app-email-modal (closeModal)="closeModal()"></app-email-modal>
+}
+
 <section class="relative mx-6 bg-white h-full">
     <!-- Contenido Hero -->
     <div class="h-full mx-auto p-12 text-center bg-gris rounded-xl">
@@ -12,7 +17,7 @@
         </p>
 
         <!-- Botón con icono de mano -->
-        <button [routerLink]="['/dashboard']"
+        <button (click)="openModal()"
             class="gap-2 bg-white text-black font-medium py-3 px-6 w-[250px] h-[233px] rounded-xl">
             <div class="flex items-center justify-center">
                 <img src="icon-welcome.svg" alt="Icono mano" class="w-[80px] h-[76px]">
