@@ -3,13 +3,20 @@
   "version": 1,
   "cli": {
     "packageManager": "pnpm",
+    "schematicCollections": ["@schematics/angular"],
     "analytics": false
   },
   "newProjectRoot": "projects",
   "projects": {
     "frontend": {
       "projectType": "application",
-      "schematics": {},
+      "schematics": {
+        "@schematics/angular:component": {
+          "standalone": true,
+          "skipTests": true,
+          "inlineStyle": true
+        }
+      },
       "root": "",
       "sourceRoot": "src",
       "prefix": "app",
