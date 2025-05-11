@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { Pregunta } from '../entities/preguntas.entity';
 import { Creador } from '../entities/creadores.entity';
+import { EstadoEncuestaEnum } from '../enums/estado-encuestas.enum';
 
 @Entity('encuestas')
 export class Encuesta {
@@ -22,6 +23,9 @@ export class Encuesta {
 
   @Column()
   codigo_resultados: string;
+
+  @Column({ type: 'enum', enum: EstadoEncuestaEnum })
+  tipo: EstadoEncuestaEnum;
 
   @ManyToOne(() => Creador, (creador) => creador.encuestas, {
     onDelete: 'CASCADE',
