@@ -2,13 +2,20 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "cli": {
-    "packageManager": "pnpm"
+    "packageManager": "pnpm",
+    "schematicCollections": ["@schematics/angular"]
   },
   "newProjectRoot": "projects",
   "projects": {
     "frontend": {
       "projectType": "application",
-      "schematics": {},
+      "schematics": {
+        "@schematics/angular:component": {
+          "standalone": true,
+          "skipTests": true,
+          "inlineStyle": true
+        }
+      },
       "root": "",
       "sourceRoot": "src",
       "prefix": "app",

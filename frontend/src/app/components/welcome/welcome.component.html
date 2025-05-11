@@ -1,0 +1,35 @@
+<app-header-welcome></app-header-welcome>
+
+<!-- Modal -->
+@if (showModal) {
+  <app-email-modal (closeModal)="closeModal()"></app-email-modal>
+}
+
+<section class="relative mx-6 bg-white h-full">
+    <!-- Contenido Hero -->
+    <div class="h-full mx-auto p-12 text-center bg-gris rounded-xl">
+        <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+            Bienvenidos a <span class="text-blue-500">EasySurvey</span>
+        </h1>
+
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+            Recoge todos los datos que necesitas con un creador de encuestas fácil de usar y sin registro.
+        </p>
+
+        <!-- Botón con icono de mano -->
+        <button (click)="openModal()"
+            class="gap-2 bg-white text-black font-medium py-3 px-6 w-[250px] h-[233px] rounded-xl">
+            <div class="flex items-center justify-center">
+                <img src="icon-welcome.svg" alt="Icono mano" class="w-[80px] h-[76px]">
+            </div>
+            <span>Crear mi primera encuesta</span>
+            <!-- Texto inferior -->
+            <p class="mt-2 text-xs text-grisOscuro max-w-xl mx-auto">
+                <strong>Empieza desde cero</strong> o elige entre una lista de elementos predefinidos.
+            </p>
+        </button>
+        <p class="mt-12 text-xs text-grisOscuro max-w-xl mx-auto">
+            <strong>©2025 Grupo E.</strong>Todos lo derechos reservados.
+        </p>
+    </div>
+</section>
