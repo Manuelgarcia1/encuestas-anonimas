@@ -3,7 +3,8 @@
   "version": 1,
   "cli": {
     "packageManager": "pnpm",
-    "schematicCollections": ["@schematics/angular"]
+    "schematicCollections": ["@schematics/angular"],
+    "analytics": false
   },
   "newProjectRoot": "projects",
   "projects": {
