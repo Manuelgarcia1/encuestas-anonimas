@@ -11,6 +11,8 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   eslintPluginPrettierRecommended,
+
+  // configuración de lenguaje y parserOptions ya venía así
   {
     languageOptions: {
       globals: {
@@ -24,11 +26,29 @@ export default tseslint.config(
       },
     },
   },
+
+  // aquí añadimos la parte de reglas
   {
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn'
+      '@typescript-eslint/no-unsafe-argument': 'warn',
+
+      // ← override para que ignore tus decoradores
+      '@typescript-eslint/no-unsafe-call': [
+        'error',
+        {
+          allow: [
+            '^IsString$',
+            '^IsNotEmpty$',
+            '^IsArray$',
+            '^ArrayNotEmpty$',
+            '^ArrayMinSize$',
+            '^ValidateNested$',
+            '^Type$',
+          ],
+        },
+      ],
     },
   },
 );
