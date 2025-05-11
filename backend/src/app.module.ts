@@ -7,25 +7,23 @@ import { EncuestasModule } from './encuestas/encuestas.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      load: [configuration],
-      isGlobal: true,
-      ignoreEnvFile: process.env.NODE_ENV === 'production',
+      load:        [configuration],
+      isGlobal:    true,
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get<string>('DATABASE.HOST'),
-        port: configService.get<number>('DATABASE.PORT'),
-        username: configService.get<string>('DATABASE.USERNAME'),
-        password: configService.get<string>('DATABASE.PASSWORD'),
-        database: configService.get<string>('DATABASE.NAME'),
-        synchronize: true,
+      inject:  [ConfigService],
+      useFactory: (cfg: ConfigService) => ({
+        type:        'postgres',
+        host:        cfg.get<string>('DATABASE.HOST'),
+        port:        cfg.get<number>('DATABASE.PORT'),
+        username:    cfg.get<string>('DATABASE.USERNAME'),
+        password:    cfg.get<string>('DATABASE.PASSWORD'),
+        database:    cfg.get<string>('DATABASE.NAME'),
+        synchronize: cfg.get<boolean>('DATABASE.SYNCHRONIZE'),
         autoLoadEntities: true,
-        // No se agrega el tipado de datos porque genera conflictos con el tipo esperado
-        logging: configService.get('DATABASE.LOGGING'),
-        logger: configService.get('DATABASE.LOGGER'),
+        logging:     cfg.get<boolean>('DATABASE.LOGGING'),
+        logger:      cfg.get<string>('DATABASE.LOGGER') as any,
       }),
     }),
     EncuestasModule,

@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
     "module": "commonjs",
+    "moduleResolution": "node",             // <— clave para resolver en node_modules
+    "esModuleInterop": true,                // <— para poder hacer default imports
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
@@ -9,6 +11,7 @@
     "target": "ES2023",
     "sourceMap": true,
     "outDir": "./dist",
+    "rootDir": "./src",                     // <— opcional, pero recomendado
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
@@ -17,5 +20,7 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
-  }
+  },
+  "include": ["src/**/*.ts"],               // <— ajusta al directorio donde viven tus .ts
+  "exclude": ["node_modules", "dist"]
 }

@@ -1,5 +1,11 @@
 // src/encuestas/encuesta.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  ManyToOne,
+} from 'typeorm';
 import { Pregunta } from '../entities/preguntas.entity';
 import { Creador } from '../entities/creadores.entity';
 
@@ -17,7 +23,9 @@ export class Encuesta {
   @Column()
   codigo_resultados: string;
 
-  @ManyToOne(() => Creador, (creador) => creador.encuestas, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Creador, (creador) => creador.encuestas, {
+    onDelete: 'CASCADE',
+  })
   creador: Creador;
 
   @OneToMany(() => Pregunta, (pregunta) => pregunta.encuesta)
