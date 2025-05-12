@@ -3,13 +3,17 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from './config/configuration';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EncuestasModule } from './encuestas/encuestas.module';
+import { CreadoresModule } from './creadores/creadores.module';
 
 @Module({
   imports: [
+    // 2.1 Carga y valida variables de entorno de forma global
     ConfigModule.forRoot({
       load:        [configuration],
       isGlobal:    true,
     }),
+
+    // 2.2 Configura la conexión a PostgreSQL y registra entidades
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject:  [ConfigService],
@@ -26,7 +30,11 @@ import { EncuestasModule } from './encuestas/encuestas.module';
         logger:      cfg.get<string>('DATABASE.LOGGER') as any,
       }),
     }),
+    
+    // 2.3 Importa tu módulo de encuestas (controllers + services + repositorios)
     EncuestasModule,
+    //2.4 Importa tu módulo de creadores (controllers + services + repositorios)
+    CreadoresModule,
   ],
 })
 export class AppModule {}

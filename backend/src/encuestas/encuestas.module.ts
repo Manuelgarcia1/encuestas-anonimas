@@ -1,4 +1,4 @@
-import { Creador } from './entities/creadores.entity';
+import { Creador } from '../creadores/entities/creador.entity';
 import { Module } from '@nestjs/common';
 import { EncuestasService } from './encuestas.service';
 import { EncuestasController } from './encuestas.controller';
