@@ -4,7 +4,7 @@ import { Encuesta } from '../entities/encuesta.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v4 } from 'uuid';
-import { CodigoTipoEnum } from '../enums/codigo-tipo.enum';
+import { CodigoTipoEnum } from '../enums/token-tipo.enum';
 
 @Injectable()
 export class EncuestasService {

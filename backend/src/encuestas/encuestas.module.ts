@@ -4,11 +4,10 @@ import { EncuestasService } from './services/encuestas.service';
 import { EncuestasController } from './controller/encuestas.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Encuesta } from './entities/encuesta.entity';
-import { Pregunta } from './entities/preguntas.entity';
-import { Opcion } from './entities/opcion.entity';
+import { Pregunta } from './../preguntas/entities/pregunta.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Creador, Encuesta, Pregunta, Opcion])],
+  imports: [TypeOrmModule.forFeature([Creador, Encuesta, Pregunta])],
   controllers: [EncuestasController],
   providers: [EncuestasService],
 })

@@ -1,4 +1,4 @@
-export enum CodigoTipoEnum {
+export enum TokenTipoEnum {
   RESULTADOS = 'RESULTADOS',
   RESPUESTA = 'RESPUESTA',
 }
