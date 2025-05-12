@@ -31,9 +31,9 @@ import { CreadoresModule } from './creadores/creadores.module';
       }),
     }),
     
-    // 2.3 Importa tu módulo de encuestas (controllers + services + repositorios)
+    // 2.3 Importa módulo de encuestas (controllers + services + repositorios)
     EncuestasModule,
-    //2.4 Importa tu módulo de creadores (controllers + services + repositorios)
+    //2.4 Importa módulo de creadores (controllers + services + repositorios)
     CreadoresModule,
   ],
 })

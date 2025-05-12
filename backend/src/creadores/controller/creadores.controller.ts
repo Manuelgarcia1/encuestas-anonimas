@@ -5,8 +5,8 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { CreadoresService } from './creadores.service';
-import { CreateCreadorDto } from './dto/create-creador.dto';
+import { CreadoresService } from '../services/creadores.service';
+import { CreateCreadorDto } from '../dto/create-creador.dto';
 
 @Controller('creadores')
 export class CreadoresController {

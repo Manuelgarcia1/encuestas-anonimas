@@ -1,7 +1,7 @@
 import { Creador } from '../creadores/entities/creador.entity';
 import { Module } from '@nestjs/common';
-import { EncuestasService } from './encuestas.service';
-import { EncuestasController } from './encuestas.controller';
+import { EncuestasService } from './services/encuestas.service';
+import { EncuestasController } from './controller/encuestas.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Encuesta } from './entities/encuesta.entity';
 import { Pregunta } from './entities/preguntas.entity';
