@@ -7,7 +7,7 @@ import {
   ManyToOne,
 } from 'typeorm';
 import { Pregunta } from '../entities/preguntas.entity';
-import { Creador } from '../entities/creadores.entity';
+import { Creador } from '../../creadores/entities/creador.entity';
 import { EstadoEncuestaEnum } from '../enums/estado-encuestas.enum';
 
 @Entity('encuestas')

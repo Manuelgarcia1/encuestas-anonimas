@@ -13,7 +13,6 @@ export class CreateEncuestaDTO {
   @IsString()
   @IsNotEmpty()
   nombre: string;
-
   @IsArray()
   @ArrayNotEmpty()
   @ArrayMinSize(1)
