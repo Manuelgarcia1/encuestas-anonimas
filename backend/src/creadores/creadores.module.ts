@@ -3,8 +3,8 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { Creador } from './entities/creador.entity';
-import { CreadoresService } from './creadores.service';
-import { CreadoresController } from './creadores.controller';
+import { CreadoresService } from './services/creadores.service';
+import { CreadoresController } from './controller/creadores.controller';
 
 @Module({
   imports: [

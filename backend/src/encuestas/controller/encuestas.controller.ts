@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
-import { EncuestasService } from './encuestas.service';
-import { CreateEncuestaDTO } from './dto/create-encuesta.dto';
-import { Encuesta } from './entities/encuesta.entity';
-import { GetEncuestaDto } from './dto/get-encuesta.dto';
+import { EncuestasService } from '../services/encuestas.service';
+import { CreateEncuestaDTO } from '../dto/create-encuesta.dto';
+import { Encuesta } from '../entities/encuesta.entity';
+import { GetEncuestaDto } from '../dto/get-encuesta.dto';
 
 @Controller('/encuestas')
 export class EncuestasController {

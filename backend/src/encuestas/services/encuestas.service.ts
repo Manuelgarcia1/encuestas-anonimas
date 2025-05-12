@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { CreateEncuestaDTO } from './dto/create-encuesta.dto';
-import { Encuesta } from './entities/encuesta.entity';
+import { CreateEncuestaDTO } from '../dto/create-encuesta.dto';
+import { Encuesta } from '../entities/encuesta.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v4 } from 'uuid';
-import { CodigoTipoEnum } from './enums/codigo-tipo.enum';
+import { CodigoTipoEnum } from '../enums/codigo-tipo.enum';
 
 @Injectable()
 export class EncuestasService {
