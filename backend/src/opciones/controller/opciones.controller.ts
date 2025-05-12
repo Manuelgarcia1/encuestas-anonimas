@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { OpcionesService } from './opciones.service';
-import { CreateOpcioneDto } from './dto/create-opcione.dto';
-import { UpdateOpcioneDto } from './dto/update-opcione.dto';
+import { OpcionesService } from './../services/opciones.service';
+import { CreateOpcioneDto } from './../dto/create-opcione.dto';
+import { UpdateOpcioneDto } from './../dto/update-opcione.dto';
 
 @Controller('opciones')
 export class OpcionesController {

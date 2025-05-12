@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { CreateOpcioneDto } from './dto/create-opcione.dto';
-import { UpdateOpcioneDto } from './dto/update-opcione.dto';
+import { CreateOpcioneDto } from './../dto/create-opcione.dto';
+import { UpdateOpcioneDto } from './../dto/update-opcione.dto';
 
 @Injectable()
 export class OpcionesService {

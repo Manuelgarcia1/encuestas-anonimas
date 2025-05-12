@@ -1,12 +1,12 @@
 import { IsEnum, IsNotEmpty, IsUUID } from 'class-validator';
-import { CodigoTipoEnum } from '../enums/token-tipo.enum';
+import { TokenTipoEnum } from '../enums/token-tipo.enum';
 
 export class GetEncuestaDto {
   @IsUUID('4')
   @IsNotEmpty()
   codigo: string;
 
-  @IsEnum(CodigoTipoEnum)
+  @IsEnum(TokenTipoEnum)
   @IsNotEmpty()
-  tipo: CodigoTipoEnum;
+  tipo: TokenTipoEnum;
 }
