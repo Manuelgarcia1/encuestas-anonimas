@@ -6,7 +6,7 @@ import {
   OneToMany,
   ManyToOne,
 } from 'typeorm';
-import { Pregunta } from '../../preguntas/entities/preguntas.entity';
+import { Pregunta } from '../../preguntas/entities/pregunta.entity';
 import { Creador } from '../../creadores/entities/creador.entity';
 import { EstadoEncuestaEnum } from '../enums/estado-encuestas.enum';
 
