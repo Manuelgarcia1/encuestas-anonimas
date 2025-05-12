@@ -5,9 +5,10 @@ import { EncuestasController } from './controller/encuestas.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Encuesta } from './entities/encuesta.entity';
 import { Pregunta } from './../preguntas/entities/pregunta.entity';
+import { CreadoresModule } from './../creadores/creadores.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Creador, Encuesta, Pregunta])],
+  imports: [TypeOrmModule.forFeature([Creador, Encuesta, Pregunta]), CreadoresModule],
   controllers: [EncuestasController],
   providers: [EncuestasService],
 })
