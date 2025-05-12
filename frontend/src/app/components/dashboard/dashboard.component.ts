@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 import { LucideAngularModule, Plus, Filter, Search, Calendar, FileText, MoreVertical, Edit, Trash2, Copy, Pencil } from 'lucide-angular';
 import { HeaderDashboardComponent } from '../header/header-dashboard/header-dashboard.component';
 
@@ -9,6 +10,9 @@ import { HeaderDashboardComponent } from '../header/header-dashboard/header-dash
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent {
+
+  constructor(private router: Router) { }
+
   // Iconos disponibles
   icons = { Plus, Filter, Search, Calendar, FileText, MoreVertical, Edit, Trash2, Copy, Pencil };
 
@@ -62,12 +66,17 @@ export class DashboardComponent {
         return `${baseClasses} bg-gray-100 text-gray-800`;
     }
   }
-    toggleMenu(form: any) {
+  toggleMenu(form: any) {
     form.showMenu = !form.showMenu;
   }
 
   closeAllMenus() {
     this.forms.forEach(form => form.showMenu = false);
+  }
+
+  // Método para redirigir a create-form
+  navigateToCreateForm() {
+    this.router.navigate(['/create']);
   }
 
   copyLink(form: any) {
