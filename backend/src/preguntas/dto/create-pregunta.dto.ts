@@ -7,11 +7,11 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { TiposRespuestaEnum } from '../enums/tipos-respuestas.enum';
+import { TiposRespuestaEnum } from '../../preguntas/enums/tipos-respuestas.enum';
 import { Type } from 'class-transformer';
-import { CreateOpcionDTO } from './create-opcion.dto';
+import { CreateOpcioneDto } from './../../opciones/dto/create-opcione.dto';
 
-export class CreatePreguntaDTO {
+export class CreatePreguntaDto {
   @IsNumber()
   @IsNotEmpty()
   numero: number;
@@ -27,6 +27,6 @@ export class CreatePreguntaDTO {
   @IsArray()
   @IsOptional()
   @ValidateNested({ each: true })
-  @Type(() => CreateOpcionDTO)
-  opciones?: CreateOpcionDTO[];
+  @Type(() => CreateOpcioneDto)
+  opciones?: CreateOpcioneDto[];
 }

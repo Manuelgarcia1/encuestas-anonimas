@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class CreateOpcionDTO {
+export class CreateOpcioneDto {
   @IsString()
   @IsNotEmpty()
   texto: string;

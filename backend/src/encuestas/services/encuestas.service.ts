@@ -1,42 +1,53 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { CreateEncuestaDTO } from '../dto/create-encuesta.dto';
 import { Encuesta } from '../entities/encuesta.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v4 } from 'uuid';
-import { CodigoTipoEnum } from '../enums/codigo-tipo.enum';
+import { TokenTipoEnum } from '../enums/token-tipo.enum';
+import { EstadoEncuestaEnum } from '../enums/estado-encuestas.enum';
+import { Creador } from '../../creadores/entities/creador.entity';
 
 @Injectable()
 export class EncuestasService {
   constructor(
     @InjectRepository(Encuesta)
     private encuestasRepository: Repository<Encuesta>,
+    @InjectRepository(Creador)
+    private creadoresRepository: Repository<Creador>,
   ) {}
 
-  async crearEncuesta(dto: CreateEncuestaDTO): Promise<{
-    id: number;
-    codigoRespuesta: string;
-    codigoResultados: string;
-  }> {
-    const encuesta: Encuesta = this.encuestasRepository.create({
-      ...dto,
-      codigo_respuesta: v4(),
-      codigo_resultados: v4(),
+  // encuestas.service.ts
+  async obtenerEncuestasPorTokenCreador(
+    token_dashboard: string,
+  ): Promise<Encuesta[]> {
+    return this.encuestasRepository.find({
+      where: { creador: { token_dashboard } },
+    });
+  }
+
+  async crearEncuesta(
+    nombre: string,
+    token_dashboard: string,
+  ): Promise<Encuesta> {
+    const creador = await this.creadoresRepository.findOneOrFail({
+      where: { token_dashboard },
     });
 
-    const encuestaGuardada = await this.encuestasRepository.save(encuesta);
+    const encuesta = this.encuestasRepository.create({
+      nombre,
+      tipo: EstadoEncuestaEnum.BORRADOR,
+      token_respuesta: v4(),
+      token_resultados: v4(),
+      creador,
+    });
 
-    return {
-      id: encuestaGuardada.id,
-      codigoRespuesta: encuestaGuardada.codigo_respuesta,
-      codigoResultados: encuestaGuardada.codigo_resultados,
-    };
+    return this.encuestasRepository.save(encuesta);
   }
 
   async obtenerEncuesta(
     id: number,
     codigo: string,
-    codigoTipo: CodigoTipoEnum.RESPUESTA | CodigoTipoEnum.RESULTADOS,
+    codigoTipo: TokenTipoEnum.RESPUESTA | TokenTipoEnum.RESULTADOS,
   ): Promise<Encuesta> {
     const query = this.encuestasRepository
       .createQueryBuilder('encuesta')
@@ -45,11 +56,11 @@ export class EncuestasService {
       .where('encuesta.id = :id', { id });
 
     switch (codigoTipo) {
-      case CodigoTipoEnum.RESPUESTA:
+      case TokenTipoEnum.RESPUESTA:
         query.andWhere('encuesta.codigoRespuesta = :codigo', { codigo });
         break;
 
-      case CodigoTipoEnum.RESULTADOS:
+      case TokenTipoEnum.RESULTADOS:
         query.andWhere('encuesta.codigoResultados = :codigo', { codigo });
         break;
     }

@@ -6,7 +6,7 @@ import {
   OneToMany,
   ManyToOne,
 } from 'typeorm';
-import { Pregunta } from '../entities/preguntas.entity';
+import { Pregunta } from '../../preguntas/entities/pregunta.entity';
 import { Creador } from '../../creadores/entities/creador.entity';
 import { EstadoEncuestaEnum } from '../enums/estado-encuestas.enum';
 
@@ -19,10 +19,10 @@ export class Encuesta {
   nombre: string;
 
   @Column()
-  codigo_respuesta: string;
+  token_respuesta: string;
 
   @Column()
-  codigo_resultados: string;
+  token_resultados: string;
 
   @Column({ type: 'enum', enum: EstadoEncuestaEnum })
   tipo: EstadoEncuestaEnum;

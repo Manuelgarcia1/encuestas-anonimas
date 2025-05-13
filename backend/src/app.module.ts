@@ -4,6 +4,8 @@ import configuration from './config/configuration';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EncuestasModule } from './encuestas/encuestas.module';
 import { CreadoresModule } from './creadores/creadores.module';
+import { PreguntasModule } from './preguntas/preguntas.module';
+import { OpcionesModule } from './opciones/opciones.module';
 
 @Module({
   imports: [
@@ -35,7 +37,8 @@ import { CreadoresModule } from './creadores/creadores.module';
     EncuestasModule,
     //2.4 Importa módulo de creadores (controllers + services + repositorios)
     CreadoresModule,
-    
+    PreguntasModule,
+    OpcionesModule,
   ],
 })
 export class AppModule {}

@@ -1,31 +1,24 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { EncuestasService } from '../services/encuestas.service';
-import { CreateEncuestaDTO } from '../dto/create-encuesta.dto';
+import { CreateEncuestaDto } from '../dto/create-encuesta.dto';
 import { Encuesta } from '../entities/encuesta.entity';
-import { GetEncuestaDto } from '../dto/get-encuesta.dto';
 
 @Controller('/encuestas')
 export class EncuestasController {
   constructor(private encuestasService: EncuestasService) {}
 
-  @Post()
-  async crearEncuesta(@Body() dto: CreateEncuestaDTO): Promise<{
-    id: number;
-    codigoRespuesta: string;
-    codigoResultados: string;
-  }> {
-    return await this.encuestasService.crearEncuesta(dto);
+  @Post(':token_dashboard')
+  async createEncuesta(
+    @Param('token_dashboard') token: string,
+    @Body() dto: CreateEncuestaDto,
+  ): Promise<Encuesta> {
+    return this.encuestasService.crearEncuesta(dto.nombre, token);
   }
 
-  @Get(':id')
-  async obtenerEncuesta(
-    @Param('id') id: number,
-    @Query() dto: GetEncuestaDto,
-  ): Promise<Encuesta> {
-    return await this.encuestasService.obtenerEncuesta(
-      id,
-      dto.codigo,
-      dto.tipo,
-    );
+  @Get(':token_dashboard')
+  async findByCreador(
+    @Param('token_dashboard') token: string,
+  ): Promise<Encuesta[]> {
+    return this.encuestasService.obtenerEncuestasPorTokenCreador(token);
   }
 }
