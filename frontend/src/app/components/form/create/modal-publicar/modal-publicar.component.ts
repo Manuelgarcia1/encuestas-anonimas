@@ -19,15 +19,26 @@ export class ModalPublicarComponent {
   // Evento para cerrar el modal
   @Output() close = new EventEmitter<void>();
 
-  // Método para copiar el link al portapapeles
   copyLink() {
     navigator.clipboard.writeText(this.surveyLink)
       .then(() => {
-        console.log('Link copiado al portapapeles');
+        this.showToast('¡Link copiado con éxito!');
       })
       .catch(err => {
         console.error('Error al copiar el link:', err);
+        this.showToast('Error al copiar el link', true);
       });
+  }
+
+  private showToast(message: string, isError: boolean = false) {
+    const toast = document.createElement('div');
+    toast.className = `toast ${isError ? 'bg-red-500' : 'bg-blue-500'} text-white p-2 rounded fixed bottom-2 right-2 z-1000`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
   }
 
   // Método para generar QR
@@ -40,7 +51,7 @@ export class ModalPublicarComponent {
     const subject = 'Encuesta GAMERS';
     const body = `Por favor completa esta encuesta: ${this.surveyLink}`;
     const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    
+
     window.location.href = mailtoLink;
   }
 

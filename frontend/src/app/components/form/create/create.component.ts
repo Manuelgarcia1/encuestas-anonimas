@@ -1,13 +1,15 @@
 import { Component } from '@angular/core';
-import { 
-  LucideAngularModule, 
-  Plus, Eye, ChevronDown, ChevronUp, ListChecks, Calendar, 
-  TextCursorInput, Mail, Phone, Image, Video, CheckSquare, 
-  Circle, X, MoreVertical, Copy, Trash2 
+import {
+  LucideAngularModule,
+  Plus, Eye, ChevronDown, ChevronUp, ListChecks, Calendar,
+  TextCursorInput, Mail, Phone, Image, Video, CheckSquare,
+  Circle, X, MoreVertical, Copy, Trash2,
+  Check
 } from 'lucide-angular';
 import { HeaderFormComponent } from '../../header/header-form/header-form.component';
 import { ModalCreateComponent } from './modal-create/modal-create.component';
 import { CommonModule } from '@angular/common';
+import { TruncatePipe } from './truncate.pipe';
 
 // Definimos una interfaz para el tipo de pregunta
 interface Question {
@@ -15,22 +17,24 @@ interface Question {
   text: string;
   type: string;
   active: boolean;
+  required: boolean; // Nuevo campo
   showMenu?: boolean;
-  options?: string[]; // Nuevo campo para almacenar opciones
+  options?: string[];
 }
 
 @Component({
   selector: 'app-create',
   standalone: true,
-  imports: [HeaderFormComponent, LucideAngularModule, ModalCreateComponent,CommonModule],
-  templateUrl: './create.component.html',
+  imports: [HeaderFormComponent, LucideAngularModule, ModalCreateComponent, CommonModule, TruncatePipe],
+  templateUrl: './create.component.html'
 })
 export class CreateComponent {
   // Iconos disponibles
-  icons = { 
-    Plus, Eye, ChevronDown, ChevronUp, ListChecks, Calendar, 
-    TextCursorInput, Mail, Phone, Image, Video, CheckSquare, 
-    Circle, X, MoreVertical, Copy, Trash2 
+  // En tus imports de Lucide
+  icons = {
+    Plus, Eye, ChevronDown, ChevronUp, ListChecks, Calendar,
+    TextCursorInput, Mail, Phone, Image, Video, CheckSquare,
+    Circle, X, MoreVertical, Copy, Trash2, Check // Agrega Check
   };
 
   // Estado del sidebar móvil
@@ -56,11 +60,12 @@ export class CreateComponent {
   questions: Question[] = [
     {
       id: 1,
-      text: '¿En qué fecha se crea...',
+      text: 'Nueva pregunta de selección múltiple',
       type: 'multiple_choice',
       active: true,
       showMenu: false,
-      options: ['Enero 2023', 'Marzo 2023', 'Septiembre 2023', 'Mayo 2025']
+      options: ['Opción 1', 'Opción 2'],
+      required: false
     }
   ];
 
@@ -91,7 +96,7 @@ export class CreateComponent {
         this.activeQuestion.type === 'radio')) {
       const newOptionNumber = this.currentOptions.length + 1;
       this.currentOptions.push(`Opción ${newOptionNumber}`);
-      
+
       // Actualizar las opciones en la pregunta activa
       if (this.activeQuestion) {
         this.activeQuestion.options = [...this.currentOptions];
@@ -106,7 +111,7 @@ export class CreateComponent {
         this.activeQuestion.type === 'checkbox' ||
         this.activeQuestion.type === 'radio')) {
       this.currentOptions.splice(index, 1);
-      
+
       // Actualizar las opciones en la pregunta activa
       if (this.activeQuestion) {
         this.activeQuestion.options = [...this.currentOptions];
@@ -172,7 +177,8 @@ export class CreateComponent {
       text: defaultTexts[type as keyof typeof defaultTexts] || 'Nueva pregunta',
       type: type,
       active: false,
-      showMenu: false
+      showMenu: false,
+      required: false // Inicializar como no requerida
     };
 
     // Inicializar opciones para preguntas que las necesiten
@@ -190,5 +196,12 @@ export class CreateComponent {
   // Cierra todos los menús abiertos
   closeAllMenus() {
     this.questions.forEach(q => q.showMenu = false);
+  }
+
+  // Método para alternar el estado de obligatoriedad
+  toggleQuestionRequired() {
+    if (this.activeQuestion) {
+      this.activeQuestion.required = !this.activeQuestion.required;
+    }
   }
 }
