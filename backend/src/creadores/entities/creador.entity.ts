@@ -27,7 +27,6 @@ export class Creador {
     cascade: ['insert', 'update'],
     onDelete: 'CASCADE',
   })
-  
   encuestas: Encuesta[];
 
   @CreateDateColumn()

@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { CreadoresService } from '../services/creadores.service';
 import { CreateCreadorDto } from '../dto/create-creador.dto';
-import { ApiResponse } from '../../shared/response.dto';  // Importamos ApiResponse
+import { ApiResponse } from '../../shared/response.dto'; // Importamos ApiResponse
 
 @Controller('creadores')
 export class CreadoresController {
@@ -23,15 +23,14 @@ export class CreadoresController {
   @HttpCode(HttpStatus.OK)
   async requestAccess(
     @Body() dto: CreateCreadorDto,
-  ): Promise<ApiResponse<{ message: string }>> {  
+  ): Promise<ApiResponse<{ message: string }>> {
     try {
-
       await this.svc.requestAccess(dto.email);
 
       return new ApiResponse(
         'success',
         'Si ese correo está registrado, recibirás un enlace de acceso al dashboard.',
-        HttpStatus.OK
+        HttpStatus.OK,
       );
     } catch (error) {
       throw new HttpException(

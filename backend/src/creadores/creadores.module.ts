@@ -5,7 +5,7 @@ import { Creador } from './entities/creador.entity';
 import { CreadoresService } from './services/creadores.service';
 import { CreadoresController } from './controller/creadores.controller';
 
-import { EmailModule } from '../email/email.module';  // ← Importa tu módulo de e-mail
+import { EmailModule } from '../email/email.module'; // ← Importa tu módulo de e-mail
 
 @Module({
   imports: [

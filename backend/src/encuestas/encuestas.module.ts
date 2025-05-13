@@ -8,7 +8,10 @@ import { Pregunta } from './../preguntas/entities/pregunta.entity';
 import { CreadoresModule } from './../creadores/creadores.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Creador, Encuesta, Pregunta]), CreadoresModule],
+  imports: [
+    TypeOrmModule.forFeature([Creador, Encuesta, Pregunta]),
+    CreadoresModule,
+  ],
   controllers: [EncuestasController],
   providers: [EncuestasService],
 })

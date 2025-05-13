@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { OpcionesService } from './../services/opciones.service';
 import { CreateOpcioneDto } from './../dto/create-opcione.dto';
 import { UpdateOpcioneDto } from './../dto/update-opcione.dto';
