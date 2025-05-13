@@ -32,8 +32,13 @@ async function bootstrap() {
   // 6️⃣ Validación automática de todos los DTOs entrantes
   //    - whitelist: descarta propiedades no declaradas en el DTO
   //    - forbidNonWhitelisted: rechaza la petición si aparecen extras
+  //    - Transforma los payloads al tipo de clase del DTO
   app.useGlobalPipes(
-    new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
   );
 
   // 7️⃣ Serialización de respuestas usando decoradores de clase

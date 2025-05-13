@@ -25,12 +25,12 @@ export class EncuestasController {
   ) {
     try {
       const encuesta = await this.encuestasService.crearEncuesta(
-        dto.nombre,
+        dto,
         token,
       );
       return new ApiResponse(
         'success',
-        'Encuesta creada con éxito',
+        'Encuesta creada con éxito.',
         HttpStatus.CREATED,
         encuesta,
       );

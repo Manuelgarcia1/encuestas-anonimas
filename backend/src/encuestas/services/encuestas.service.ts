@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { v4 } from 'uuid';
 import { EstadoEncuestaEnum } from '../enums/estado-encuestas.enum';
 import { Creador } from '../../creadores/entities/creador.entity';
+import { CreateEncuestaDto } from '../dto/create-encuesta.dto';
 
 @Injectable()
 export class EncuestasService {
@@ -32,13 +33,14 @@ export class EncuestasService {
     }
 
     return this.encuestasRepository.find({
-      where: { creador: { token_dashboard } },
+      where: { creador: { id: creador.id } }, // Usamos el ID directamente
+      relations: ['preguntas'], // <- Aquí cargamos las preguntas de cada encuesta
     });
   }
 
   // Crear una encuesta
   async crearEncuesta(
-    nombre: string,
+    dto: CreateEncuestaDto,
     token_dashboard: string,
   ): Promise<Encuesta> {
     const creador = await this.creadoresRepository.findOne({
@@ -50,13 +52,12 @@ export class EncuestasService {
     }
 
     const encuesta = this.encuestasRepository.create({
-      nombre,
+      ...dto,
       tipo: EstadoEncuestaEnum.BORRADOR,
       token_respuesta: v4(),
       token_resultados: v4(),
       creador,
     });
-
-    return this.encuestasRepository.save(encuesta);
+    return await this.encuestasRepository.save(encuesta);
   }
 }
