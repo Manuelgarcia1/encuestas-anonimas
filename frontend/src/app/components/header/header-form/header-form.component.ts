@@ -1,13 +1,15 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, Home, ChevronRight, Edit, ListOrdered, Send, Pencil, Menu, X } from 'lucide-angular';
+import { ModalPublicarComponent } from '../../form/create/modal-publicar/modal-publicar.component';
 
 @Component({
   selector: 'app-header-form',
   standalone: true,
   imports: [
     LucideAngularModule,
-    FormsModule
+    FormsModule,
+    ModalPublicarComponent
   ],
   templateUrl: './header-form.component.html',
 })
@@ -25,9 +27,12 @@ export class HeaderFormComponent {
   // Estado del menú móvil
   mobileMenuOpen = false;
 
+  // Estado del modal de publicación
+  showPublishModal = false;
+
   setActiveTab(tab: 'edit' | 'requests') {
     this.activeTab = tab;
-    this.mobileMenuOpen = false; // Cerramos el menú al seleccionar una opción
+    this.mobileMenuOpen = false;
   }
 
   toggleEditName() {
@@ -41,5 +46,15 @@ export class HeaderFormComponent {
 
   toggleMobileMenu() {
     this.mobileMenuOpen = !this.mobileMenuOpen;
+  }
+
+  // Método para abrir el modal de publicación
+  openPublishModal() {
+    this.showPublishModal = true;
+  }
+
+  // Método para manejar el cierre del modal
+  onCloseModal() {
+    this.showPublishModal = false;
   }
 }

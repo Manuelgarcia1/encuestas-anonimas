@@ -2,11 +2,74 @@
     <!-- Header -->
     <app-header-form></app-header-form>
 
-    <div class="flex flex-1 overflow-hidden">
+    <div class="flex flex-1 flex-col md:flex-row overflow-hidden">
+        <!-- Mobile Sidebar Toggle -->
+        <button class="md:hidden flex items-center justify-between p-4 bg-gray-100 border-b"
+            (click)="toggleMobileSidebar()">
+            <span class="font-semibold text-gray-700">Lista de Preguntas</span>
+            <i-lucide [name]="mobileSidebarOpen ? icons.ChevronUp : icons.ChevronDown" class="w-5 h-5"></i-lucide>
+        </button>
+
         <!-- Contenedor principal que envuelve sidebar y main -->
-        <div class="flex flex-1 pl-4">
-            <!-- Sidebar - Lista de preguntas -->
-            <aside class="w-64 h-[450px] bg-gray-100 p-4 overflow-y-auto ml-2 mt-4 rounded-xl shadow-sm">
+        <div class="flex flex-1 flex-col md:flex-row md:pl-4 overflow-hidden">
+            <!-- Sidebar - Lista de preguntas (Mobile) -->
+            <aside *ngIf="mobileSidebarOpen" class="md:hidden w-full bg-gray-100 p-4 overflow-y-auto shadow-sm ">
+                <div class="flex justify-between items-center mb-4">
+                    <button (click)="openAddQuestionModal()"
+                        class="flex items-center justify-center gap-1 text-sm w-full text-grisOscuro border-2 rounded-full py-1 px-2 hover:bg-white transition">
+                        <i-lucide [name]="icons.Plus" class="w-4 h-4"></i-lucide>
+                        <span>Añadir</span>
+                    </button>
+                </div>
+
+                <ul class="space-y-2">
+                    @for (question of questions; track question.id) {
+                    <li (click)="setActiveQuestion(question.id); mobileSidebarOpen = false"
+                        class="group p-3 rounded-md cursor-pointer transition-colors relative"
+                        [class.bg-blue-100]="question.active" [class.hover:bg-gray-100]="!question.active">
+                        <div class="flex items-start gap-2">
+                            <i-lucide [name]="questionTypeIcons[question.type]"
+                                class="w-4 h-4 mt-0.5 text-gray-500 flex-shrink-0">
+                            </i-lucide>
+                            <span class="font-medium text-gray-700">{{ question.id }}.</span>
+                            <p class="text-gray-600 text-sm">{{ question.text }}</p>
+                        </div>
+
+                        <!-- Botón de tres puntos -->
+                        <button
+                            class="absolute right-2 top-2 p-1 text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                            (click)="$event.stopPropagation(); question.showMenu = !question.showMenu">
+                            <i-lucide [name]="icons.MoreVertical" class="w-4 h-4"></i-lucide>
+                        </button>
+
+                        <!-- Menú desplegable -->
+                        @if (question.showMenu) {
+                        <div class="absolute right-0 top-8 z-10 mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-200"
+                            (click)="$event.stopPropagation()">
+                            <div class="py-1">
+                                <button
+                                    class="flex items-center px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                                    (click)="duplicateQuestion(question.id); question.showMenu = false">
+                                    <i-lucide [name]="icons.Copy" class="w-4 h-4 mr-2"></i-lucide>
+                                    Duplicar
+                                </button>
+                                <button
+                                    class="flex items-center px-3 py-1 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
+                                    (click)="deleteQuestion(question.id); question.showMenu = false">
+                                    <i-lucide [name]="icons.Trash2" class="w-4 h-4 mr-2"></i-lucide>
+                                    Borrar
+                                </button>
+                            </div>
+                        </div>
+                        }
+                    </li>
+                    }
+                </ul>
+            </aside>
+
+            <!-- Sidebar - Lista de preguntas (Desktop) -->
+            <aside
+                class="hidden md:block w-64 h-[450px] bg-gray-100 p-4 overflow-y-auto ml-2 mt-4 rounded-xl shadow-sm">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="font-semibold text-gray-700">Lista de Preguntas</h2>
                     <button (click)="openAddQuestionModal()"
@@ -60,8 +123,9 @@
                     }
                 </ul>
             </aside>
+
             <!-- Contenido principal -->
-            <main class="flex-1 overflow-y-auto p-6 bg-white border m-6">
+            <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-white border m-2 md:m-6">
                 @if (activeQuestion) {
                 <div class="max-w-2xl mx-auto">
                     <!-- Barra de herramientas -->
@@ -70,7 +134,6 @@
                             <span class="font-medium text-gray-700">
                                 {{ activeQuestion.id }}.
                             </span>
-                            <!-- Se ha eliminado el select de tipo de pregunta -->
                         </div>
                     </div>
 
@@ -157,3 +220,4 @@
         </app-modal-create>
         }
     </div>
+</div>

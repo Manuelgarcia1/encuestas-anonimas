@@ -1,7 +1,13 @@
 import { Component } from '@angular/core';
-import { LucideAngularModule, Plus, Eye, ChevronDown, ListChecks, Calendar, TextCursorInput, Mail, Phone, Image, Video, CheckSquare, Circle, X, MoreVertical, Copy, Trash2 } from 'lucide-angular';
+import { 
+  LucideAngularModule, 
+  Plus, Eye, ChevronDown, ChevronUp, ListChecks, Calendar, 
+  TextCursorInput, Mail, Phone, Image, Video, CheckSquare, 
+  Circle, X, MoreVertical, Copy, Trash2 
+} from 'lucide-angular';
 import { HeaderFormComponent } from '../../header/header-form/header-form.component';
 import { ModalCreateComponent } from './modal-create/modal-create.component';
+import { CommonModule } from '@angular/common';
 
 // Definimos una interfaz para el tipo de pregunta
 interface Question {
@@ -16,12 +22,19 @@ interface Question {
 @Component({
   selector: 'app-create',
   standalone: true,
-  imports: [HeaderFormComponent, LucideAngularModule, ModalCreateComponent],
+  imports: [HeaderFormComponent, LucideAngularModule, ModalCreateComponent,CommonModule],
   templateUrl: './create.component.html',
 })
 export class CreateComponent {
   // Iconos disponibles
-  icons = { Plus, Eye, ChevronDown, ListChecks, Calendar, TextCursorInput, Mail, Phone, Image, Video, CheckSquare, Circle, X, MoreVertical, Copy, Trash2 };
+  icons = { 
+    Plus, Eye, ChevronDown, ChevronUp, ListChecks, Calendar, 
+    TextCursorInput, Mail, Phone, Image, Video, CheckSquare, 
+    Circle, X, MoreVertical, Copy, Trash2 
+  };
+
+  // Estado del sidebar móvil
+  mobileSidebarOpen = false;
 
   // Mapeo de tipos de pregunta a iconos
   questionTypeIcons: { [key: string]: any } = {
@@ -46,17 +59,13 @@ export class CreateComponent {
       text: '¿En qué fecha se crea...',
       type: 'multiple_choice',
       active: true,
-      showMenu: false // Inicializamos showMenu
+      showMenu: false,
+      options: ['Enero 2023', 'Marzo 2023', 'Septiembre 2023', 'Mayo 2025']
     }
   ];
 
-  // Opciones para la pregunta activa (ejemplo)
-  currentOptions = [
-    'Enero 2023',
-    'Marzo 2023',
-    'Septiembre 2023',
-    'Mayo 2025'
-  ];
+  // Opciones para la pregunta activa
+  currentOptions: string[] = [];
 
   // Getter para obtener la pregunta activa
   get activeQuestion() {
@@ -73,6 +82,7 @@ export class CreateComponent {
       }
     });
   }
+
   // Método para añadir una nueva opción
   addOption() {
     if (this.activeQuestion &&
@@ -81,6 +91,11 @@ export class CreateComponent {
         this.activeQuestion.type === 'radio')) {
       const newOptionNumber = this.currentOptions.length + 1;
       this.currentOptions.push(`Opción ${newOptionNumber}`);
+      
+      // Actualizar las opciones en la pregunta activa
+      if (this.activeQuestion) {
+        this.activeQuestion.options = [...this.currentOptions];
+      }
     }
   }
 
@@ -91,8 +106,14 @@ export class CreateComponent {
         this.activeQuestion.type === 'checkbox' ||
         this.activeQuestion.type === 'radio')) {
       this.currentOptions.splice(index, 1);
+      
+      // Actualizar las opciones en la pregunta activa
+      if (this.activeQuestion) {
+        this.activeQuestion.options = [...this.currentOptions];
+      }
     }
   }
+
   // Abre el modal para añadir nueva pregunta
   openAddQuestionModal() {
     this.showModal = true;
@@ -101,6 +122,11 @@ export class CreateComponent {
   // Cierra el modal
   closeModal() {
     this.showModal = false;
+  }
+
+  // Alternar el sidebar móvil
+  toggleMobileSidebar() {
+    this.mobileSidebarOpen = !this.mobileSidebarOpen;
   }
 
   // Método para duplicar pregunta
@@ -128,7 +154,7 @@ export class CreateComponent {
 
   // Añade una nueva pregunta del tipo seleccionado
   addQuestion(type: string) {
-    const newId = this.questions.length + 1;
+    const newId = this.questions.length > 0 ? Math.max(...this.questions.map(q => q.id)) + 1 : 1;
     const defaultTexts = {
       'multiple_choice': 'Nueva pregunta de opción múltiple',
       'text': 'Nueva pregunta de texto abierto',
@@ -158,7 +184,9 @@ export class CreateComponent {
     this.questions.push(newQuestion);
     this.setActiveQuestion(newId);
     this.closeModal();
+    this.mobileSidebarOpen = false; // Cerrar el sidebar móvil después de añadir
   }
+
   // Cierra todos los menús abiertos
   closeAllMenus() {
     this.questions.forEach(q => q.showMenu = false);
