@@ -1,5 +1,5 @@
 export enum EstadoEncuestaEnum {
-	BORRADOR = 'BORRADOR',
+  BORRADOR = 'BORRADOR',
   PUBLICADA = 'PUBLICADA',
-	CERRADA = 'CERRADA'
+  CERRADA = 'CERRADA',
 }

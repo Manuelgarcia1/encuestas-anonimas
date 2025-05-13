@@ -1,9 +1,12 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Encuesta } from '../entities/encuesta.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v4 } from 'uuid';
-import { TokenTipoEnum } from '../enums/token-tipo.enum';
 import { EstadoEncuestaEnum } from '../enums/estado-encuestas.enum';
 import { Creador } from '../../creadores/entities/creador.entity';
 
@@ -16,22 +19,35 @@ export class EncuestasService {
     private creadoresRepository: Repository<Creador>,
   ) {}
 
-  // encuestas.service.ts
+  // Obtener encuestas por token_dashboard
   async obtenerEncuestasPorTokenCreador(
     token_dashboard: string,
   ): Promise<Encuesta[]> {
+    const creador = await this.creadoresRepository.findOne({
+      where: { token_dashboard },
+    });
+
+    if (!creador) {
+      throw new NotFoundException('Creador no encontrado.');
+    }
+
     return this.encuestasRepository.find({
       where: { creador: { token_dashboard } },
     });
   }
 
+  // Crear una encuesta
   async crearEncuesta(
     nombre: string,
     token_dashboard: string,
   ): Promise<Encuesta> {
-    const creador = await this.creadoresRepository.findOneOrFail({
+    const creador = await this.creadoresRepository.findOne({
       where: { token_dashboard },
     });
+
+    if (!creador) {
+      throw new NotFoundException('Creador no encontrado.');
+    }
 
     const encuesta = this.encuestasRepository.create({
       nombre,
@@ -42,38 +58,5 @@ export class EncuestasService {
     });
 
     return this.encuestasRepository.save(encuesta);
-  }
-
-  async obtenerEncuesta(
-    id: number,
-    codigo: string,
-    codigoTipo: TokenTipoEnum.RESPUESTA | TokenTipoEnum.RESULTADOS,
-  ): Promise<Encuesta> {
-    const query = this.encuestasRepository
-      .createQueryBuilder('encuesta')
-      .innerJoinAndSelect('encuesta.preguntas', 'pregunta')
-      .leftJoinAndSelect('pregunta.opciones', 'preguntaOpcion')
-      .where('encuesta.id = :id', { id });
-
-    switch (codigoTipo) {
-      case TokenTipoEnum.RESPUESTA:
-        query.andWhere('encuesta.codigoRespuesta = :codigo', { codigo });
-        break;
-
-      case TokenTipoEnum.RESULTADOS:
-        query.andWhere('encuesta.codigoResultados = :codigo', { codigo });
-        break;
-    }
-
-    query.orderBy('pregunta.numero', 'ASC');
-    query.addOrderBy('preguntaOpcion.numero', 'ASC');
-
-    const encuesta = await query.getOne();
-
-    if (!encuesta) {
-      throw new BadRequestException('Datos de encuesta no válidos');
-    }
-
-    return encuesta;
   }
 }

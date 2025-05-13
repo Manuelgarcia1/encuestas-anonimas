@@ -11,8 +11,8 @@ import { join } from 'path';
     MailerModule.forRootAsync({
       useFactory: (cfg: ConfigService) => ({
         transport: {
-          host:   cfg.get('SMTP_HOST'),
-          port:   cfg.get<number>('SMTP_PORT'),
+          host: cfg.get('SMTP_HOST'),
+          port: cfg.get<number>('SMTP_PORT'),
           secure: cfg.get<boolean>('SMTP_SECURE'),
           auth: {
             user: cfg.get('SMTP_USER'),
@@ -21,12 +21,12 @@ import { join } from 'path';
         },
         defaults: { from: cfg.get('SMTP_FROM') },
         template: {
-          dir:     join(__dirname, '..', 'templates', 'emails'),
+          dir: join(__dirname, '..', 'templates', 'emails'),
           adapter: new HandlebarsAdapter(),
           options: { strict: true },
         },
       }),
-      inject: [ConfigService],  // aquí sí inyectas tu ConfigService global
+      inject: [ConfigService], // aquí sí inyectas tu ConfigService global
     }),
   ],
   providers: [EmailService],

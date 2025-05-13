@@ -30,7 +30,7 @@ async function bootstrap() {
   });
 
   // 6️⃣ Validación automática de todos los DTOs entrantes
-  //    - whitelist: descarta propiedades no declaradas en el DTO  
+  //    - whitelist: descarta propiedades no declaradas en el DTO
   //    - forbidNonWhitelisted: rechaza la petición si aparecen extras
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),

@@ -14,7 +14,7 @@ export class CreadoresService {
     private readonly config: ConfigService,
   ) {}
 
-   // 1. Crear o recuperar el Creador
+  // 1. Crear o recuperar el Creador
   async requestAccess(email: string): Promise<void> {
     let creador = await this.repo.findOne({ where: { email } });
     if (!creador) {
@@ -23,7 +23,7 @@ export class CreadoresService {
     }
 
     // 2. Construir el enlace al dashboard
-    const baseUrl = this.config.get('APP_URL');    // ej: https://encuestas.midominio.com
+    const baseUrl = this.config.get('APP_URL'); // ej: https://encuestas.midominio.com
     const dashboardUrl = `${baseUrl}/dashboard/${creador.token_dashboard}`;
 
     // 3. Disparar el envío de correo
