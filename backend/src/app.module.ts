@@ -37,7 +37,9 @@ import { OpcionesModule } from './opciones/opciones.module';
     EncuestasModule,
     //2.4 Importa módulo de creadores (controllers + services + repositorios)
     CreadoresModule,
+    //2.5 Importa módulo de preguntas (controllers + services + repositorios)
     PreguntasModule,
+    //2.6 Importa módulo de opciones (controllers + services + repositorios)
     OpcionesModule,
   ],
 })
