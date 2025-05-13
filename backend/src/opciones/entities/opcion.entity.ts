@@ -6,7 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
-import { Pregunta } from './preguntas.entity';
+import { Pregunta } from './../../preguntas/entities/pregunta.entity';
 
 @Entity({ name: 'opciones' })
 export class Opcion {

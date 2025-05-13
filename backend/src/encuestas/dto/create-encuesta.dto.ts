@@ -1,22 +1,7 @@
-import { Type } from 'class-transformer';
-import {
-  ArrayMinSize,
-  ArrayNotEmpty,
-  IsArray,
-  IsNotEmpty,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
-import { CreatePreguntaDTO } from './create-pregunta.dto';
+import { IsNotEmpty, IsString } from 'class-validator';
 
-export class CreateEncuestaDTO {
+export class CreateEncuestaDto {
   @IsString()
   @IsNotEmpty()
   nombre: string;
-  @IsArray()
-  @ArrayNotEmpty()
-  @ArrayMinSize(1)
-  @ValidateNested({ each: true })
-  @Type(() => CreatePreguntaDTO)
-  preguntas: CreatePreguntaDTO[];
 }
