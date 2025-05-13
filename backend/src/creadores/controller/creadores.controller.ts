@@ -1,13 +1,14 @@
-// src/creadores/creadores.controller.ts
 import {
   Controller,
   Post,
   Body,
   HttpCode,
   HttpStatus,
+  HttpException,
 } from '@nestjs/common';
 import { CreadoresService } from '../services/creadores.service';
 import { CreateCreadorDto } from '../dto/create-creador.dto';
+import { ApiResponse } from '../../shared/response.dto';  // Importamos ApiResponse
 
 @Controller('creadores')
 export class CreadoresController {
@@ -22,12 +23,21 @@ export class CreadoresController {
   @HttpCode(HttpStatus.OK)
   async requestAccess(
     @Body() dto: CreateCreadorDto,
-  ): Promise<{ message: string }> {
-    // Llama pasando sólo el email
-    await this.svc.requestAccess(dto.email);
-    return {
-      message:
+  ): Promise<ApiResponse<{ message: string }>> {  
+    try {
+
+      await this.svc.requestAccess(dto.email);
+
+      return new ApiResponse(
+        'success',
         'Si ese correo está registrado, recibirás un enlace de acceso al dashboard.',
-    };
+        HttpStatus.OK
+      );
+    } catch (error) {
+      throw new HttpException(
+        new ApiResponse('error', error.message, HttpStatus.BAD_REQUEST),
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 }
