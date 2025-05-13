@@ -1,3 +1,4 @@
+// src/creadores/creadores.controller.ts
 import {
   Controller,
   Post,
@@ -14,15 +15,19 @@ export class CreadoresController {
 
   /**
    * POST /creadores
-   * Crea un Creador y devuelve su token_dashboard.
-   * 201 si se crea, 409 si el email existe.
+   * Dispara el envío del magic-link al e-mail.
+   * 200 siempre, para no filtrar existencia.
    */
   @Post()
-  @HttpCode(HttpStatus.CREATED)
-  async create(
+  @HttpCode(HttpStatus.OK)
+  async requestAccess(
     @Body() dto: CreateCreadorDto,
-  ): Promise<{ token_dashboard: string }> {
-    const creador = await this.svc.register(dto);
-    return { token_dashboard: creador.token_dashboard };
+  ): Promise<{ message: string }> {
+    // Llama pasando sólo el email
+    await this.svc.requestAccess(dto.email);
+    return {
+      message:
+        'Si ese correo está registrado, recibirás un enlace de acceso al dashboard.',
+    };
   }
 }

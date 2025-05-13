@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      /* Puedes poner aquí estilos inline muy sencillos */
+      body { font-family: Arial, sans-serif; color: #333; }
+      .button {
+        display: inline-block;
+        padding: 10px 20px;
+        background: #0052cc;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Acceso al Dashboard de Encuestas</h2>
+    <p>Hola,</p>
+    <p>
+      Haz clic en el siguiente botón para acceder a tu dashboard y ver tus encuestas:
+    </p>
+    <p>
+      <a href="{{dashboardUrl}}" class="button">Ver mi Dashboard</a>
+    </p>
+    <p>
+      O copia y pega este enlace en tu navegador:<br/>
+      <code>{{dashboardUrl}}</code>
+    </p>
+    <hr/>
+    <p style="font-size:0.9em;color:#666">
+      Si no solicitaste este correo, puedes ignorarlo.<br/>
+      Este enlace no se podrá recuperar si lo pierdes.
+    </p>
+  </body>
+</html>
