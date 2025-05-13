@@ -35,6 +35,7 @@ import { CreadoresModule } from './creadores/creadores.module';
     EncuestasModule,
     //2.4 Importa módulo de creadores (controllers + services + repositorios)
     CreadoresModule,
+    
   ],
 })
 export class AppModule {}
