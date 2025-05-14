@@ -19,7 +19,6 @@ export class CreadoresController {
    * (200 OK siempre para no filtrar existencia)
    */
   @Post()
-  @HttpCode(HttpStatus.OK)
   async requestAccess(
     @Body() dto: CreateCreadorDto,
   ): Promise<ApiResponse<{ message: string }>> {
