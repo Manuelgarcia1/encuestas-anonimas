@@ -14,23 +14,27 @@ export class CreadoresService {
     private readonly config: ConfigService,
   ) {}
 
-  // 1. Crear o recuperar el Creador
-  async requestAccess(email: string): Promise<void> {
+  /**
+   * Busca o crea un creador, envía el magic-link y
+   * devuelve `true` si se creó uno nuevo, `false` si ya existía.
+   */
+  async requestAccess(email: string): Promise<boolean> {
+    let created = false;
     let creador = await this.repo.findOne({ where: { email } });
+
     if (!creador) {
+      created = true;
       creador = this.repo.create({ email });
       creador = await this.repo.save(creador);
     }
 
-    // 2. Construir el enlace al dashboard
-    const baseUrl = this.config.get('APP_URL'); // ej: https://encuestas.midominio.com
+    const baseUrl     = this.config.get<string>('APP_URL');
     const dashboardUrl = `${baseUrl}/dashboard/${creador.token_dashboard}`;
-
-    // 3. Disparar el envío de correo
     await this.emailService.sendDashboardLink(email, dashboardUrl);
+
+    return created;
   }
 
-  /** Recuperar creador por token (usado en tu DashboardController) */
   async findByToken(token: string): Promise<Creador> {
     return this.repo.findOneOrFail({ where: { token_dashboard: token } });
   }

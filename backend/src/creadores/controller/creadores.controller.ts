@@ -1,41 +1,41 @@
+// src/creadores/creadores.controller.ts
 import {
   Controller,
   Post,
   Body,
   HttpCode,
   HttpStatus,
-  HttpException,
 } from '@nestjs/common';
 import { CreadoresService } from '../services/creadores.service';
 import { CreateCreadorDto } from '../dto/create-creador.dto';
-import { ApiResponse } from '../../shared/response.dto'; // Importamos ApiResponse
+import { ApiResponse } from '../../shared/response.dto';
 
 @Controller('creadores')
 export class CreadoresController {
-  constructor(private readonly svc: CreadoresService) {}
+  constructor(private readonly creadoresService: CreadoresService) {}
 
   /**
-   * POST /creadores
-   * Dispara el envío del magic-link al e-mail.
-   * 200 siempre, para no filtrar existencia.
+   * Envía un magic-link al email.
+   * (200 OK siempre para no filtrar existencia)
    */
   @Post()
   async requestAccess(
     @Body() dto: CreateCreadorDto,
   ): Promise<ApiResponse<{ message: string }>> {
-    try {
-      await this.svc.requestAccess(dto.email);
+    // 1️⃣ Llamamos al Service, que nos dice si creó un nuevo Creador
+    const created = await this.creadoresService.requestAccess(dto.email);
 
-      return new ApiResponse(
-        'success',
-        'Si ese correo está registrado, recibirás un enlace de acceso al dashboard.',
-        HttpStatus.OK,
-      );
-    } catch (error) {
-      throw new HttpException(
-        new ApiResponse('error', error.message, HttpStatus.BAD_REQUEST),
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    // 2️⃣ Definimos mensajes distintos según el caso
+    const text = created
+      ? 'Usuario registrado exitosamente. Se ha enviado tu enlace al dashboard.'
+      : 'Ya estabas registrado. Te hemos reenviado el enlace de acceso al dashboard.';
+
+    // 3️⃣ Devolvemos ApiResponse con el mensaje adecuado
+    return new ApiResponse<{ message: string }>(
+      'success',       // status lógico
+      text,            // mensaje principal
+      HttpStatus.OK,   // código HTTP interno
+      { message: text } // payload data
+    );
   }
 }
