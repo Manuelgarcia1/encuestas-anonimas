@@ -13,7 +13,7 @@
             }
         </select>
 
-        <button
+        <button (click)="navigateToCreateForm()"
             class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-full">
             <i-lucide [name]="icons.Plus" class="w-5 h-5"></i-lucide>
             <span>Crear Formulario</span>
@@ -23,7 +23,7 @@
     <!-- SIDEBAR - DESKTOP -->
     <aside class="hidden sm:block w-1/5 p-4 bg-white fixed top-0 left-0 h-full pt-16">
         <!-- Botón -->
-        <button
+        <button (click)="navigateToCreateForm()"
             class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-full mb-6">
             <i-lucide [name]="icons.Plus" class="w-5 h-5"></i-lucide>
             <span>Crear Formulario</span>
