@@ -1,12 +1,23 @@
-import { IsEnum, IsNotEmpty, IsUUID } from 'class-validator';
-import { TokenTipoEnum } from '../enums/token-tipo.enum';
+import { IsOptional, IsInt, Min, IsIn } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class GetEncuestaDto {
-  @IsUUID('4')
-  @IsNotEmpty()
-  codigo: string;
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number;
 
-  @IsEnum(TokenTipoEnum)
-  @IsNotEmpty()
-  tipo: TokenTipoEnum;
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  limit?: number;
+
+  @IsOptional()
+  sortBy?: string;
+
+  @IsOptional()
+  @IsIn(['ASC', 'DESC'])
+  order?: 'ASC' | 'DESC';
 }

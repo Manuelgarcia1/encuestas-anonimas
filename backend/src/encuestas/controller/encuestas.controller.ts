@@ -7,11 +7,13 @@ import {
   Param,
   Post,
   Body,
+  Query,
 } from '@nestjs/common';
 import { EncuestasService } from '../services/encuestas.service';
 import { CreateEncuestaDto } from '../dto/create-encuesta.dto';
 import { Encuesta } from '../entities/encuesta.entity';
 import { ApiResponse } from '../../shared/response.dto';
+import { GetEncuestaDto } from '../dto/get-encuesta.dto';
 
 @Controller('/encuestas')
 export class EncuestasController {
@@ -24,10 +26,7 @@ export class EncuestasController {
     @Body() dto: CreateEncuestaDto,
   ) {
     try {
-      const encuesta = await this.encuestasService.crearEncuesta(
-        dto,
-        token,
-      );
+      const encuesta = await this.encuestasService.crearEncuesta(dto, token);
       return new ApiResponse(
         'success',
         'Encuesta creada con éxito.',
@@ -46,7 +45,8 @@ export class EncuestasController {
   @Get(':token_dashboard')
   async findByCreador(
     @Param('token_dashboard') token: string,
-  ): Promise<ApiResponse<Encuesta[]>> {
+    @Query() getEncuestaDto: GetEncuestaDto,
+  ) {
     const uuidRegex =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(token)) {
@@ -60,18 +60,20 @@ export class EncuestasController {
       );
     }
 
-    // Obtener las encuestas por token_dashboard
-    const encuestas =
-      await this.encuestasService.obtenerEncuestasPorTokenCreador(token);
+    const { data, total, page, limit } =
+      await this.encuestasService.obtenerEncuestasPorTokenCreador(
+        token,
+        getEncuestaDto,
+      );
 
-    // Si no se encuentran encuestas, responder con mensaje adecuado
-    return new ApiResponse(
-      'success',
-      encuestas.length
-        ? 'Encuestas encontradas para el creador.'
-        : 'Este creador no tiene encuestas creadas aún.',
-      HttpStatus.OK,
-      encuestas,
-    );
+    const message = total
+      ? 'Encuestas encontradas para el creador.'
+      : 'Este creador no tiene encuestas creadas aún.';
+
+    return new ApiResponse('success', message, HttpStatus.OK, data, {
+      total,
+      page,
+      limit,
+    });
   }
 }
