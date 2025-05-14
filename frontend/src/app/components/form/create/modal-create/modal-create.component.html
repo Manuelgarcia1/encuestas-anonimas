@@ -1,0 +1,25 @@
+<div class="fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
+  <div class="modal-container bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto">
+    <div class="p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">Seleccionar tipo de pregunta</h3>
+        <button (click)="closeModal.emit()" class="text-gray-500 hover:text-gray-700">
+          <!-- Usa el icono X del objeto icons -->
+          <i-lucide [name]="icons.X" class="w-5 h-5"></i-lucide>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        @for (item of questionTypes; track item.type) {
+        <button 
+          (click)="selectQuestionType(item.type)"
+          class="flex flex-col items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <i-lucide [name]="item.icon" class="w-6 h-6 text-blue-600 mb-2"></i-lucide>
+          <span class="text-sm text-gray-700">{{ item.label }}</span>
+        </button>
+        }
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,89 @@
+<header class="bg-white px-4 sm:px-6 py-4 shadow-sm">
+  <div class="flex justify-between items-center">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 text-sm text-gray-600">
+      <a href="dashboard" class="flex items-center">
+        <i-lucide [name]="icons.Home" class="w-4 h-4"></i-lucide>
+      </a>
+      <a href="dashboard" class="hover:text-blue-500 hidden sm:inline">Dashboard</a>
+      <i-lucide [name]="icons.ChevronRight" class="w-4 h-4 hidden sm:block"></i-lucide>
+
+      @if (isEditingName) {
+      <div class="flex items-center gap-2">
+        <input type="text" [(ngModel)]="formName" (keyup.enter)="saveFormName(formName)" (blur)="saveFormName(formName)"
+          class="border-b border-gray-300 px-1 py-0.5 focus:outline-none focus:border-blue-500 w-32 sm:w-auto"
+          autofocus>
+      </div>
+      } @else {
+      <div class="flex items-center gap-1 group">
+        <span class="text-gray-700">{{ formName }}</span>
+        <button (click)="toggleEditName()"
+          class="text-gray-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
+          <i-lucide [name]="icons.Pencil" class="w-3 h-3"></i-lucide>
+        </button>
+      </div>
+      }
+    </nav>
+
+    <!-- Desktop Navigation -->
+    <div class="hidden sm:flex items-center gap-4">
+      <button (click)="setActiveTab('edit')" class="flex items-center gap-2 px-4 py-1 rounded-md transition-colors"
+        [class.text-blue-600]="activeTab === 'edit'" [class.bg-blue-50]="activeTab === 'edit'"
+        [class.text-gray-600]="activeTab !== 'edit'">
+        <i-lucide [name]="icons.Edit" class="w-4 h-4"></i-lucide>
+        <span>Editar</span>
+      </button>
+
+      <button (click)="setActiveTab('requests')" class="flex items-center gap-2 px-4 py-1 rounded-md transition-colors"
+        [class.text-blue-600]="activeTab === 'requests'" [class.bg-blue-50]="activeTab === 'requests'"
+        [class.text-gray-600]="activeTab !== 'requests'">
+        <i-lucide [name]="icons.ListOrdered" class="w-4 h-4"></i-lucide>
+        <span>Respuestas</span>
+      </button>
+
+      <button (click)="openPublishModal()"
+        class="flex items-center gap-2 px-4 py-1 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors">
+        <i-lucide [name]="icons.Send" class="w-4 h-4"></i-lucide>
+        <span>Publicar</span>
+      </button>
+    </div>
+
+    <!-- Mobile Menu Button -->
+    <button class="sm:hidden p-2 text-gray-600 hover:text-blue-500" (click)="toggleMobileMenu()">
+      <i-lucide [name]="mobileMenuOpen ? icons.X : icons.Menu" class="w-5 h-5"></i-lucide>
+    </button>
+  </div>
+
+  <!-- Mobile Menu -->
+  @if (mobileMenuOpen) {
+  <div class="sm:hidden mt-4 pb-2 border-t border-gray-200">
+    <div class="flex flex-col space-y-2 pt-2">
+      <button (click)="setActiveTab('edit')"
+        class="flex items-center gap-3 px-4 py-2 rounded-md transition-colors w-full text-left"
+        [class.text-blue-600]="activeTab === 'edit'" [class.bg-blue-50]="activeTab === 'edit'"
+        [class.text-gray-600]="activeTab !== 'edit'">
+        <i-lucide [name]="icons.Edit" class="w-4 h-4"></i-lucide>
+        <span>Editar</span>
+      </button>
+
+      <button (click)="setActiveTab('requests')"
+        class="flex items-center gap-3 px-4 py-2 rounded-md transition-colors w-full text-left"
+        [class.text-blue-600]="activeTab === 'requests'" [class.bg-blue-50]="activeTab === 'requests'"
+        [class.text-gray-600]="activeTab !== 'requests'">
+        <i-lucide [name]="icons.ListOrdered" class="w-4 h-4"></i-lucide>
+        <span>Respuestas</span>
+      </button>
+
+      <button (click)="openPublishModal()"
+        class="flex items-center gap-3 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors w-full justify-center">
+        <i-lucide [name]="icons.Send" class="w-4 h-4"></i-lucide>
+        <span>Publicar</span>
+      </button>
+    </div>
+  </div>
+  }
+  <!-- Modal Publicar -->
+  @if (showPublishModal) {
+    <app-modal-publicar (close)="onCloseModal()"></app-modal-publicar>
+  }
+</header>
