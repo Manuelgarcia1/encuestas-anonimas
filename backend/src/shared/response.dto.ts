@@ -8,7 +8,7 @@ export class ApiResponse<T = any> {
       total?: number;
       page?: number;
       limit?: number;
-    }
+    },
   ) {
     if (meta) {
       Object.assign(this, meta);
