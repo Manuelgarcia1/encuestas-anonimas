@@ -19,17 +19,21 @@ export class EncuestasService {
     private creadoresRepository: Repository<Creador>,
   ) {}
 
+  private async findCreador(token_dashboard: string): Promise<Creador> {
+    const creador = await this.creadoresRepository.findOne({
+      where: { token_dashboard },
+    });
+    if (!creador) {
+      throw new NotFoundException('Creador no encontrado.');
+    }
+    return creador;
+  }
+
   // Obtener encuestas por token_dashboard
   async obtenerEncuestasPorTokenCreador(
     token_dashboard: string,
   ): Promise<Encuesta[]> {
-    const creador = await this.creadoresRepository.findOne({
-      where: { token_dashboard },
-    });
-
-    if (!creador) {
-      throw new NotFoundException('Creador no encontrado.');
-    }
+    await this.findCreador(token_dashboard);
 
     return this.encuestasRepository.find({
       where: { creador: { token_dashboard } },
@@ -41,13 +45,8 @@ export class EncuestasService {
     nombre: string,
     token_dashboard: string,
   ): Promise<Encuesta> {
-    const creador = await this.creadoresRepository.findOne({
-      where: { token_dashboard },
-    });
-
-    if (!creador) {
-      throw new NotFoundException('Creador no encontrado.');
-    }
+    
+    const creador = await this.findCreador(token_dashboard);
 
     const encuesta = this.encuestasRepository.create({
       nombre,
