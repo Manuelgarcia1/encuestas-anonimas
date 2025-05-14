@@ -32,6 +32,9 @@ export class Encuesta {
   })
   creador: Creador;
 
-  @OneToMany(() => Pregunta, (pregunta) => pregunta.encuesta)
+  @OneToMany(() => Pregunta, (pregunta) => pregunta.encuesta, {
+    cascade: true,
+    eager: true, // opcional
+  })
   preguntas: Pregunta[];
 }
