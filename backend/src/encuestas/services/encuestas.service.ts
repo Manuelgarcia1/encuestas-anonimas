@@ -21,11 +21,10 @@ export class EncuestasService {
     private creadoresRepository: Repository<Creador>,
   ) {}
 
-  // Obtener encuestas por token_dashboard
-  async obtenerEncuestasPorTokenCreador(
+  // Método reutilizable
+  private async obtenerCreadorPorToken(
     token_dashboard: string,
-    getEncuestaDto: GetEncuestaDto,
-  ): Promise<{ data: Encuesta[]; total: number; page: number; limit: number }> {
+  ): Promise<Creador> {
     const creador = await this.creadoresRepository.findOne({
       where: { token_dashboard },
     });
@@ -33,6 +32,15 @@ export class EncuestasService {
     if (!creador) {
       throw new NotFoundException('Creador no encontrado.');
     }
+
+    return creador;
+  }
+
+  async obtenerEncuestasPorTokenCreador(
+    token_dashboard: string,
+    getEncuestaDto: GetEncuestaDto,
+  ): Promise<{ data: Encuesta[]; total: number; page: number; limit: number }> {
+    const creador = await this.obtenerCreadorPorToken(token_dashboard);
 
     const {
       page = 1,
@@ -42,7 +50,7 @@ export class EncuestasService {
     } = getEncuestaDto;
 
     const [data, total] = await this.encuestasRepository.findAndCount({
-      where: { creador: { token_dashboard } },
+      where: { creador: { token_dashboard: creador.token_dashboard } },
       take: limit,
       skip: (page - 1) * limit,
       order: { [sortBy]: order.toUpperCase() as 'ASC' | 'DESC' },
@@ -51,18 +59,11 @@ export class EncuestasService {
     return { data, total, page, limit };
   }
 
-  // Crear una encuesta
   async crearEncuesta(
     dto: CreateEncuestaDto,
     token_dashboard: string,
   ): Promise<Encuesta> {
-    const creador = await this.creadoresRepository.findOne({
-      where: { token_dashboard },
-    });
-
-    if (!creador) {
-      throw new NotFoundException('Creador no encontrado.');
-    }
+    const creador = await this.obtenerCreadorPorToken(token_dashboard);
 
     const encuesta = this.encuestasRepository.create({
       ...dto,
@@ -71,6 +72,7 @@ export class EncuestasService {
       token_resultados: v4(),
       creador,
     });
+
     return await this.encuestasRepository.save(encuesta);
   }
 }
