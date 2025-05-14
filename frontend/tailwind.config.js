@@ -8,7 +8,7 @@ module.exports = {
       colors: {
         gris: '#EDEDED',
         grisOscuro:'#636363',
-        negro:'3C323E',
+        negro:'#3C323E',
         celeste:'#BDDDF9'
       },
     },

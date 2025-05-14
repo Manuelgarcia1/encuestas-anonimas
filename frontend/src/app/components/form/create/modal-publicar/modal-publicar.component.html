@@ -1,0 +1,44 @@
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+    <!-- Header del modal -->
+    <div class="flex justify-between items-center p-4 border-b">
+      <h3 class="text-lg font-semibold text-gray-800">Compartir encuesta</h3>
+      <button (click)="closeModal()" class="text-gray-500 hover:text-gray-700">
+        <i-lucide [name]="icons.X" class="w-5 h-5"></i-lucide>
+      </button>
+    </div>
+
+    <!-- Contenido del modal -->
+    <div class="p-4">
+      <!-- Link para compartir -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Link para compartir</label>
+        <div class="flex gap-2">
+          <input type="text" readonly [value]="surveyLink" 
+                 class="flex-1 border rounded-md px-3 py-2 text-sm bg-gray-50">
+          <button (click)="copyLink()" 
+                  class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition">
+            Copiar
+          </button>
+        </div>
+      </div>
+
+      <!-- Opciones de compartir -->
+      <div class="flex justify-around">
+        <button (click)="generateQR()" class="flex flex-col items-center text-gray-700 hover:text-blue-600">
+          <div class="bg-gray-100 p-3 rounded-full mb-1">
+            <i-lucide [name]="icons.QrCode" class="w-5 h-5"></i-lucide>
+          </div>
+          <span class="text-xs">Generar QR</span>
+        </button>
+
+        <button (click)="shareByEmail()" class="flex flex-col items-center text-gray-700 hover:text-blue-600">
+          <div class="bg-gray-100 p-3 rounded-full mb-1">
+            <i-lucide [name]="icons.Mail" class="w-5 h-5"></i-lucide>
+          </div>
+          <span class="text-xs">Enviar por email</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
