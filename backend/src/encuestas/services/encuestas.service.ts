@@ -10,6 +10,7 @@ import { v4 } from 'uuid';
 import { EstadoEncuestaEnum } from '../enums/estado-encuestas.enum';
 import { Creador } from '../../creadores/entities/creador.entity';
 import { CreateEncuestaDto } from '../dto/create-encuesta.dto';
+import { GetEncuestaDto } from '../dto/get-encuesta.dto';
 
 @Injectable()
 export class EncuestasService {
@@ -20,36 +21,44 @@ export class EncuestasService {
     private creadoresRepository: Repository<Creador>,
   ) {}
 
-  // Obtener encuestas por token_dashboard
-  async obtenerEncuestasPorTokenCreador(
-    token_dashboard: string,
-  ): Promise<Encuesta[]> {
+  private async findCreador(token_dashboard: string): Promise<Creador> {
     const creador = await this.creadoresRepository.findOne({
       where: { token_dashboard },
     });
-
     if (!creador) {
       throw new NotFoundException('Creador no encontrado.');
     }
-
-    return this.encuestasRepository.find({
-      where: { creador: { id: creador.id } }, // Usamos el ID directamente
-      relations: ['preguntas'], // <- Aquí cargamos las preguntas de cada encuesta
-    });
+    return creador;
   }
 
-  // Crear una encuesta
+  async obtenerEncuestasPorTokenCreador(
+    token_dashboard: string,
+    getEncuestaDto: GetEncuestaDto,
+  ): Promise<{ data: Encuesta[]; total: number; page: number; limit: number }> {
+    const creador = await this.findCreador(token_dashboard);
+
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = 'id',
+      order = 'ASC',
+    } = getEncuestaDto;
+
+    const [data, total] = await this.encuestasRepository.findAndCount({
+      where: { creador: { token_dashboard: creador.token_dashboard } },
+      take: limit,
+      skip: (page - 1) * limit,
+      order: { [sortBy]: order.toUpperCase() as 'ASC' | 'DESC' },
+    });
+
+    return { data, total, page, limit };
+  }
+
   async crearEncuesta(
     dto: CreateEncuestaDto,
     token_dashboard: string,
   ): Promise<Encuesta> {
-    const creador = await this.creadoresRepository.findOne({
-      where: { token_dashboard },
-    });
-
-    if (!creador) {
-      throw new NotFoundException('Creador no encontrado.');
-    }
+    const creador = await this.findCreador(token_dashboard);
 
     const encuesta = this.encuestasRepository.create({
       ...dto,
@@ -58,6 +67,7 @@ export class EncuestasService {
       token_resultados: v4(),
       creador,
     });
+
     return await this.encuestasRepository.save(encuesta);
   }
 }

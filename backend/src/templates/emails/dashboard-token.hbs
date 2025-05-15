@@ -2,36 +2,127 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <style>
-      /* Puedes poner aquí estilos inline muy sencillos */
-      body { font-family: Arial, sans-serif; color: #333; }
-      .button {
-        display: inline-block;
-        padding: 10px 20px;
-        background: #0052cc;
-        color: #fff;
-        text-decoration: none;
-        border-radius: 4px;
-      }
-    </style>
+    <title>Acceso al Dashboard de Encuestas</title>
   </head>
-  <body>
-    <h2>Acceso al Dashboard de Encuestas</h2>
-    <p>Hola,</p>
-    <p>
-      Haz clic en el siguiente botón para acceder a tu dashboard y ver tus encuestas:
-    </p>
-    <p>
-      <a href="{{dashboardUrl}}" class="button">Ver mi Dashboard</a>
-    </p>
-    <p>
-      O copia y pega este enlace en tu navegador:<br/>
-      <code>{{dashboardUrl}}</code>
-    </p>
-    <hr/>
-    <p style="font-size:0.9em;color:#666">
-      Si no solicitaste este correo, puedes ignorarlo.<br/>
-      Este enlace no se podrá recuperar si lo pierdes.
-    </p>
+  <body style="margin:0; padding:0; background-color:#f0f2f5;">
+    <!-- Wrapper general -->
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background-color:#f0f2f5;"
+    >
+      <tr>
+        <td align="center" style="padding:20px;">
+          <!-- Contenedor principal -->
+          <table
+            role="presentation"
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            style="
+              background-color:#ffffff;
+              border-radius:12px;
+              font-family:Arial, sans-serif;
+              overflow:hidden;
+            "
+          >
+            <!-- Header con degradado y radios superiores -->
+            <tr>
+              <td
+                align="center"
+                style="
+                  background: linear-gradient(135deg, #4f46e5, #3b82f6);
+                  padding:24px;
+                  border-top-left-radius:12px;
+                  border-top-right-radius:12px;
+                "
+              >
+                <h2
+                  style="
+                    margin:0;
+                    color:#000000;
+                    font-size:24px;
+                    line-height:1.2;
+                  "
+                >
+                  Acceso al Dashboard de Encuestas
+                </h2>
+              </td>
+            </tr>
+
+            <!-- Cuerpo del mensaje -->
+            <tr>
+              <td
+                style="
+                  padding:24px;
+                  color:#333333;
+                  font-size:16px;
+                  line-height:1.5;
+                "
+              >
+                <p style="margin:0 0 16px 0;">Hola,</p>
+                <p style="margin:0 0 24px 0;">
+                  Haz clic en el siguiente botón para acceder a tu dashboard y ver tus encuestas:
+                </p>
+                <p style="text-align:center; margin:0 0 24px 0;">
+                  <a
+                    href="{{dashboardUrl}}"
+                    style="
+                      display:inline-block;
+                      padding:12px 28px;
+                      background-color:#0052cc;
+                      color:#ffffff !important;
+                      text-decoration:none;
+                      border-radius:4px;
+                      font-size:16px;
+                    "
+                    target="_blank"
+                  >
+                    Ver mi Dashboard
+                  </a>
+                </p>
+                <p style="margin:0 0 8px 0;">
+                  O copia y pega este enlace en tu navegador:
+                </p>
+                <code
+                  style="
+                    display:block;
+                    background-color:#eef2f7;
+                    padding:10px;
+                    border-radius:4px;
+                    word-break:break-all;
+                    font-size:14px;
+                  "
+                >
+                  {{dashboardUrl}}
+                </code>
+              </td>
+            </tr>
+
+            <!-- Footer dentro del contenedor blanco con radios inferiores -->
+            <tr>
+              <td
+                align="center"
+                style="
+                  padding:16px 24px;
+                  background-color:#ffffff;
+                  color:#777777;
+                  font-size:12px;
+                  border-bottom-left-radius:12px;
+                  border-bottom-right-radius:12px;
+                "
+              >
+                Si no solicitaste este correo, puedes ignorarlo.<br />
+                Este enlace no se podrá recuperar si lo pierdes.
+              </td>
+            </tr>
+          </table>
+          <!-- /Contenedor principal -->
+        </td>
+      </tr>
+    </table>
+    <!-- /Wrapper general -->
   </body>
 </html>

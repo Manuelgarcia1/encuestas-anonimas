@@ -1,3 +1,4 @@
+
 import { Component,OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, Home, ChevronRight, Edit, ListOrdered, Send, Pencil, Menu, X } from 'lucide-angular';
@@ -14,6 +15,7 @@ import { Router } from '@angular/router';
   ],
   templateUrl: './header-form.component.html',
 })
+
 export class HeaderFormComponent implements OnInit {
   constructor(private router: Router) { }
 
@@ -44,7 +46,6 @@ export class HeaderFormComponent implements OnInit {
     }
   }
 
-
   toggleEditName() {
     this.isEditingName = !this.isEditingName;
   }
@@ -67,4 +68,5 @@ export class HeaderFormComponent implements OnInit {
   onCloseModal() {
     this.showPublishModal = false;
   }
+
 }
