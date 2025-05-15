@@ -34,9 +34,9 @@
         <span>Editar</span>
       </button>
 
-      <button (click)="setActiveTab('requests')" class="flex items-center gap-2 px-4 py-1 rounded-md transition-colors"
-        [class.text-blue-600]="activeTab === 'requests'" [class.bg-blue-50]="activeTab === 'requests'"
-        [class.text-gray-600]="activeTab !== 'requests'">
+      <button (click)="setActiveTab('results')" class="flex items-center gap-2 px-4 py-1 rounded-md transition-colors"
+        [class.text-blue-600]="activeTab === 'results'" [class.bg-blue-50]="activeTab === 'results'"
+        [class.text-gray-600]="activeTab !== 'results'">
         <i-lucide [name]="icons.ListOrdered" class="w-4 h-4"></i-lucide>
         <span>Respuestas</span>
       </button>
@@ -66,10 +66,10 @@
         <span>Editar</span>
       </button>
 
-      <button (click)="setActiveTab('requests')"
+      <button (click)="setActiveTab('results')"
         class="flex items-center gap-3 px-4 py-2 rounded-md transition-colors w-full text-left"
-        [class.text-blue-600]="activeTab === 'requests'" [class.bg-blue-50]="activeTab === 'requests'"
-        [class.text-gray-600]="activeTab !== 'requests'">
+        [class.text-blue-600]="activeTab === 'results'" [class.bg-blue-50]="activeTab === 'results'"
+        [class.text-gray-600]="activeTab !== 'results'">
         <i-lucide [name]="icons.ListOrdered" class="w-4 h-4"></i-lucide>
         <span>Respuestas</span>
       </button>

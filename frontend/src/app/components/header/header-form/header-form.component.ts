@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component,OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, Home, ChevronRight, Edit, ListOrdered, Send, Pencil, Menu, X } from 'lucide-angular';
 import { ModalPublicarComponent } from '../../form/create/modal-publicar/modal-publicar.component';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-header-form',
@@ -13,27 +14,36 @@ import { ModalPublicarComponent } from '../../form/create/modal-publicar/modal-p
   ],
   templateUrl: './header-form.component.html',
 })
-export class HeaderFormComponent {
-  // Iconos disponibles
+export class HeaderFormComponent implements OnInit {
+  constructor(private router: Router) { }
+
   icons = { Home, ChevronRight, Edit, ListOrdered, Send, Pencil, Menu, X };
-  
-  // Estado activo (edit/requests)
-  activeTab: 'edit' | 'requests' = 'edit';
-  
-  // Nombre del formulario
+  activeTab: 'edit' | 'results' = 'edit';
   formName = 'Mi Formulario';
   isEditingName = false;
-  
-  // Estado del menú móvil
   mobileMenuOpen = false;
-
-  // Estado del modal de publicación
   showPublishModal = false;
 
-  setActiveTab(tab: 'edit' | 'requests') {
+  ngOnInit(): void {
+    const currentUrl = this.router.url;
+    if (currentUrl.includes('/results')) {
+      this.activeTab = 'results';
+    } else if (currentUrl.includes('/create')) {
+      this.activeTab = 'edit';
+    }
+  }
+
+  setActiveTab(tab: 'edit' | 'results') {
     this.activeTab = tab;
     this.mobileMenuOpen = false;
+
+    if (tab === 'results') {
+      this.router.navigate(['/results']);
+    } else if (tab === 'edit') {
+      this.router.navigate(['/create']);
+    }
   }
+
 
   toggleEditName() {
     this.isEditingName = !this.isEditingName;
