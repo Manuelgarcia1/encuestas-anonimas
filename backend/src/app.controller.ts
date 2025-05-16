@@ -1,12 +1,20 @@
+// src/app.controller.ts
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
+import { LocalCacheService } from './cache/local-cache.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly cache: LocalCacheService) {}
 
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  @Get('test-cache-set')
+  testSet() {
+    this.cache.set('foo', 'bar');
+    return { ok: true };
+  }
+
+  @Get('test-cache-get')
+  testGet() {
+    const foo = this.cache.get<string>('foo');
+    return { foo: foo ?? null };
   }
 }

@@ -7,6 +7,7 @@ import {
   Query,
   HttpStatus,
   HttpException,
+  UseInterceptors,
 } from '@nestjs/common';
 import { EncuestasService } from '../services/encuestas.service';
 import { CreateEncuestaDto } from '../dto/create-encuesta.dto';

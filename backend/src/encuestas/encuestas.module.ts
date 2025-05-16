@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Encuesta } from './entities/encuesta.entity';
 import { Pregunta } from './../preguntas/entities/pregunta.entity';
 import { CreadoresModule } from './../creadores/creadores.module';
+import { LocalCacheService } from '../cache/local-cache.service';
 
 @Module({
   imports: [
@@ -13,6 +14,6 @@ import { CreadoresModule } from './../creadores/creadores.module';
     CreadoresModule,
   ],
   controllers: [EncuestasController],
-  providers: [EncuestasService],
+  providers: [EncuestasService, LocalCacheService],
 })
 export class EncuestasModule {}
