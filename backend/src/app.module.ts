@@ -1,21 +1,24 @@
+// src/app.module.ts
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from './config/configuration';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppController } from './app.controller';
 import { EncuestasModule } from './encuestas/encuestas.module';
 import { CreadoresModule } from './creadores/creadores.module';
 import { PreguntasModule } from './preguntas/preguntas.module';
 import { OpcionesModule } from './opciones/opciones.module';
+import { LocalCacheService } from './cache/local-cache.service';
 
 @Module({
   imports: [
-    // 2.1 Carga y valida variables de entorno de forma global
+    // 2.1 Variables de entorno
     ConfigModule.forRoot({
       load: [configuration],
       isGlobal: true,
     }),
 
-    // 2.2 Configura la conexión a PostgreSQL y registra entidades
+    // 2.3 PostgreSQL / TypeORM
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -33,14 +36,13 @@ import { OpcionesModule } from './opciones/opciones.module';
       }),
     }),
 
-    // 2.3 Importa módulo de encuestas (controllers + services + repositorios)
+    // 2.4 Tus módulos de dominio
     EncuestasModule,
-    //2.4 Importa módulo de creadores (controllers + services + repositorios)
     CreadoresModule,
-    //2.5 Importa módulo de preguntas (controllers + services + repositorios)
     PreguntasModule,
-    //2.6 Importa módulo de opciones (controllers + services + repositorios)
     OpcionesModule,
   ],
+  controllers: [AppController],
+  providers: [LocalCacheService],
 })
 export class AppModule {}

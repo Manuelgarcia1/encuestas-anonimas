@@ -7,6 +7,7 @@ import {
   Query,
   HttpStatus,
   HttpException,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiTags,

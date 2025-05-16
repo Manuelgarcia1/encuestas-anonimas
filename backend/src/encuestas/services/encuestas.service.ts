@@ -11,6 +11,7 @@ import { EstadoEncuestaEnum } from '../enums/estado-encuestas.enum';
 import { Creador } from '../../creadores/entities/creador.entity';
 import { CreateEncuestaDto } from '../dto/create-encuesta.dto';
 import { GetEncuestaDto } from '../dto/get-encuesta.dto';
+import { LocalCacheService } from '../../cache/local-cache.service';
 
 @Injectable()
 export class EncuestasService {
@@ -19,6 +20,7 @@ export class EncuestasService {
     private encuestasRepository: Repository<Encuesta>,
     @InjectRepository(Creador)
     private creadoresRepository: Repository<Creador>,
+    private cache: LocalCacheService,
   ) {}
 
   private async findCreador(token_dashboard: string): Promise<Creador> {
@@ -35,8 +37,6 @@ export class EncuestasService {
     token_dashboard: string,
     getEncuestaDto: GetEncuestaDto,
   ): Promise<{ data: Encuesta[]; total: number; page: number; limit: number }> {
-    const creador = await this.findCreador(token_dashboard);
-
     const {
       page = 1,
       limit = 10,
@@ -44,14 +44,34 @@ export class EncuestasService {
       order = 'ASC',
     } = getEncuestaDto;
 
+    const cacheKey = `encuestas:${token_dashboard}:p${page}:l${limit}:s${sortBy}:${order}`;
+
+    // 1️⃣ Intentamos leer de cache
+    const cached = this.cache.get<{
+      data: Encuesta[];
+      total: number;
+      page: number;
+      limit: number;
+    }>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // 2️⃣ Si no hay cache, vamos a BD
+    await this.findCreador(token_dashboard);
     const [data, total] = await this.encuestasRepository.findAndCount({
-      where: { creador: { token_dashboard: creador.token_dashboard } },
+      where: { creador: { token_dashboard } },
       take: limit,
       skip: (page - 1) * limit,
       order: { [sortBy]: order.toUpperCase() as 'ASC' | 'DESC' },
     });
 
-    return { data, total, page, limit };
+    const result = { data, total, page, limit };
+
+    // 3️⃣ Guardamos en cache por 60 segundos
+    this.cache.set(cacheKey, result, 60);
+
+    return result;
   }
 
   async crearEncuesta(
@@ -68,6 +88,16 @@ export class EncuestasService {
       creador,
     });
 
-    return await this.encuestasRepository.save(encuesta);
+    const saved = await this.encuestasRepository.save(encuesta);
+
+    // INVALIDAR CACHE de la lista de encuestas de este creador
+    // Usamos la misma clave que en obtenerEncuestasPorTokenCreador
+    const page1Key = `encuestas:${token_dashboard}:p1:l10:sid:ASC`;
+    this.cache.del(page1Key);
+    // Si tienes más combinaciones de page/limit/sort,
+    // podrías limpiar todas con flush():
+    // this.cache.flush();
+
+    return saved;
   }
 }
