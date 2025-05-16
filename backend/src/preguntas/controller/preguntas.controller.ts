@@ -15,31 +15,31 @@ import { UpdatePreguntaDto } from '../dto/update-pregunta.dto';
 export class PreguntasController {
   constructor(private readonly preguntasService: PreguntasService) {}
 
-  @Post()
-  create(@Body() createPreguntaDto: CreatePreguntaDto) {
-    return this.preguntasService.create(createPreguntaDto);
-  }
+  // @Post()
+  // create(@Body() createPreguntaDto: CreatePreguntaDto) {
+  //   return this.preguntasService.create(createPreguntaDto);
+  // }
 
-  @Get()
-  findAll() {
-    return this.preguntasService.findAll();
-  }
+  // @Get()
+  // findAll() {
+  //   return this.preguntasService.findAll();
+  // }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.preguntasService.findOne(+id);
-  }
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.preguntasService.findOne(+id);
+  // }
 
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updatePreguntaDto: UpdatePreguntaDto,
-  ) {
-    return this.preguntasService.update(+id, updatePreguntaDto);
-  }
+  // @Patch(':id')
+  // update(
+  //   @Param('id') id: string,
+  //   @Body() updatePreguntaDto: UpdatePreguntaDto,
+  // ) {
+  //   return this.preguntasService.update(+id, updatePreguntaDto);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.preguntasService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.preguntasService.remove(+id);
+  // }
 }
