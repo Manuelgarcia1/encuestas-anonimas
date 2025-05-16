@@ -14,7 +14,7 @@ export class ModalPublicarComponent {
   icons = { X, QrCode, Mail };
 
   // Link de la encuesta (ejemplo)
-  surveyLink = 'https://www.gamers.com/add.html';
+  surveyLink = 'http://localhost:4200/response';
 
   // Evento para cerrar el modal
   @Output() close = new EventEmitter<void>();
