@@ -18,7 +18,9 @@ export class CreadoresService {
    * Busca o crea un creador, envía el magic-link y
    * devuelve `true` si se creó uno nuevo, `false` si ya existía.
    */
-  async requestAccess(email: string): Promise<boolean> {
+  async requestAccess(
+    email: string,
+  ): Promise<{ created: boolean; token: string }> {
     let created = false;
     let creador = await this.repo.findOne({ where: { email } });
 
@@ -28,11 +30,11 @@ export class CreadoresService {
       creador = await this.repo.save(creador);
     }
 
-    const baseUrl     = this.config.get<string>('APP_URL');
+    const baseUrl = this.config.get<string>('APP_URL');
     const dashboardUrl = `${baseUrl}/dashboard/${creador.token_dashboard}`;
     await this.emailService.sendDashboardLink(email, dashboardUrl);
 
-    return created;
+    return { created, token: creador.token_dashboard };
   }
 
   async findByToken(token: string): Promise<Creador> {
