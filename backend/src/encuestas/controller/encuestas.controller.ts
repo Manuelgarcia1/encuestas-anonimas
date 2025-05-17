@@ -9,11 +9,19 @@ import {
   HttpException,
   UseInterceptors,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse as SwaggerApiResponse,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { EncuestasService } from '../services/encuestas.service';
 import { CreateEncuestaDto } from '../dto/create-encuesta.dto';
 import { GetEncuestaDto } from '../dto/get-encuesta.dto';
 import { ApiResponse } from '../../shared/response.dto';
 
+ApiTags('Encuestas');
 @Controller('/encuestas')
 export class EncuestasController {
   constructor(private readonly encuestasService: EncuestasService) {}
@@ -22,6 +30,10 @@ export class EncuestasController {
    * Crea una nueva encuesta para un creador identificado por su token.
    */
   @Post(':token_dashboard')
+  @ApiOperation({ summary: 'Crear una nueva encuesta para un creador' })
+  @ApiParam({ name: 'token_dashboard', description: 'Token UUID del creador' })
+  @SwaggerApiResponse({ status: 201, description: 'Encuesta creada con éxito' })
+  @SwaggerApiResponse({ status: 400, description: 'Token inválido' })
   async createEncuesta(
     @Param('token_dashboard') token: string,
     @Body() dto: CreateEncuestaDto,
@@ -45,6 +57,18 @@ export class EncuestasController {
    * Lista las encuestas creadas por un usuario a partir de su token_dashboard.
    */
   @Get(':token_dashboard')
+  @ApiOperation({
+    summary: 'Listar encuestas de un creador por su token_dashboard',
+  })
+  @ApiParam({ name: 'token_dashboard', description: 'Token UUID del creador' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'sortBy', required: false, type: String })
+  @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
+  @SwaggerApiResponse({
+    status: 200,
+    description: 'Encuestas encontradas o lista vacía',
+  })
   async findByCreador(
     @Param('token_dashboard') token: string,
     @Query() getEncuestaDto: GetEncuestaDto,

@@ -7,32 +7,27 @@ import {
   ValidationPipe,
   VersioningType,
 } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
-  // 1️⃣ Creamos la aplicación Nest a partir de nuestro módulo raíz
   const app = await NestFactory.create(AppModule);
 
-  // 2️⃣ Añadimos Helmet para cabeceras HTTP de seguridad
-  //    (protege contra XSS, content sniffing, clickjacking…)
   app.use(helmet());
 
-  // 3️⃣ Obtenemos el servicio de configuración para leer variables de entorno
   const configService = app.get(ConfigService);
+  const port: number = configService.get<number>('PORT') || 3000;
+  const globalPrefix: string = configService.get<string>('PREFIX') || 'api';
 
-  // 4️⃣ Prefijo global de todas las rutas: e.g. /api/encuestas…
-  const globalPrefix: string = configService.get<string>('PREFIX') as string;
+  // ✅ 1. Setear prefijo global
   app.setGlobalPrefix(globalPrefix);
 
-  // 5️⃣ Versionado de la API por URI: /v1/encuestas…
+  // ✅ 2. Habilitar versionado URI
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: '1',
   });
 
-  // 6️⃣ Validación automática de todos los DTOs entrantes
-  //    - whitelist: descarta propiedades no declaradas en el DTO
-  //    - forbidNonWhitelisted: rechaza la petición si aparecen extras
-  //    - Transforma los payloads al tipo de clase del DTO
+  // ✅ 3. Pipes globales
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -41,12 +36,23 @@ async function bootstrap() {
     }),
   );
 
-  // 7️⃣ Serialización de respuestas usando decoradores de clase
-  //    - @Exclude(), @Transform(), etc., via ClassSerializerInterceptor
+  // ✅ 4. Interceptores globales
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
-  // 8️⃣ Arrancamos el servidor en el puerto definido en .env (o 3000 por defecto)
-  const port: number = configService.get<number>('PORT') as number;
+  // ✅ 5. Swagger (después de prefix y versionado)
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('API de Encuestas Anónimas')
+    .setDescription('Documentación generada con Swagger')
+    .setVersion('1.0')
+    .addTag('Encuestas')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+
+  SwaggerModule.setup(`${globalPrefix}/docs`, app, document);
+  // Resultado: http://localhost:3000/api/docs
+
+  // ✅ 6. Levantar servidor
   await app.listen(port);
 }
 bootstrap();

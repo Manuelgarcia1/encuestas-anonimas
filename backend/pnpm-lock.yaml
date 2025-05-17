@@ -65,6 +65,9 @@ importers:
       rxjs:
         specifier: ^7.8.1
         version: 7.8.2
+      swagger-ui-express:
+        specifier: ^5.0.1
+        version: 5.0.1(express@5.1.0)
       typeorm:
         specifier: ^0.3.22
         version: 0.3.22(ioredis@5.6.1)(pg@8.14.1)(redis@4.7.1)(reflect-metadata@0.2.2)(ts-node@10.9.2(@swc/core@1.11.20)(@types/node@22.14.0)(typescript@5.8.3))
@@ -4779,6 +4782,12 @@ packages:
 
   swagger-ui-dist@5.20.8:
     resolution: {integrity: sha512-VXVhdRh5vuKVpkegw0n0wCXuFFG+pxNmXa0vDcf76r1yP2cYKqcpOE5g8l5crbtLGx+j2EiDnG4/EU5T0jyN1w==}
+
+  swagger-ui-express@5.0.1:
+    resolution: {integrity: sha512-SrNU3RiBGTLLmFU8GIJdOdanJTl4TOmT27tt3bWWHppqYmAZ6IDuEuBvMU6nZq0zLEe6b/1rACXCgLZqO6ZfrA==}
+    engines: {node: '>= v0.10.32'}
+    peerDependencies:
+      express: '>=4.0.0 || >=5.0.0-beta'
 
   symbol-observable@4.0.0:
     resolution: {integrity: sha512-b19dMThMV4HVFynSAM1++gBHAbk2Tc/osgLIBZMKsyqh34jb2e8Os7T6ZW/Bt3pJFdBTd2JwAnAAEQV7rSNvcQ==}
@@ -10944,6 +10953,11 @@ snapshots:
   swagger-ui-dist@5.20.8:
     dependencies:
       '@scarf/scarf': 1.4.0
+
+  swagger-ui-express@5.0.1(express@5.1.0):
+    dependencies:
+      express: 5.1.0
+      swagger-ui-dist: 5.20.8
 
   symbol-observable@4.0.0: {}
 
