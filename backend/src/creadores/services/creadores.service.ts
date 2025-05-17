@@ -16,7 +16,7 @@ export class CreadoresService {
 
   /**
    * Busca o crea un creador, envía el magic-link y
-   * devuelve `true` si se creó uno nuevo, `false` si ya existía.
+   * devuelve { created, token }.
    */
   async requestAccess(
     email: string,
@@ -30,9 +30,12 @@ export class CreadoresService {
       creador = await this.repo.save(creador);
     }
 
-    const baseUrl = this.config.get<string>('APP_URL');
-    const dashboardUrl = `${baseUrl}/dashboard/${creador.token_dashboard}`;
-    await this.emailService.sendDashboardLink(email, dashboardUrl);
+    // Preparamos el enlace apuntando al FRONTEND:
+    const frontendUrl = this.config.get<string>('APP_URL');
+    const dashboardLink = `${frontendUrl}/dashboard?token=${creador.token_dashboard}`;
+
+    // Enviamos siempre el link por e-mail:
+    await this.emailService.sendDashboardLink(email, dashboardLink);
 
     return { created, token: creador.token_dashboard };
   }
