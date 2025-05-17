@@ -1,10 +1,10 @@
 <header class="bg-white px-6 py-4">
   <nav class="flex items-center gap-2 text-sm text-gray-600">
-    <!-- Breadcrumb -->
     <i-lucide [name]="icons.Home" class="w-4 h-4"></i-lucide>
     <span class="text-blue-500 pl-1">Dashboard</span>
-
     <i-lucide [name]="icons.ChevronRight" class="w-4 h-4"></i-lucide>
-    <span class="text-gray-500 font-mono">{{ userCode }}</span>
+    <span class="text-gray-500 font-mono">
+      {{ email || 'Usuario' }}
+    </span>
   </nav>
 </header>

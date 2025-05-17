@@ -1,5 +1,5 @@
 <!-- HEADER FIXED -->
-<app-header-dashboard class="fixed top-0 left-0 right-0 z-40"></app-header-dashboard>
+<app-header-dashboard [email]="userEmail" class="fixed top-0 left-0 right-0 z-40"></app-header-dashboard>
 
 <!-- CONTENEDOR PRINCIPAL CON PADDING PARA ELEMENTOS FIXED -->
 <div class="pt-16 sm:pt-0 pb-4 min-h-screen bg-gray-50 flex flex-col sm:flex-row">
@@ -71,7 +71,7 @@
                 </div>
                 <div class="flex items-center gap-2 text-sm text-gray-600">
                     <i-lucide [name]="icons.FileText" class="w-4 h-4"></i-lucide>
-                    <span>{{ form.response }} respuestas</span>
+                    <span>- respuestas</span>
                 </div>
                 <span [class]="getStatusClasses(form.status)">
                     {{ form.status }}
@@ -135,7 +135,7 @@
                     @for (form of forms; track form.id) {
                     <tr class="hover:bg-gray-50 relative">
                         <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ form.name }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-500">{{ form.response }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">-</td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ form.creationDate }}</td>
                         <td class="px-6 py-4">
                             <span [class]="getStatusClasses(form.status)">
