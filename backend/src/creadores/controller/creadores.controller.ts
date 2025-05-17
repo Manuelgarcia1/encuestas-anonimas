@@ -1,20 +1,9 @@
 // src/creadores/creadores.controller.ts
-import {
-  Controller,
-  Post,
-  Body,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { CreadoresService } from '../services/creadores.service';
 import { CreateCreadorDto } from '../dto/create-creador.dto';
 import { ApiResponse as CustomApiResponse } from '../../shared/response.dto';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBody,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('Creadores')
 @Controller('creadores')
@@ -28,7 +17,8 @@ export class CreadoresController {
   @Post()
   @ApiOperation({
     summary: 'Solicitar acceso mediante email',
-    description: 'Envía un enlace de acceso al dashboard por email. No revela si el correo ya existe.',
+    description:
+      'Envía un enlace de acceso al dashboard por email. No revela si el correo ya existe.',
   })
   @ApiBody({ type: CreateCreadorDto })
   @ApiResponse({
@@ -37,19 +27,23 @@ export class CreadoresController {
     schema: {
       example: {
         status: 'success',
-        message: 'Usuario registrado exitosamente. Se ha enviado tu enlace al dashboard.',
+        message:
+          'Usuario registrado exitosamente. Se ha enviado tu enlace al dashboard.',
         statusCode: 200,
         data: {
-          message: 'Usuario registrado exitosamente. Se ha enviado tu enlace al dashboard.',
+          message:
+            'Usuario registrado exitosamente. Se ha enviado tu enlace al dashboard.',
         },
       },
     },
   })
   async requestAccess(
     @Body() dto: CreateCreadorDto,
-  ): Promise<CustomApiResponse<{ message: string }>> {
+  ): Promise<CustomApiResponse<{ message: string; token: string }>> {
     // 1️⃣ Llamamos al Service, que nos dice si creó un nuevo Creador
-    const created = await this.creadoresService.requestAccess(dto.email);
+    const { created, token } = await this.creadoresService.requestAccess(
+      dto.email,
+    );
 
     // 2️⃣ Definimos mensajes distintos según el caso
     const text = created
@@ -57,11 +51,11 @@ export class CreadoresController {
       : 'Ya estabas registrado. Te hemos reenviado el enlace de acceso al dashboard.';
 
     // 3️⃣ Devolvemos ApiResponse con el mensaje adecuado
-    return new CustomApiResponse<{ message: string }>(
-      'success',       // status lógico
-      text,            // mensaje principal
-      HttpStatus.OK,   // código HTTP interno
-      { message: text } // payload data
+    return new CustomApiResponse<{ message: string; token: string }>(
+      'success', // status lógico
+      text, // mensaje principal
+      HttpStatus.OK, // código HTTP interno
+      { message: text, token }, // payload data
     );
   }
 }
