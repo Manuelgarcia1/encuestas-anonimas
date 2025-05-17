@@ -10,21 +10,21 @@
   </header>
 
   <!-- Main Content -->
-  <main class="flex-1 pt-8 max-w-3xl mx-auto w-full">
+  <main class="flex-1 pt-8 max-w-3xl mx-auto w-full px-4">
     @if (!isSubmitted) {
-    <div class="bg-white rounded-lg p-6">
+    <div class="bg-white rounded-lg p-6 shadow-sm">
       <!-- Question -->
       <div class="mb-6">
         <h2 class="text-lg font-medium text-negro mb-4">{{ currentQuestion.text }}</h2>
 
         <!-- Simple Choice -->
         @if (currentQuestion.type === 'simple') {
-        <div class="space-y-3">
+        <div class="space-y-2">
           @for (option of currentQuestion.options; track $index) {
-          <label class="flex items-center space-x-3 cursor-pointer">
+          <label class="flex items-center p-3 rounded-md border border-gray-200 hover:border-blue-300 cursor-pointer">
             <input type="radio" [(ngModel)]="currentQuestion.answer" [value]="option"
               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
-            <span class="text-gray-700">{{ option }}</span>
+            <span class="text-gray-700 ml-3">{{ option }}</span>
           </label>
           }
         </div>
@@ -32,12 +32,12 @@
 
         <!-- Multiple Choice -->
         @if (currentQuestion.type === 'multiple') {
-        <div class="space-y-3">
+        <div class="space-y-2">
           @for (option of currentQuestion.options; track $index) {
-          <label *ngIf="currentQuestion.answers" class="flex items-center space-x-3 cursor-pointer">
+          <label *ngIf="currentQuestion.answers" class="flex items-center p-3 rounded-md border border-gray-200 hover:border-blue-300 cursor-pointer">
             <input type="checkbox" [(ngModel)]="currentQuestion.answers[$index]"
               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
-            <span class="text-gray-700">{{ option }}</span>
+            <span class="text-gray-700 ml-3">{{ option }}</span>
           </label>
           }
         </div>
@@ -50,35 +50,32 @@
           rows="4" placeholder="Escribe tu respuesta aquí..."></textarea>
         }
       </div>
+    </div>
 
-      <!-- Navigation Buttons -->
-      <div class="flex justify-between items-center pt-4 border-t border-gray-200">
-        <button (click)="prevQuestion()" [disabled]="isFirstQuestion"
-          class="flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
-          <i-lucide [name]="icons.ChevronUp" class="w-5 h-5 mr-2"></i-lucide>
-          Anterior
-        </button>
+    <!-- Navigation Buttons (outside question container) -->
+    <div class="flex justify-between mt-6 mb-8">
+      <button (click)="prevQuestion()" [disabled]="isFirstQuestion"
+        class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+        Anterior
+      </button>
 
-        @if (!isLastQuestion) {
-        <button (click)="nextQuestion()"
-          class="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-          Siguiente
-          <i-lucide [name]="icons.ChevronDown" class="w-5 h-5 ml-2"></i-lucide>
-        </button>
-        }
+      @if (!isLastQuestion) {
+      <button (click)="nextQuestion()"
+        class="px-6 py-2 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        Siguiente
+      </button>
+      }
 
-        @if (isLastQuestion) {
-        <button (click)="submitForm()"
-          class="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-          Enviar
-          <i-lucide [name]="icons.Send" class="w-5 h-5 ml-2"></i-lucide>
-        </button>
-        }
-      </div>
+      @if (isLastQuestion) {
+      <button (click)="submitForm()"
+        class="px-6 py-2 border border-transparent rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+        Enviar
+      </button>
+      }
     </div>
     } @else {
-    <!-- Thank You Message -->
-    <div class="bg-white rounded-lg shadow-md p-6 text-center">
+    <!-- Thank You Message (without header) -->
+    <div class="flex flex-col items-center justify-center h-full text-center py-12">
       <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
         <i-lucide [name]="icons.Check" class="h-6 w-6 text-green-600"></i-lucide>
       </div>
