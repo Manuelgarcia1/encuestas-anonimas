@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EncuestasService } from '../../services/encuestas.service';
-import { LucideAngularModule, Plus, Filter, Search, Calendar, FileText, MoreVertical, Edit, Trash2, Copy, Pencil } from 'lucide-angular';
+import { LucideAngularModule, Plus, Filter, Search, Calendar, FileText, MoreVertical, Edit, Trash2, Copy, Pencil, ChevronDown, Check} from 'lucide-angular';
 import { HeaderDashboardComponent } from '../header/header-dashboard/header-dashboard.component';
 
 @Component({
@@ -18,7 +18,7 @@ export class DashboardComponent {
     { id: 2, name: 'Número de Respuestas', checked: false },
     { id: 3, name: 'Orden Alfabético', checked: false }
   ];
-  icons = { Plus, Filter, Search, Calendar, FileText, MoreVertical, Edit, Trash2, Copy, Pencil };
+  icons = { Plus, Filter, Search, Calendar, FileText, MoreVertical, Edit, Trash2, Copy, Pencil, ChevronDown,Check};
   menuOpenId: string | null = null;
 
   constructor(
@@ -65,19 +65,19 @@ export class DashboardComponent {
   }
 
   getStatusClasses(status: string) {
-  const baseClasses = 'px-2 py-1 rounded text-xs';
-  switch (status) {
-    case 'borrador':
-      return `${baseClasses} bg-yellow-100 text-yellow-800`;
-    case 'publicada':
-    case 'activo':
-      return `${baseClasses} bg-green-100 text-green-800`;
-    case 'cerrada':
-    case 'cerrado':
-      return `${baseClasses} bg-red-100 text-red-800`;
-    default:
-      return `${baseClasses} bg-gray-100 text-gray-800`;
-  }
+    const baseClasses = 'px-2 py-1 rounded text-xs';
+    switch (status) {
+      case 'borrador':
+        return `${baseClasses} bg-yellow-100 text-yellow-800`;
+      case 'publicada':
+      case 'activo':
+        return `${baseClasses} bg-green-100 text-green-800`;
+      case 'cerrada':
+      case 'cerrado':
+        return `${baseClasses} bg-red-100 text-red-800`;
+      default:
+        return `${baseClasses} bg-gray-100 text-gray-800`;
+    }
   }
 
   toggleMenu(form: any) {
