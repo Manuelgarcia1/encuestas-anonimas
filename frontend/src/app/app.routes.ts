@@ -4,14 +4,13 @@ import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { CreateComponent } from './components/form/create/create.component';
 import { ResultsComponent } from './components/form/results/results.component';
 
-
 export const routes: Routes = [
-    {
-        path: '',
-        component: WelcomeComponent
-    },
-    { path: 'dashboard', component: DashboardComponent },
+  {
+    path: '',
+    component: WelcomeComponent,
+  },
+  { path: 'dashboard', component: DashboardComponent },
 
-    { path: 'create', component: CreateComponent },
-    {path:'results',component:ResultsComponent}
+  { path: 'create', component: CreateComponent },
+  { path: 'results', component: ResultsComponent },
 ];

@@ -1,7 +1,19 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EncuestasService } from '../../services/encuestas.service';
-import { LucideAngularModule, Plus, Filter, Search, Calendar, FileText, MoreVertical, Edit, Trash2, Copy, Pencil } from 'lucide-angular';
+import {
+  LucideAngularModule,
+  Plus,
+  Filter,
+  Search,
+  Calendar,
+  FileText,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Copy,
+  Pencil,
+} from 'lucide-angular';
 import { HeaderDashboardComponent } from '../header/header-dashboard/header-dashboard.component';
 
 @Component({
@@ -16,9 +28,20 @@ export class DashboardComponent {
   filters = [
     { id: 1, name: 'Fecha de creación', checked: false },
     { id: 2, name: 'Número de Respuestas', checked: false },
-    { id: 3, name: 'Orden Alfabético', checked: false }
+    { id: 3, name: 'Orden Alfabético', checked: false },
   ];
-  icons = { Plus, Filter, Search, Calendar, FileText, MoreVertical, Edit, Trash2, Copy, Pencil };
+  icons = {
+    Plus,
+    Filter,
+    Search,
+    Calendar,
+    FileText,
+    MoreVertical,
+    Edit,
+    Trash2,
+    Copy,
+    Pencil,
+  };
   menuOpenId: string | null = null;
 
   constructor(
@@ -26,7 +49,7 @@ export class DashboardComponent {
     private router: Router,
     private encuestasService: EncuestasService
   ) {
-    this.route.queryParamMap.subscribe(params => {
+    this.route.queryParamMap.subscribe((params) => {
       const token = params.get('token');
       if (token) {
         this.encuestasService.getEncuestasPorToken(token).subscribe({
@@ -49,12 +72,12 @@ export class DashboardComponent {
               creationDate: encuesta.createdAt || '',
               // response: encuesta.respuestas?.length ?? 0,
               status: encuesta.tipo?.toLowerCase() || 'borrador',
-              ...encuesta
+              ...encuesta,
             }));
           },
           error: (err) => {
             console.error('Error al obtener encuestas:', err);
-          }
+          },
         });
       }
     });
@@ -65,19 +88,19 @@ export class DashboardComponent {
   }
 
   getStatusClasses(status: string) {
-  const baseClasses = 'px-2 py-1 rounded text-xs';
-  switch (status) {
-    case 'borrador':
-      return `${baseClasses} bg-yellow-100 text-yellow-800`;
-    case 'publicada':
-    case 'activo':
-      return `${baseClasses} bg-green-100 text-green-800`;
-    case 'cerrada':
-    case 'cerrado':
-      return `${baseClasses} bg-red-100 text-red-800`;
-    default:
-      return `${baseClasses} bg-gray-100 text-gray-800`;
-  }
+    const baseClasses = 'px-2 py-1 rounded text-xs';
+    switch (status) {
+      case 'borrador':
+        return `${baseClasses} bg-yellow-100 text-yellow-800`;
+      case 'publicada':
+      case 'activo':
+        return `${baseClasses} bg-green-100 text-green-800`;
+      case 'cerrada':
+      case 'cerrado':
+        return `${baseClasses} bg-red-100 text-red-800`;
+      default:
+        return `${baseClasses} bg-gray-100 text-gray-800`;
+    }
   }
 
   toggleMenu(form: any) {
