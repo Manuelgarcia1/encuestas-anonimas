@@ -13,6 +13,8 @@ import {
   Trash2,
   Copy,
   Pencil,
+  ChevronDown,
+  Check,
 } from 'lucide-angular';
 import { HeaderDashboardComponent } from '../header/header-dashboard/header-dashboard.component';
 
@@ -41,6 +43,8 @@ export class DashboardComponent {
     Trash2,
     Copy,
     Pencil,
+    ChevronDown,
+    Check,
   };
   menuOpenId: string | null = null;
 

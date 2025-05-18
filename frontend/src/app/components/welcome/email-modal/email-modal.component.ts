@@ -20,37 +20,60 @@ export class EmailModalComponent {
 
   constructor(private router: Router, private creadoresService: CreadoresService) {}
 
+  private isEmailValid(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
   onSubmit() {
-  if (this.email && this.email.includes('@')) {
+    if (!this.isEmailValid(this.email)) {
+      this.showToast('Email inválido. Intenta con otro.', true);
+      return;
+    }
+
     this.loading = true;
     this.error = null;
+
     this.creadoresService.requestAccess(this.email).subscribe({
       next: (response) => {
         this.loading = false;
-        // usa el mensaje principal del backend
-        const message = response?.message || response?.data?.message || 'Operación realizada con éxito.';
-        alert(message);
         const token = response?.data?.token;
+        const message = response?.message || 'Operación realizada con éxito.';
+
+        this.showToast(message, false);
+
         if (token) {
-          this.router.navigate(['/dashboard'], { queryParams: { token } });
+          setTimeout(() => {
+            this.router.navigate(['/dashboard'], { queryParams: { token } });
+          }, 1200);
         } else {
-          // si no hay token, cierra el modal y recarga la página
           this.onClose();
-          window.location.reload();
         }
       },
-      error: (err: unknown) => {
+      error: (err) => {
         this.loading = false;
-        this.error = 'Error al enviar el email. Intenta de nuevo.';
+        this.showToast('Error al enviar el email. Intenta nuevamente.', true);
         console.error('Error en la petición:', err);
       }
     });
-  } else {
-    console.warn('Email inválido:', this.email);
   }
-}
 
   onClose() {
     this.closeModal.emit();
+  }
+
+  private showToast(message: string, isError: boolean = false) {
+    const toast = document.createElement('div');
+    toast.className = `
+      toast
+      ${isError ? 'bg-red-500' : 'bg-green-500'}
+      text-white px-4 py-2 rounded shadow fixed bottom-4 right-4 z-[1000] animate-fade-in
+    `;
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
   }
 }
