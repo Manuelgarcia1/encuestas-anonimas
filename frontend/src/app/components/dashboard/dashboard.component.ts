@@ -93,4 +93,8 @@ export class DashboardComponent {
     navigator.clipboard.writeText(url);
     alert('¡Enlace copiado!');
   }
+
+  goToCreate(formId: string) {
+  this.router.navigate(['/create', formId]);
+}
 }

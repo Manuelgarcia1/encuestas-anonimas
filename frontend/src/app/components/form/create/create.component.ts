@@ -10,6 +10,7 @@ import { HeaderFormComponent } from '../../header/header-form/header-form.compon
 import { ModalCreateComponent } from './modal-create/modal-create.component';
 import { CommonModule } from '@angular/common';
 import { TruncatePipe } from './truncate.pipe';
+import { ActivatedRoute } from '@angular/router';
 
 // Definimos una interfaz para el tipo de pregunta
 interface Question {
@@ -204,4 +205,13 @@ export class CreateComponent {
       this.activeQuestion.required = !this.activeQuestion.required;
     }
   }
+
+  constructor(private route: ActivatedRoute) {}
+  
+  ngOnInit() {
+  const encuestaId = this.route.snapshot.paramMap.get('id');
+  if (encuestaId) {
+    // Llama a tu servicio para traer la encuesta por id
+  }
+}
 }
