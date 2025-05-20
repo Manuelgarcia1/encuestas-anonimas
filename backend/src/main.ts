@@ -25,7 +25,7 @@ import {
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 // Cookie-parser: parsea cookies de las peticiones y las deja en req.cookies
-import * as cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   // Creamos la app NestJS a partir de AppModule
