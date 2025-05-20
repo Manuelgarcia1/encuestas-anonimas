@@ -7,6 +7,7 @@ import {
   Query,
   HttpStatus,
   HttpException,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import {
@@ -16,6 +17,7 @@ import {
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
+import { TokenCookieGuard } from '../../auth/token-cookie.guard';
 import { EncuestasService } from '../services/encuestas.service';
 import { CreateEncuestaDto } from '../dto/create-encuesta.dto';
 import { GetEncuestaDto } from '../dto/get-encuesta.dto';
@@ -30,7 +32,8 @@ export class EncuestasController {
    * Crea una nueva encuesta para un creador identificado por su token.
    */
   @Post(':token_dashboard')
-  @ApiOperation({ summary: 'Crear una nueva encuesta para un creador' })
+  @UseGuards(TokenCookieGuard)
+  @ApiOperation({ summary: 'Crear encuesta (requiere cookie)' })
   @ApiParam({ name: 'token_dashboard', description: 'Token UUID del creador' })
   @SwaggerApiResponse({ status: 201, description: 'Encuesta creada con éxito' })
   @SwaggerApiResponse({ status: 400, description: 'Token inválido' })

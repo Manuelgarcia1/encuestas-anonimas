@@ -1,8 +1,24 @@
 // src/creadores/creadores.controller.ts
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Param,
+  Body,
+  Res,
+  HttpStatus,
+  HttpCode,
+} from '@nestjs/common';
+import { Response } from 'express';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBody,
+  ApiResponse as SwaggerApiResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 import { CreadoresService } from '../services/creadores.service';
 import { CreateCreadorDto } from '../dto/create-creador.dto';
-import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { ApiResponse as CustomApiResponse } from '../../shared/response.dto';
 
 @ApiTags('Creadores')
@@ -10,26 +26,20 @@ import { ApiResponse as CustomApiResponse } from '../../shared/response.dto';
 export class CreadoresController {
   constructor(private readonly creadoresService: CreadoresService) {}
 
+  // ────────────────────────────────────────────────────────────────
+  // 1️⃣ POST /creadores → envía el magic link por email
+  // ────────────────────────────────────────────────────────────────
   @Post()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Solicitar acceso mediante email',
+    summary: 'Solicitar enlace de acceso al dashboard',
     description:
-      'Envía un enlace de acceso al dashboard por email. Solo al crear retorna token para redirigir.',
+      'Envía un email con el magic link; si es la primera vez, retorna el token en la respuesta.',
   })
   @ApiBody({ type: CreateCreadorDto })
-  @ApiResponse({
+  @SwaggerApiResponse({
     status: 200,
-    description:
-      'Si user nuevo → retorna { token } en data. Si ya existía → data vacía.',
-    schema: {
-      example: {
-        status: 'success',
-        message: 'Usuario creado. Te redirijo al dashboard…',
-        statusCode: 200,
-        data: { token: 'eyJhbGciOi…' }, // solo con created === true
-      },
-    },
+    description: 'Si user nuevo → data: { token }. Si ya existía → data vacía.',
   })
   async requestAccess(
     @Body() dto: CreateCreadorDto,
@@ -37,14 +47,43 @@ export class CreadoresController {
     const { created, token } = await this.creadoresService.requestAccess(
       dto.email,
     );
-
     const message = created
-      ? 'Usuario registrado. Te redirijo al dashboard…'
-      : 'Ya te encuentras registrado. Revisa tu correo para acceder al dashboard.';
-
-    // Si es nuevo, incluyo token en data; si no, data queda undefined
+      ? 'Usuario registrado. Revisa tu email para acceder al dashboard…'
+      : 'Ya registrado. Revisa tu email para acceder al dashboard.';
     const data = created ? { token } : undefined;
-
     return new CustomApiResponse('success', message, HttpStatus.OK, data);
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // 2️⃣ GET /creadores/ingresar/:token → setea session-cookie y redirige
+  // ────────────────────────────────────────────────────────────────
+  @Get('ingresar/:token')
+  @ApiOperation({ summary: 'Setea cookie y redirige al frontend' })
+  @ApiParam({ name: 'token', description: 'UUID del creador' })
+  async ingresarConToken(@Param('token') token: string, @Res() res: Response) {
+    const isValid = await this.creadoresService.findByToken(token);
+    if (!isValid) {
+      return res.status(HttpStatus.BAD_REQUEST).send('Token inválido');
+    }
+
+    // — session cookie: dura hasta que el navegador cierra —
+    res.cookie('token_dashboard', token, {
+      httpOnly: true,
+      secure: false, // en prod con HTTPS = true
+      sameSite: 'lax',
+      path: '/', // disponible en toda la API
+      // NO maxAge ni expires → session cookie
+    });
+
+    return res.redirect('http://localhost:4200/dashboard');
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // 3️⃣ (Opcional) GET /creadores/logout → limpia la cookie
+  // ────────────────────────────────────────────────────────────────
+  @Get('logout')
+  async logout(@Res() res: Response) {
+    res.clearCookie('token_dashboard', { path: '/' });
+    return res.redirect('http://localhost:4200/');
   }
 }

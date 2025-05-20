@@ -6,6 +6,7 @@ import { ResultsComponent } from './components/form/results/results.component';
 import { ResponseComponent } from './components/response/response.component';
 
 export const routes: Routes = [
+<<<<<<< HEAD
   {
     path: '',
     component: WelcomeComponent,
@@ -14,4 +15,14 @@ export const routes: Routes = [
   { path: 'create', component: CreateComponent },
   { path: 'results', component: ResultsComponent },
   { path: 'response', component: ResponseComponent },
+=======
+    {
+        path: '',
+        component: WelcomeComponent
+    },
+    { path: 'dashboard', component: DashboardComponent },
+    { path: 'create/:id', component: CreateComponent },
+    { path: 'results', component: ResultsComponent },
+    {path:'response',component:ResponseComponent}
+>>>>>>> a5e486e9a6f6f4df65709a4091b453677e3d4994
 ];
