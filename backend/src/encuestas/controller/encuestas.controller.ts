@@ -111,7 +111,8 @@ export class EncuestasController {
   //Dado el token v4 (enlace de participacion) devuelve nombre + preguntas + opciones
   @Get('/participacion/:token_respuesta')
   @ApiOperation({ summary: 'Obtener encuesta por token_respuesta (UUID v4)' })
-  @ApiParam({ name: 'token', description: 'Token de respuesta (UUID v4)' })
+  @ApiParam({ name: 'token_respuesta', description: 'Token de respuesta (UUID v4)' })
+  // @ApiParam({ name: 'token', description: 'Token de respuesta (UUID v4)' })
   async getEncuestaParaResponder(
     @Param('token_respuesta', new ParseUUIDPipe({ version: '4' }))
     tokenrespuesta: string,
