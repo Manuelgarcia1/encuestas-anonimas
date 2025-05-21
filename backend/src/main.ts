@@ -24,15 +24,9 @@ import {
 // Swagger: para generar documentación automática
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
-// Cookie-parser: parsea cookies de las peticiones y las deja en req.cookies
-import cookieParser from 'cookie-parser';
-
 async function bootstrap() {
   // Creamos la app NestJS a partir de AppModule
   const app = await NestFactory.create(AppModule);
-
-  // ① Middleware: parseo de cookies  ⇒ req.cookies estará disponible
-  app.use(cookieParser());
 
   // ② Middleware: helmet ⇒ establece headers de seguridad comunes
   app.use(helmet());

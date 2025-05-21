@@ -40,12 +40,6 @@ export class CreadoresService {
     return { created, token: creador.token_dashboard };
   }
 
-  async tokenExists(token: string): Promise<boolean> {
-    // .count() devuelve 0 o más; es eficiente y no lanza
-    const count = await this.repo.count({ where: { token_dashboard: token } });
-    return count > 0;
-  }
-
   async findByToken(token: string): Promise<Creador> {
     return this.repo.findOneOrFail({ where: { token_dashboard: token } });
   }
