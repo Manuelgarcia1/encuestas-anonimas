@@ -100,4 +100,38 @@ export class EncuestasService {
 
     return saved;
   }
+
+  async obtenerTokenRespuesta(
+    tokenDashboard: string,
+    idEncuesta: number,
+  ): Promise<string> {
+    const encuesta = await this.encuestasRepository.findOne({
+      where: {
+        id: idEncuesta,
+        creador: { token_dashboard: tokenDashboard },
+      },
+      relations: ['creador'],
+    });
+    if (!encuesta) {
+      throw new NotFoundException(
+        `Encuesta ${idEncuesta} no encontrada o no pertenece al creador.`,
+      );
+    }
+    return encuesta.token_respuesta;
+  }
+
+  /**
+   * Busca la encuesta por token_respuesta e incluye preguntas y sus opciones.
+   * Lanza 404 si no existe.
+   */
+  async findEncuestaByToken(token: string): Promise<Encuesta> {
+    const encuesta = await this.encuestasRepository.findOne({
+      where: { token_respuesta: token },
+      relations: ['preguntas', 'preguntas.opciones'],
+    });
+    if (!encuesta) {
+      throw new NotFoundException('Token de respuesta inválido.');
+    }
+    return encuesta;
+  }
 }

@@ -6,8 +6,8 @@ import {
   Param,
   Query,
   HttpStatus,
-  HttpException,
-  UseInterceptors,
+  ParseUUIDPipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -21,98 +21,117 @@ import { CreateEncuestaDto } from '../dto/create-encuesta.dto';
 import { GetEncuestaDto } from '../dto/get-encuesta.dto';
 import { ApiResponse } from '../../shared/response.dto';
 
-ApiTags('Encuestas');
-@Controller('/encuestas')
+@ApiTags('Encuestas')
+@Controller('encuestas')
 export class EncuestasController {
   constructor(private readonly encuestasService: EncuestasService) {}
 
-  /**
-   * Crea una nueva encuesta para un creador identificado por su token.
-   */
-  @Post(':token_dashboard')
+  // Crea una encuesta para el creador identificado
+  @Post('creador/:token_dashboard')
   @ApiOperation({ summary: 'Crear una nueva encuesta para un creador' })
-  @ApiParam({ name: 'token_dashboard', description: 'Token UUID del creador' })
-  @SwaggerApiResponse({ status: 201, description: 'Encuesta creada con éxito' })
-  @SwaggerApiResponse({ status: 400, description: 'Token inválido' })
+  @ApiParam({ name: 'token_dashboard', description: 'UUID del creador' })
+  @SwaggerApiResponse({
+    status: 201,
+    description: 'Encuesta creada con éxito.',
+  }) // <-- aquí
   async createEncuesta(
-    @Param('token_dashboard') token: string,
+    @Param('token_dashboard', new ParseUUIDPipe()) token: string,
     @Body() dto: CreateEncuestaDto,
   ): Promise<ApiResponse> {
-    // 1️⃣ Validamos que el token tenga formato UUID
-    this.validateToken(token);
-
-    // 2️⃣ Llamamos al Service para crear la encuesta
     const encuesta = await this.encuestasService.crearEncuesta(dto, token);
-
-    // 3️⃣ Devolvemos ApiResponse con mensaje y datos de la encuesta
     return new ApiResponse(
-      'success', // estado lógico
-      'Encuesta creada con éxito.', // mensaje para el cliente
-      HttpStatus.CREATED, // código HTTP
-      encuesta, // payload con la encuesta creada
+      'success',
+      'Encuesta creada.',
+      HttpStatus.CREATED,
+      encuesta,
     );
   }
-
-  /**
-   * Lista las encuestas creadas por un usuario a partir de su token_dashboard.
-   */
-  @Get(':token_dashboard')
-  @ApiOperation({
-    summary: 'Listar encuestas de un creador por su token_dashboard',
-  })
-  @ApiParam({ name: 'token_dashboard', description: 'Token UUID del creador' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'sortBy', required: false, type: String })
-  @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
+  // Devuelve todas las encuestas de ese creador
+  @Get('creador/:token_dashboard')
+  @ApiOperation({ summary: 'Listar encuestas de un creador' })
   @SwaggerApiResponse({
     status: 200,
-    description: 'Encuestas encontradas o lista vacía',
-  })
+    description: 'Encuestas obtenidas correctamente.',
+  }) // <-- y aquí
   async findByCreador(
-    @Param('token_dashboard') token: string,
-    @Query() getEncuestaDto: GetEncuestaDto,
+    @Param('token_dashboard', new ParseUUIDPipe()) token: string,
+    @Query() query: GetEncuestaDto,
   ): Promise<ApiResponse> {
-    // 1️⃣ Validamos que el token tenga formato UUID
-    this.validateToken(token);
-
-    // 2️⃣ Llamamos al Service que devuelve las encuestas + info de paginación
     const { data, total, page, limit } =
-      await this.encuestasService.obtenerEncuestasPorTokenCreador(
-        token,
-        getEncuestaDto,
-      );
+      await this.encuestasService.obtenerEncuestasPorTokenCreador(token, query);
 
-    // 3️⃣ Mensaje personalizado según si se encontraron encuestas o no
     const message = total
       ? 'Encuestas encontradas para el creador.'
-      : 'Este creador no tiene encuestas creadas aún.';
-
-    // 4️⃣ Devolvemos ApiResponse con datos y meta de paginación
+      : 'Este creador no tiene encuestas aún.';
     return new ApiResponse('success', message, HttpStatus.OK, data, {
       total,
       page,
       limit,
     });
   }
+  //	Devuelve el token_respuesta para compartir
+  @Get('/creador/:token_dashboard/:id_encuesta/token-participacion')
+  @ApiOperation({
+    summary: 'Obtener token_respuesta de una encuesta para participación',
+  })
+  @ApiParam({
+    name: 'token_dashboard',
+    description: 'UUID del creador de la encuesta',
+  })
+  @ApiParam({
+    name: 'id_encuesta',
+    description: 'ID numérico de la encuesta',
+    type: Number,
+  })
+  @SwaggerApiResponse({
+    status: 200,
+    description: 'Token de respuesta obtenido correctamente.',
+  })
+  @SwaggerApiResponse({
+    status: 404,
+    description: 'Encuesta no encontrada o no pertenece al creador.',
+  })
+  async getTokenRespuesta(
+    @Param('token_dashboard', new ParseUUIDPipe()) tokenDashboard: string,
+    @Param('id_encuesta', new ParseIntPipe()) idEncuesta: number,
+  ): Promise<ApiResponse> {
+    const tokenRespuesta = await this.encuestasService.obtenerTokenRespuesta(
+      tokenDashboard,
+      idEncuesta,
+    );
 
-  /**
-   * 🔐 Método privado para validar formato UUID del token_dashboard.
-   * Lanza excepción si es inválido.
-   */
-  private validateToken(token: string): void {
-    const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return new ApiResponse(
+      'success',
+      'Token de respuesta obtenido correctamente.',
+      HttpStatus.OK,
+      { token_respuesta: tokenRespuesta },
+    );
+  }
 
-    if (!uuidRegex.test(token)) {
-      throw new HttpException(
-        new ApiResponse(
-          'error',
-          'Token de creador inválido o inexistente.',
-          HttpStatus.BAD_REQUEST,
-        ),
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+  //Dado el token v4 (enlace de participacion) devuelve nombre + preguntas + opciones
+  @Get('/participacion/:token_respuesta')
+  @ApiOperation({ summary: 'Obtener encuesta por token_respuesta (UUID v4)' })
+  @ApiParam({ name: 'token', description: 'Token de respuesta (UUID v4)' })
+  async getEncuestaParaResponder(
+    @Param('token_respuesta', new ParseUUIDPipe({ version: '4' }))
+    tokenrespuesta: string,
+  ): Promise<ApiResponse> {
+    const encuesta =
+      await this.encuestasService.findEncuestaByToken(tokenrespuesta);
+    const payload = {
+      nombre: encuesta.nombre,
+      preguntas: encuesta.preguntas.map((p) => ({
+        id: p.id,
+        texto: p.texto,
+        tipo: p.tipo,
+        opciones: p.opciones?.map((o) => ({ id: o.id, texto: o.texto })) || [],
+      })),
+    };
+    return new ApiResponse(
+      'success',
+      'Encuesta cargada correctamente.',
+      HttpStatus.OK,
+      payload,
+    );
   }
 }
