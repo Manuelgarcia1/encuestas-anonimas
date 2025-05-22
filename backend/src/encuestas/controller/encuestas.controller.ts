@@ -120,6 +120,7 @@ export class EncuestasController {
     const encuesta =
       await this.encuestasService.findEncuestaByToken(tokenrespuesta);
     const payload = {
+      id: encuesta.id,
       nombre: encuesta.nombre,
       preguntas: encuesta.preguntas.map((p) => ({
         id: p.id,
