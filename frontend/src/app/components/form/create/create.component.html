@@ -128,6 +128,14 @@
 
             <!-- Contenido principal -->
             <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-white border m-2 md:m-6">
+                <div class="mb-6">
+                <input
+                    type="text"
+                    class="w-full border-b-2 border-gray-200 py-2 text-xl font-semibold focus:border-blue-500 outline-none"
+                    placeholder="Nombre de la encuesta"
+                    [(ngModel)]="nombreEncuesta"
+                />
+                </div>
                 @if (activeQuestion) {
                 <div class="max-w-2xl mx-auto">
                     <!-- Barra de herramientas (actualizada) -->
@@ -161,7 +169,9 @@
                         <!-- Texto de la pregunta -->
                         <input type="text"
                             class="w-full border-b-2 border-gray-200 py-2 text-lg focus:border-blue-500 outline-none"
-                            placeholder="Escribe tu pregunta aquí..." [value]="activeQuestion.text">
+                            placeholder="Escribe tu pregunta aquí..." 
+                            [(ngModel)]="activeQuestion.text"
+                            (ngModelChange)="onQuestionTextChange()" />
 
                         <!-- Opciones (para preguntas de opción múltiple) -->
                         @if (activeQuestion.type === 'multiple_choice' || activeQuestion.type === 'checkbox' ||
@@ -174,7 +184,10 @@
                                 } @else {
                                 <input type="checkbox" disabled class="w-4 h-4">
                                 }
-                                <input type="text" class="flex-1 border rounded-md px-3 py-1 text-sm" [value]="option">
+                                <input type="text" class="flex-1 border rounded-md px-3 py-1 text-sm" 
+                                [value]="option"
+                                [(ngModel)]="currentOptions[$index]"
+                                (ngModelChange)="onOptionChange($index)" />
                                 <button class="text-gray-400 hover:text-red-500" (click)="removeOption($index)">
                                     <i-lucide [name]="icons.Trash2" class="w-4 h-4"></i-lucide>
                                 </button>
@@ -223,6 +236,16 @@
                         </div>
                         }
                     </div>
+
+                    <div class="flex justify-center mt-10">
+                    <button
+                        class="bg-blue-600 text-white px-8 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition max-w-xs w-full text-lg"
+                        (click)="guardarEncuesta()"
+                    >
+                        Guardar borrador
+                    </button>
+                    </div>
+
                 </div>
                 } @else {
                 <!-- Estado cuando no hay preguntas seleccionadas -->

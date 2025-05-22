@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostListener} from '@angular/core';
 import {
   LucideAngularModule,
   Plus, Eye, ChevronDown, ChevronUp, ListChecks, Calendar,
@@ -11,6 +11,10 @@ import { ModalCreateComponent } from './modal-create/modal-create.component';
 import { CommonModule } from '@angular/common';
 import { TruncatePipe } from './truncate.pipe';
 import { ActivatedRoute } from '@angular/router';
+import { DraftQuestionsService } from '../../../services/borrador.service';
+import { FormsModule } from '@angular/forms';
+import { EncuestasService } from '../../../services/encuestas.service';
+import { Router } from '@angular/router';
 
 // Definimos una interfaz para el tipo de pregunta
 interface Question {
@@ -26,7 +30,7 @@ interface Question {
 @Component({
   selector: 'app-create',
   standalone: true,
-  imports: [HeaderFormComponent, LucideAngularModule, ModalCreateComponent, CommonModule, TruncatePipe],
+  imports: [HeaderFormComponent, LucideAngularModule, ModalCreateComponent, CommonModule, TruncatePipe, FormsModule],
   templateUrl: './create.component.html'
 })
 export class CreateComponent {
@@ -56,26 +60,66 @@ export class CreateComponent {
 
   // Estado del modal
   showModal = false;
-
-  // Preguntas del formulario con tipo Question
-  questions: Question[] = [
-    {
-      id: 1,
-      text: 'Nueva pregunta de selección múltiple',
-      type: 'multiple_choice',
-      active: true,
-      showMenu: false,
-      options: ['Opción 1', 'Opción 2'],
-      required: false
-    }
-  ];
-
-  // Opciones para la pregunta activa
+  questions: Question[] = [ ];
   currentOptions: string[] = [];
+  nombreEncuesta: string = '';
 
   // Getter para obtener la pregunta activa
   get activeQuestion() {
     return this.questions.find(q => q.active);
+  }
+
+  constructor(
+    private draftService: DraftQuestionsService,
+    private route: ActivatedRoute,
+    private encuestasService: EncuestasService,
+    private router: Router 
+  ) {
+    this.draftService.questions$.subscribe(qs => this.questions = qs);
+  }
+
+  mapTipoBackToFront(tipo: string): string {
+    switch (tipo) {
+      case 'ABIERTA': return 'text';
+      case 'OPCION_MULTIPLE_SELECCION_SIMPLE': return 'radio';
+      case 'OPCION_MULTIPLE_SELECCION_MULTIPLE': return 'checkbox';
+      default: return 'text';
+    }
+}
+
+  ngOnInit() {
+    const encuestaId = this.route.snapshot.paramMap.get('id');
+    const token_dashboard = this.getTokenFromCookie('td');
+    if (encuestaId && token_dashboard) {
+      /*
+      this.encuestasService.getEncuestaPorId(token_dashboard, encuestaId).subscribe({
+        next: (encuesta) => {
+          this.nombreEncuesta = encuesta.nombre;
+          this.questions = (encuesta.preguntas || []).map((p: any, idx: number) => ({
+            id: idx + 1,
+            text: p.texto,
+            type: this.mapTipoBackToFront(p.tipo),
+            active: false,
+            required: false,
+            options: p.opciones ? p.opciones.map((o: any) => o.texto) : []
+          }));
+          if (this.questions.length > 0) {
+            this.setActiveQuestion(this.questions[0].id);
+          }
+        },
+        error: (err) => {
+          alert('No se pudo cargar la encuesta');
+        }
+      });
+      */
+    }
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any): void {
+    if (this.questions.length > 0) {
+      $event.returnValue = true; 
+    }
   }
 
   // Activa una pregunta específica
@@ -140,21 +184,23 @@ export class CreateComponent {
     const questionToDuplicate = this.questions.find(q => q.id === questionId);
     if (questionToDuplicate) {
       const newId = Math.max(...this.questions.map(q => q.id)) + 1;
-      this.questions.push({
+      const duplicated = {
         ...questionToDuplicate,
         id: newId,
         active: false,
         showMenu: false
-      });
+      };
+      const updated = [...this.questions, duplicated];
+      this.draftService.updateQuestions(updated);
     }
   }
 
   // Método para borrar pregunta
   deleteQuestion(questionId: number) {
-    this.questions = this.questions.filter(q => q.id !== questionId);
-    // Si borramos la pregunta activa, seleccionamos la primera disponible
-    if (this.questions.length > 0 && !this.activeQuestion) {
-      this.setActiveQuestion(this.questions[0].id);
+    const updated = this.questions.filter(q => q.id !== questionId);
+    this.draftService.updateQuestions(updated);
+    if (updated.length > 0 && !this.activeQuestion) {
+      this.setActiveQuestion(updated[0].id);
     }
   }
 
@@ -188,10 +234,10 @@ export class CreateComponent {
       this.currentOptions = [...newQuestion.options];
     }
 
-    this.questions.push(newQuestion);
+    this.draftService.addQuestion(newQuestion);
     this.setActiveQuestion(newId);
     this.closeModal();
-    this.mobileSidebarOpen = false; // Cerrar el sidebar móvil después de añadir
+    this.mobileSidebarOpen = false;
   }
 
   // Cierra todos los menús abiertos
@@ -203,15 +249,72 @@ export class CreateComponent {
   toggleQuestionRequired() {
     if (this.activeQuestion) {
       this.activeQuestion.required = !this.activeQuestion.required;
+      this.draftService.updateQuestions(this.questions);
     }
   }
 
-  constructor(private route: ActivatedRoute) {}
-  
-  ngOnInit() {
-  const encuestaId = this.route.snapshot.paramMap.get('id');
-  if (encuestaId) {
-    // Llama a tu servicio para traer la encuesta por id
+  onOptionChange(index: number) {
+    if (this.activeQuestion) {
+      this.activeQuestion.options = [...this.currentOptions];
+      this.draftService.updateQuestions(this.questions);
+    }
   }
+
+  onQuestionTextChange() {
+    this.draftService.updateQuestions(this.questions);
+  }
+
+  clearDraft() {
+    this.draftService.clearDraft();
+  }
+
+  mapTipoFrontToBack(type: string): string {
+    switch (type) {
+      case 'text': return 'ABIERTA';
+      case 'radio': return 'OPCION_MULTIPLE_SELECCION_SIMPLE';
+      case 'checkbox': return 'OPCION_MULTIPLE_SELECCION_MULTIPLE';
+      // agregá los demás según tu enum TiposRespuestaEnum
+      default: return 'ABIERTA';
+    }
+  }  
+
+  getTokenFromCookie(nombre: string): string {
+    const match = document.cookie.match(new RegExp('(^| )' + nombre + '=([^;]+)'));
+    return match ? match[2] : '';
+  }
+
+  guardarEncuesta() {    
+    const preguntasBackend = this.questions.map((q, idx) => ({
+      numero: idx + 1,
+      texto: q.text,
+      tipo: this.mapTipoFrontToBack(q.type), 
+      opciones: (q.options && q.options.length > 0)
+        ? q.options.map((opt, idx) => ({
+            texto: opt,
+            numero: idx + 1
+          }))
+        : undefined,
+    }));
+
+    const encuesta = {
+      nombre: this.nombreEncuesta || 'Encuesta sin nombre',
+      preguntas: preguntasBackend,
+    };
+
+    const token_dashboard = this.getTokenFromCookie('td');
+    this.encuestasService.crearEncuesta(encuesta, token_dashboard).subscribe({
+      next: (resp) => {
+        this.clearDraft();
+        alert('¡Encuesta guardada como borrador!');
+        if (token_dashboard) {
+          this.router.navigate(['/dashboard'], { queryParams: { token_dashboard } });
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
+      },
+      error: (err) => {
+        alert('Error al guardar la encuesta');
+      }
+    });
 }
 }
