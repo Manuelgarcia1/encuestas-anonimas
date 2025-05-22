@@ -1,7 +1,21 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EncuestasService } from '../../services/encuestas.service';
-import { LucideAngularModule, Plus, Filter, Search, Calendar, FileText, MoreVertical, Edit, Trash2, Copy, Pencil, ChevronDown, Check} from 'lucide-angular';
+import {
+  LucideAngularModule,
+  Plus,
+  Filter,
+  Search,
+  Calendar,
+  FileText,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Copy,
+  Pencil,
+  ChevronDown,
+  Check,
+} from 'lucide-angular';
 import { HeaderDashboardComponent } from '../header/header-dashboard/header-dashboard.component';
 
 @Component({
@@ -16,9 +30,22 @@ export class DashboardComponent {
   filters = [
     { id: 1, name: 'Fecha de creación', checked: false },
     { id: 2, name: 'Número de Respuestas', checked: false },
-    { id: 3, name: 'Orden Alfabético', checked: false }
+    { id: 3, name: 'Orden Alfabético', checked: false },
   ];
-  icons = { Plus, Filter, Search, Calendar, FileText, MoreVertical, Edit, Trash2, Copy, Pencil, ChevronDown,Check};
+  icons = {
+    Plus,
+    Filter,
+    Search,
+    Calendar,
+    FileText,
+    MoreVertical,
+    Edit,
+    Trash2,
+    Copy,
+    Pencil,
+    ChevronDown,
+    Check,
+  };
   menuOpenId: string | null = null;
 
   constructor(
@@ -26,7 +53,7 @@ export class DashboardComponent {
     private router: Router,
     private encuestasService: EncuestasService
   ) {
-    this.route.queryParamMap.subscribe(params => {
+    this.route.queryParamMap.subscribe((params) => {
       const token = params.get('token');
       if (token) {
         this.encuestasService.getEncuestasPorToken(token).subscribe({
@@ -49,12 +76,12 @@ export class DashboardComponent {
               creationDate: encuesta.createdAt || '',
               // response: encuesta.respuestas?.length ?? 0,
               status: encuesta.tipo?.toLowerCase() || 'borrador',
-              ...encuesta
+              ...encuesta,
             }));
           },
           error: (err) => {
             console.error('Error al obtener encuestas:', err);
-          }
+          },
         });
       }
     });

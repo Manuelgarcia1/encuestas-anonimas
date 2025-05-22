@@ -1,23 +1,27 @@
-
-import { Component,OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, Home, ChevronRight, Edit, ListOrdered, Send, Pencil, Menu, X } from 'lucide-angular';
+import {
+  LucideAngularModule,
+  Home,
+  ChevronRight,
+  Edit,
+  ListOrdered,
+  Send,
+  Pencil,
+  Menu,
+  X,
+} from 'lucide-angular';
 import { ModalPublicarComponent } from '../../form/create/modal-publicar/modal-publicar.component';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-header-form',
   standalone: true,
-  imports: [
-    LucideAngularModule,
-    FormsModule,
-    ModalPublicarComponent
-  ],
+  imports: [LucideAngularModule, FormsModule, ModalPublicarComponent],
   templateUrl: './header-form.component.html',
 })
-
 export class HeaderFormComponent implements OnInit {
-  constructor(private router: Router) { }
+  constructor(private router: Router) {}
 
   icons = { Home, ChevronRight, Edit, ListOrdered, Send, Pencil, Menu, X };
   activeTab: 'edit' | 'results' = 'edit';
@@ -68,5 +72,4 @@ export class HeaderFormComponent implements OnInit {
   onCloseModal() {
     this.showPublishModal = false;
   }
-
 }
