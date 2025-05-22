@@ -56,6 +56,8 @@ export class DashboardComponent {
     this.route.queryParamMap.subscribe((params) => {
       const token = params.get('token');
       if (token) {
+        // creamos cookie de sesion token_dashboard llamada td
+        document.cookie = `td=${token}; path=/; SameSite=Strict; Secure`;
         this.encuestasService.getEncuestasPorToken(token).subscribe({
           next: (response) => {
             let encuestas: any[] = [];
