@@ -9,6 +9,6 @@ export class EncuestasService {
   constructor(private http: HttpClient) {}
 
   getEncuestasPorToken(token: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${token}`);
+    return this.http.get<any>(`${this.apiUrl}/creador/${token}`);
   }
 }
