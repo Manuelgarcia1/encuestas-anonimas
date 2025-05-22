@@ -33,7 +33,7 @@ export class EncuestasController {
   @SwaggerApiResponse({
     status: 201,
     description: 'Encuesta creada con éxito.',
-  }) // <-- aquí
+  }) //
   async createEncuesta(
     @Param('token_dashboard', new ParseUUIDPipe()) token: string,
     @Body() dto: CreateEncuestaDto,
@@ -52,7 +52,7 @@ export class EncuestasController {
   @SwaggerApiResponse({
     status: 200,
     description: 'Encuestas obtenidas correctamente.',
-  }) // <-- y aquí
+  })
   async findByCreador(
     @Param('token_dashboard', new ParseUUIDPipe()) token: string,
     @Query() query: GetEncuestaDto,
@@ -69,6 +69,9 @@ export class EncuestasController {
       limit,
     });
   }
+
+  // HACER UN NUEVO UPDATE PARA CAMBIAR EL ESTADO DE UNA ENCUESTA CUANDO SE LE DEE A BOTON PUBLICAR
+
   //	Devuelve el token_respuesta para compartir
   @Get('/creador/:token_dashboard/:id_encuesta/token-participacion')
   @ApiOperation({
@@ -111,7 +114,7 @@ export class EncuestasController {
   //Dado el token v4 (enlace de participacion) devuelve nombre + preguntas + opciones
   @Get('/participacion/:token_respuesta')
   @ApiOperation({ summary: 'Obtener encuesta por token_respuesta (UUID v4)' })
-  @ApiParam({ name: 'token', description: 'Token de respuesta (UUID v4)' })
+  @ApiParam({ name: 'token_respuesta', type: String })
   async getEncuestaParaResponder(
     @Param('token_respuesta', new ParseUUIDPipe({ version: '4' }))
     tokenrespuesta: string,
