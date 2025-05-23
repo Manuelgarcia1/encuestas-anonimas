@@ -367,8 +367,10 @@ export class CreateComponent {
       next: (resp) => {
         this.clearDraft();
         alert('¡Encuesta guardada como borrador!');
-        if (token) {
-          this.router.navigate(['/dashboard'], { queryParams: { token } });
+        if (token_dashboard) {
+          this.router.navigate(['/dashboard'], {
+            queryParams: { token: token_dashboard },
+          });
         } else {
           this.router.navigate(['/dashboard']);
         }

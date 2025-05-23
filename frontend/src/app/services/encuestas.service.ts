@@ -20,7 +20,7 @@ export class EncuestasService {
     return this.http.get<any>(`${this.apiUrl}/${token}/${id}`);
   }
 
-  getTokenDeRespuestaPorId(token: string, id: string): Observable<any> {
+  getTokenDeParticipacionPorId(token: string, id: string): Observable<any> {
     return this.http.get<any>(
       `${this.apiUrl}/${token}/${id}/token-participacion`
     );
