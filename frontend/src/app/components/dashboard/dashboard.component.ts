@@ -26,7 +26,7 @@ import { HeaderDashboardComponent } from '../header/header-dashboard/header-dash
 })
 export class DashboardComponent {
   forms: any[] = [];
-  userEmail: string | null = null;
+  creadorEmail: string | null = null; // Nueva propiedad para el email del creador
   filters = [
     { id: 1, name: 'Fecha de creación', checked: false },
     { id: 2, name: 'Número de Respuestas', checked: false },
@@ -56,7 +56,6 @@ export class DashboardComponent {
     this.route.queryParamMap.subscribe((params) => {
       const token = params.get('token');
       if (token) {
-        // creamos cookie de sesion token_dashboard llamada td
         document.cookie = `td=${token}; path=/; SameSite=Strict; Secure`;
         this.encuestasService.getEncuestasPorToken(token).subscribe({
           next: (response) => {
@@ -66,17 +65,18 @@ export class DashboardComponent {
             } else if (response.data) {
               encuestas = [response.data];
             }
-            if (encuestas.length && encuestas[0].creador?.email) {
-              console.log('Email encontrado:', encuestas[0].creador.email);
-              this.userEmail = encuestas[0].creador.email;
-            } else {
-              console.log('No se encontró email en la respuesta:', encuestas);
+            console.log('Respuesta completa:', response);
+            
+            // Obtener el email del creador desde la respuesta
+            if (response.creadorEmail) {
+              this.creadorEmail = response.creadorEmail;
+              console.log('Email del creador:', this.creadorEmail);
             }
+
             this.forms = encuestas.map((encuesta: any) => ({
               id: encuesta.id,
               name: encuesta.nombre,
               creationDate: encuesta.createdAt || '',
-              // response: encuesta.respuestas?.length ?? 0,
               status: encuesta.tipo?.toLowerCase() || 'borrador',
               ...encuesta,
             }));
@@ -124,6 +124,6 @@ export class DashboardComponent {
   }
 
   goToCreate(formId: string) {
-  this.router.navigate(['/create', formId]);
-}
+    this.router.navigate(['/create', formId]);
+  }
 }

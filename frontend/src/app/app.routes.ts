@@ -11,5 +11,5 @@ export const routes: Routes = [
   { path: 'create', component: CreateComponent },
   { path: 'create/:id', component: CreateComponent },
   { path: 'results', component: ResultsComponent },
-  { path: 'response', component: ResponseComponent },
+  { path: 'response/:token', component: ResponseComponent },
 ];
