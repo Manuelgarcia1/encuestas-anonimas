@@ -26,7 +26,7 @@ export class RespuestasService {
   ) {}
 
   async crearRespuesta(tokenRespuesta: string, dto: CreateRespuestaDto) {
-    // 1. Validar token y obtener encuesta con preguntas y opciones
+    // 1. Obtener encuesta
     const encuesta = await this.encuestaRepository.findOne({
       where: { token_respuesta: tokenRespuesta },
       relations: ['preguntas', 'preguntas.opciones'],
@@ -35,39 +35,49 @@ export class RespuestasService {
       throw new NotFoundException('Token inválido o encuesta no existe');
     }
 
-    // 2. Crear set de IDs válidos
-    const idsPreguntas = new Set(encuesta.preguntas.map((p) => p.id));
-    const idsOpciones = new Set(
-      encuesta.preguntas.flatMap((p) => p.opciones?.map((o) => o.id) || []),
+    // 2. Clasificar preguntas
+    const preguntasAbiertas = encuesta.preguntas.filter(
+      (p) => !p.opciones || p.opciones.length === 0,
+    );
+    const preguntasOpciones = encuesta.preguntas.filter(
+      (p) => p.opciones && p.opciones.length > 0,
     );
 
-    // 3. Crear respuesta maestra
-    const respuesta = await this.respuestaRepository.save({
-      encuesta: { id: encuesta.id },
-    });
+    const idsPreguntasAbiertas = new Set(preguntasAbiertas.map((p) => p.id));
+    const idsPreguntasOpciones = new Set(preguntasOpciones.map((p) => p.id));
+    const idsOpciones = new Set(
+      preguntasOpciones.flatMap((p) => p.opciones.map((o) => o.id)),
+    );
 
-    // 4. Guardar respuestas abiertas (con validación)
+    // ✅ 3. Validar duplicados
+    const preguntasRespondidas = new Set<number>();
+
+    // 🔍 4. Validar preguntas abiertas
     for (const abierta of dto.respuestas_abiertas) {
-      if (!idsPreguntas.has(abierta.id_pregunta)) {
+      const id = abierta.id_pregunta;
+      if (!idsPreguntasAbiertas.has(id)) {
         throw new BadRequestException(
-          `La pregunta ${abierta.id_pregunta} no pertenece a esta encuesta`,
+          `La pregunta ${id} no es una pregunta abierta válida`,
         );
       }
-
-      await this.respuestaAbiertaRepository.save({
-        respuesta: { id: respuesta.id },
-        pregunta: { id: abierta.id_pregunta },
-        texto: abierta.texto,
-      });
+      if (preguntasRespondidas.has(id)) {
+        throw new BadRequestException(`La pregunta ${id} ya fue respondida`);
+      }
+      preguntasRespondidas.add(id);
     }
 
-    // 5. Guardar respuestas de opciones (con validación)
+    // 🔍 5. Validar preguntas de opción
     for (const opcion of dto.respuestas_opciones) {
-      if (!idsPreguntas.has(opcion.id_pregunta)) {
+      const id = opcion.id_pregunta;
+      if (!idsPreguntasOpciones.has(id)) {
         throw new BadRequestException(
-          `La pregunta ${opcion.id_pregunta} no pertenece a esta encuesta`,
+          `La pregunta ${id} no es una pregunta de opciones válida`,
         );
       }
+      if (preguntasRespondidas.has(id)) {
+        throw new BadRequestException(`La pregunta ${id} ya fue respondida`);
+      }
+      preguntasRespondidas.add(id);
 
       for (const idOpcion of opcion.id_opciones) {
         if (!idsOpciones.has(idOpcion)) {
@@ -75,7 +85,37 @@ export class RespuestasService {
             `La opción ${idOpcion} no pertenece a esta encuesta`,
           );
         }
+      }
+    }
 
+    // ✅ 6. Verificar que todas las preguntas fueron respondidas
+    const idsEsperados = new Set(encuesta.preguntas.map((p) => p.id));
+    if (preguntasRespondidas.size !== idsEsperados.size) {
+      const faltantes = [...idsEsperados].filter(
+        (id) => !preguntasRespondidas.has(id),
+      );
+      throw new BadRequestException(
+        `Faltan respuestas para las preguntas: ${faltantes.join(', ')}`,
+      );
+    }
+
+    // 🧾 7. Guardar respuesta maestra
+    const respuesta = await this.respuestaRepository.save({
+      encuesta: { id: encuesta.id },
+    });
+
+    // 8. Guardar respuestas abiertas
+    for (const abierta of dto.respuestas_abiertas) {
+      await this.respuestaAbiertaRepository.save({
+        respuesta: { id: respuesta.id },
+        pregunta: { id: abierta.id_pregunta },
+        texto: abierta.texto,
+      });
+    }
+
+    // 9. Guardar respuestas opciones
+    for (const opcion of dto.respuestas_opciones) {
+      for (const idOpcion of opcion.id_opciones) {
         await this.respuestaOpcionRepository.save({
           respuesta: { id: respuesta.id },
           pregunta: { id: opcion.id_pregunta },
