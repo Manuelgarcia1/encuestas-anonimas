@@ -362,8 +362,8 @@ export class CreateComponent {
       preguntas: preguntasBackend,
     };
 
-    const token = this.getTokenFromCookie('td');
-    this.encuestasService.crearEncuesta(encuesta, token).subscribe({
+    const token_dashboard = this.getTokenFromCookie('td');
+    this.encuestasService.crearEncuesta(encuesta, token_dashboard).subscribe({
       next: (resp) => {
         this.clearDraft();
         alert('¡Encuesta guardada como borrador!');

@@ -77,7 +77,7 @@ export class EncuestasController {
     );
   }
 
-  // Devuelve una única encuesta de ese creador por ID
+  // Devuelve una única encuesta de ese creador por ID de encuesta
   @Get('creador/:token_dashboard/encuesta/:id')
   @ApiOperation({ summary: 'Obtener una encuesta de un creador por su ID' })
   @SwaggerApiResponse({
