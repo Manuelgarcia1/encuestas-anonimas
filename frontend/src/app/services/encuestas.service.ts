@@ -9,7 +9,7 @@ export class EncuestasService {
   constructor(private http: HttpClient) {}
 
   getEncuestasPorToken(token: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/creador/${token}`);
+    return this.http.get<any>(`${this.apiUrl}/${token}`);
   }
 
   crearEncuesta(data: any, token: string): Observable<any> {
@@ -17,10 +17,12 @@ export class EncuestasService {
   }
 
   getEncuestaPorId(token: string, id: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${token}/${id}`);  
+    return this.http.get<any>(`${this.apiUrl}/${token}/${id}`);
   }
 
   getTokenDeRespuestaPorId(token: string, id: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${token}/${id}/token-participacion`);
+    return this.http.get<any>(
+      `${this.apiUrl}/${token}/${id}/token-participacion`
+    );
   }
 }

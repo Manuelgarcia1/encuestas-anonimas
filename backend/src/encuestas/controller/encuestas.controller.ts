@@ -57,17 +57,47 @@ export class EncuestasController {
     @Param('token_dashboard', new ParseUUIDPipe()) token: string,
     @Query() query: GetEncuestaDto,
   ): Promise<ApiResponse> {
-    const { data, total, page, limit } =
+    const { data, total, page, limit, creadorEmail } =
       await this.encuestasService.obtenerEncuestasPorTokenCreador(token, query);
 
     const message = total
       ? 'Encuestas encontradas para el creador.'
       : 'Este creador no tiene encuestas aún.';
-    return new ApiResponse('success', message, HttpStatus.OK, data, {
-      total,
-      page,
-      limit,
-    });
+    return new ApiResponse(
+      'success',
+      message,
+      HttpStatus.OK,
+      creadorEmail,
+      data,
+      {
+        total,
+        page,
+        limit,
+      },
+    );
+  }
+
+  // Devuelve una única encuesta de ese creador por ID
+  @Get('creador/:token_dashboard/encuesta/:id')
+  @ApiOperation({ summary: 'Obtener una encuesta de un creador por su ID' })
+  @SwaggerApiResponse({
+    status: 200,
+    description: 'Encuesta obtenida correctamente.',
+  })
+  async findOneByCreador(
+    @Param('token_dashboard', new ParseUUIDPipe()) token: string,
+    @Param('id', ParseIntPipe) encuestaId: number,
+  ): Promise<ApiResponse> {
+    const encuesta =
+      await this.encuestasService.obtenerEncuestaPorTokenCreadorYId(
+        token,
+        encuestaId,
+      );
+
+    const message = encuesta
+      ? 'Encuesta encontrada para el creador.'
+      : 'Encuesta no encontrada para este creador.';
+    return new ApiResponse('success', message, HttpStatus.OK, encuesta);
   }
 
   // HACER UN NUEVO UPDATE PARA CAMBIAR EL ESTADO DE UNA ENCUESTA CUANDO SE LE DEE A BOTON PUBLICAR
