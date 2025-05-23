@@ -33,7 +33,7 @@ export class EncuestasController {
   @SwaggerApiResponse({
     status: 201,
     description: 'Encuesta creada con éxito.',
-  }) // <-- aquí
+  }) //
   async createEncuesta(
     @Param('token_dashboard', new ParseUUIDPipe()) token: string,
     @Body() dto: CreateEncuestaDto,
@@ -52,23 +52,56 @@ export class EncuestasController {
   @SwaggerApiResponse({
     status: 200,
     description: 'Encuestas obtenidas correctamente.',
-  }) // <-- y aquí
+  })
   async findByCreador(
     @Param('token_dashboard', new ParseUUIDPipe()) token: string,
     @Query() query: GetEncuestaDto,
   ): Promise<ApiResponse> {
-    const { data, total, page, limit } =
+    const { data, total, page, limit, creadorEmail } =
       await this.encuestasService.obtenerEncuestasPorTokenCreador(token, query);
 
     const message = total
       ? 'Encuestas encontradas para el creador.'
       : 'Este creador no tiene encuestas aún.';
-    return new ApiResponse('success', message, HttpStatus.OK, data, {
-      total,
-      page,
-      limit,
-    });
+    return new ApiResponse(
+      'success',
+      message,
+      HttpStatus.OK,
+      creadorEmail,
+      data,
+      {
+        total,
+        page,
+        limit,
+      },
+    );
   }
+
+  // Devuelve una única encuesta de ese creador por ID de encuesta
+  @Get('creador/:token_dashboard/encuesta/:id')
+  @ApiOperation({ summary: 'Obtener una encuesta de un creador por su ID' })
+  @SwaggerApiResponse({
+    status: 200,
+    description: 'Encuesta obtenida correctamente.',
+  })
+  async findOneByCreador(
+    @Param('token_dashboard', new ParseUUIDPipe()) token: string,
+    @Param('id', ParseIntPipe) encuestaId: number,
+  ): Promise<ApiResponse> {
+    const encuesta =
+      await this.encuestasService.obtenerEncuestaPorTokenCreadorYId(
+        token,
+        encuestaId,
+      );
+
+    const message = encuesta
+      ? 'Encuesta encontrada para el creador.'
+      : 'Encuesta no encontrada para este creador.';
+    return new ApiResponse('success', message, HttpStatus.OK, encuesta);
+  }
+
+  // HACER UN NUEVO UPDATE PARA CAMBIAR EL ESTADO DE UNA ENCUESTA CUANDO SE LE DEE A BOTON PUBLICAR
+
   //	Devuelve el token_respuesta para compartir
   @Get('/creador/:token_dashboard/:id_encuesta/token-participacion')
   @ApiOperation({
@@ -111,7 +144,10 @@ export class EncuestasController {
   //Dado el token v4 (enlace de participacion) devuelve nombre + preguntas + opciones
   @Get('/participacion/:token_respuesta')
   @ApiOperation({ summary: 'Obtener encuesta por token_respuesta (UUID v4)' })
-  @ApiParam({ name: 'token_respuesta', description: 'Token de respuesta (UUID v4)' })
+  @ApiParam({
+    name: 'token_respuesta',
+    description: 'Token de respuesta (UUID v4)',
+  })
   // @ApiParam({ name: 'token', description: 'Token de respuesta (UUID v4)' })
   async getEncuestaParaResponder(
     @Param('token_respuesta', new ParseUUIDPipe({ version: '4' }))

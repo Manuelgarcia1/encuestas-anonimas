@@ -36,7 +36,13 @@ export class EncuestasService {
   async obtenerEncuestasPorTokenCreador(
     token_dashboard: string,
     getEncuestaDto: GetEncuestaDto,
-  ): Promise<{ data: Encuesta[]; total: number; page: number; limit: number }> {
+  ): Promise<{
+    data: Encuesta[];
+    total: number;
+    page: number;
+    limit: number;
+    creadorEmail: string;
+  }> {
     const {
       page = 1,
       limit = 10,
@@ -52,12 +58,17 @@ export class EncuestasService {
       total: number;
       page: number;
       limit: number;
+      creadorEmail: string;
     }>(cacheKey);
+
     if (cached) {
       return cached;
     }
 
-    // 2️⃣ Si no hay cache, vamos a BD
+    // 1 traigo al creador (incluye email)
+    const creador = await this.findCreador(token_dashboard);
+
+    // 2️⃣ Si no hay cache, vamos a BD y traemos las encuestas
     await this.findCreador(token_dashboard);
     const [data, total] = await this.encuestasRepository.findAndCount({
       where: { creador: { token_dashboard } },
@@ -66,12 +77,43 @@ export class EncuestasService {
       order: { [sortBy]: order.toUpperCase() as 'ASC' | 'DESC' },
     });
 
-    const result = { data, total, page, limit };
+    const result = { data, total, page, limit, creadorEmail: creador.email };
 
     // 3️⃣ Guardamos en cache por 60 segundos
     this.cache.set(cacheKey, result, 60);
 
     return result;
+  }
+
+  async obtenerEncuestaPorTokenCreadorYId(
+    token_dashboard: string,
+    encuestaId: number,
+  ): Promise<Encuesta> {
+    // 1) verificar creador por token
+    const creador = await this.creadoresRepository.findOne({
+      where: { token_dashboard },
+    });
+    if (!creador) {
+      throw new NotFoundException('Token de creador inválido.');
+    }
+
+    // 2) obtener encuesta que pertenezca a ese creador
+    const encuesta = await this.encuestasRepository.findOne({
+      where: {
+        id: encuestaId, // número, no string
+        creador: {
+          // anidado sobre la relación ManyToOne
+          token_dashboard: token_dashboard, // propiedad camelCase de tu entidad Creador
+        },
+      },
+      relations: ['preguntas', 'preguntas.opciones'], //carga preguntas y opciones
+    });
+
+    if (!encuesta) {
+      throw new NotFoundException('Encuesta no encontrada para este creador.');
+    }
+
+    return encuesta;
   }
 
   async crearEncuesta(

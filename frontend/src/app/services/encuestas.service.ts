@@ -17,10 +17,12 @@ export class EncuestasService {
   }
 
   getEncuestaPorId(token: string, id: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${token}/${id}`);  
+    return this.http.get<any>(`${this.apiUrl}/${token}/${id}`);
   }
 
   getTokenDeParticipacionPorId(token: string, id: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${token}/${id}/token-participacion`);
+    return this.http.get<any>(
+      `${this.apiUrl}/${token}/${id}/token-participacion`
+    );
   }
 }

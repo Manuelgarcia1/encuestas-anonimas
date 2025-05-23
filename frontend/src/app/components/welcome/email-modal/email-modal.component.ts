@@ -18,7 +18,10 @@ export class EmailModalComponent {
 
   icons = { X, Mail };
 
-  constructor(private router: Router, private creadoresService: CreadoresService) {}
+  constructor(
+    private router: Router,
+    private creadoresService: CreadoresService
+  ) {}
 
   private isEmailValid(email: string): boolean {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -53,7 +56,7 @@ export class EmailModalComponent {
         this.loading = false;
         this.showToast('Error al enviar el email. Intenta nuevamente.', true);
         console.error('Error en la petición:', err);
-      }
+      },
     });
   }
 
