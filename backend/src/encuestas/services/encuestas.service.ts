@@ -144,6 +144,7 @@ export class EncuestasService {
         'preguntas.opciones',
         'respuestas',
         'respuestas.respuestasAbiertas',
+        'respuestas.respuestasAbiertas.pregunta',
         'respuestas.opciones',
         'respuestas.opciones.opcion',
       ],
