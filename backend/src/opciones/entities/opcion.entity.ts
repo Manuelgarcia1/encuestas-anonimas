@@ -3,10 +3,12 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Pregunta } from './../../preguntas/entities/pregunta.entity';
+import { RespuestaOpcion } from '../../respuestas-opciones/entities/respuestas-opcione.entity';
 
 @Entity({ name: 'opciones' })
 export class Opcion {
@@ -23,4 +25,7 @@ export class Opcion {
   @JoinColumn({ name: 'id_pregunta' })
   @Exclude()
   pregunta: Pregunta;
+
+  @OneToMany(() => RespuestaOpcion, (respuestaOpcion) => respuestaOpcion.opcion)
+  respuestasOpciones: RespuestaOpcion[]; // Nombre consistente
 }

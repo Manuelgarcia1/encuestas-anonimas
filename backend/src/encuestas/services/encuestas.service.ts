@@ -134,4 +134,77 @@ export class EncuestasService {
     }
     return encuesta;
   }
+
+  async obtenerResultados(tokenResultados: string) {
+    // 1. Obtener encuesta con relaciones
+    const encuesta = await this.encuestasRepository.findOne({
+      where: { token_resultados: tokenResultados },
+      relations: [
+        'preguntas',
+        'preguntas.opciones',
+        'respuestas',
+        'respuestas.respuestasAbiertas',
+        'respuestas.opciones',
+        'respuestas.opciones.opcion',
+      ],
+    });
+
+    if (!encuesta) {
+      throw new NotFoundException('Encuesta no encontrada');
+    }
+
+    // 2. Inicializar estructura de resultados
+    const resultados = {
+      encuesta: {
+        id: encuesta.id,
+        nombre: encuesta.nombre,
+        totalRespuestas: encuesta.respuestas?.length || 0, // Usamos las respuestas cargadas
+        preguntas: [] as any[],
+      },
+    };
+
+    // 3. Procesar cada pregunta
+    for (const pregunta of encuesta.preguntas || []) {
+      const preguntaResultado = {
+        id: pregunta.id,
+        texto: pregunta.texto,
+        tipo: pregunta.tipo,
+        respuestas: [] as any[],
+      };
+
+      if (pregunta.tipo === 'ABIERTA') {
+        // Procesar respuestas abiertas
+        const respuestas = (encuesta.respuestas || [])
+          .flatMap((r) => r.respuestasAbiertas || [])
+          .filter((ra) => ra?.pregunta?.id === pregunta.id) // ← Usa la relación pregunta.id
+          .map((ra) => ra.texto);
+
+        preguntaResultado.respuestas = respuestas;
+      } else {
+        // Procesar opciones múltiples
+        preguntaResultado.respuestas = (pregunta.opciones || []).map(
+          (opcion) => {
+            const count = (encuesta.respuestas || [])
+              .flatMap((r) => r.opciones || [])
+              .filter((ro) => ro?.opcion?.id === opcion.id).length;
+
+            return {
+              opcion: opcion.texto,
+              count,
+              porcentaje:
+                resultados.encuesta.totalRespuestas > 0
+                  ? Math.round(
+                      (count / resultados.encuesta.totalRespuestas) * 100,
+                    )
+                  : 0,
+            };
+          },
+        );
+      }
+
+      resultados.encuesta.preguntas.push(preguntaResultado);
+    }
+
+    return resultados;
+  }
 }

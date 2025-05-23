@@ -11,6 +11,7 @@ import { Encuesta } from './../../encuestas/entities/encuesta.entity';
 import { Exclude } from 'class-transformer';
 import { Opcion } from './../../opciones/entities/opcion.entity';
 import { TiposRespuestaEnum } from './../enums/tipos-respuestas.enum';
+import { RespuestaAbierta } from '../../respuestas-abiertas/entities/respuestas-abierta.entity';
 
 @Entity({ name: 'preguntas' })
 export class Pregunta {
@@ -33,4 +34,10 @@ export class Pregunta {
 
   @OneToMany(() => Opcion, (opcion) => opcion.pregunta, { cascade: ['insert'] })
   opciones: Opcion[];
+
+  @OneToMany(
+    () => RespuestaAbierta,
+    (respuestaAbierta) => respuestaAbierta.pregunta,
+  )
+  respuestasAbiertas: RespuestaAbierta[];
 }

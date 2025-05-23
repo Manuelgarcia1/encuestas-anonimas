@@ -15,5 +15,6 @@ import { LocalCacheService } from '../cache/local-cache.service';
   ],
   controllers: [EncuestasController],
   providers: [EncuestasService, LocalCacheService],
+  exports: [EncuestasService, TypeOrmModule],
 })
 export class EncuestasModule {}
