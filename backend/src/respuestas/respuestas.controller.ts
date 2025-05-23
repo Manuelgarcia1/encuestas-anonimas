@@ -1,8 +1,9 @@
 // src/respuestas/respuestas.controller.ts
-import { Body, Controller, Post, Param, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Post, Param, HttpStatus, Get, ParseUUIDPipe } from '@nestjs/common';
 import { RespuestasService } from './respuestas.service';
 import { CreateRespuestaDto } from './dto/create-respuesta.dto';
-import { ApiTags, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiResponse as SwaggerApiResponse, ApiParam, ApiOperation } from '@nestjs/swagger';
+import { ApiResponse } from '../shared/response.dto';
 
 @ApiTags('Respuestas')
 @Controller('respuestas')
@@ -11,7 +12,10 @@ export class RespuestasController {
 
   @Post(':token_respuesta')
   @ApiParam({ name: 'token_respuesta', description: 'Token de participación' })
-  @ApiResponse({ status: 201, description: 'Respuestas guardadas correctamente' })
+  @SwaggerApiResponse({
+    status: 201,
+    description: 'Respuestas guardadas correctamente',
+  })
   async create(
     @Param('token_respuesta') tokenRespuesta: string,
     @Body() dto: CreateRespuestaDto,
@@ -22,5 +26,33 @@ export class RespuestasController {
       message: 'Respuestas registradas de forma anónima',
       statusCode: HttpStatus.CREATED,
     };
+  }
+
+  @Get('/resultados/:token_resultados')
+  @ApiOperation({ summary: 'Obtener resultados de una encuesta' })
+  @ApiParam({ name: 'token_resultados', description: 'Token de resultados' })
+  @SwaggerApiResponse({
+    status: 200,
+    description: 'Resultados obtenidos exitosamente',
+    type: SwaggerApiResponse, // Añade esto para documentación Swagger
+  })
+  @SwaggerApiResponse({
+    status: 404,
+    description: 'Token de resultados inválido',
+  })
+  async obtenerResultados(
+    @Param('token_resultados', new ParseUUIDPipe()) tokenResultados: string,
+  ): Promise<ApiResponse> {
+    const data = await this.respuestasService.obtenerResultados(tokenResultados);
+
+    return new ApiResponse(
+      'success',
+      'Resultados obtenidos correctamente',
+      HttpStatus.OK,
+      data,
+      {
+        total: data.encuesta.totalRespuestas, // Añade metadatos si es necesario
+      },
+    );
   }
 }
