@@ -1,5 +1,6 @@
 <!-- HEADER FIXED -->
-<app-header-dashboard [email]="userEmail"></app-header-dashboard>
+<app-header-dashboard [creadorEmail]="creadorEmail" class="fixed top-0 left-0 right-0 z-40">
+</app-header-dashboard>
 
 <!-- CONTENEDOR PRINCIPAL CON PADDING PARA ELEMENTOS FIXED -->
 <div class="pt-16 sm:pt-0 pb-4 min-h-screen bg-gray-50 flex flex-col sm:flex-row">
@@ -84,7 +85,8 @@
         <!-- TARJETAS EN RESPONSIVE - GRID -->
         <div class="grid grid-cols-1 sm:hidden gap-4">
             @for (form of forms; track form.id) {
-            <div class="bg-white p-4 rounded-xl shadow border space-y-2" (click)="goToCreate(form.id)" style="cursor:pointer">
+            <div class="bg-white p-4 rounded-xl shadow border space-y-2" (click)="goToCreate(form.id)"
+                style="cursor:pointer">
                 <h2 class="text-lg font-semibold text-gray-800">{{ form.name }}</h2>
                 <div class="flex items-center gap-2 text-sm text-gray-600">
                     <i-lucide [name]="icons.Calendar" class="w-4 h-4"></i-lucide>

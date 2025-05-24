@@ -1,7 +1,9 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, X, QrCode, Mail } from 'lucide-angular';
 import { FormsModule } from '@angular/forms';
+import { EncuestasService } from '../../../../services/encuestas.service';
+
 
 @Component({
   selector: 'app-modal-publicar',
@@ -10,16 +12,52 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './modal-publicar.component.html',
 })
 export class ModalPublicarComponent {
-  // Iconos disponibles
-  icons = { X, QrCode, Mail };
-
-  // Link de la encuesta (ejemplo)
-  surveyLink = 'http://localhost:4200/response';
-
-  // Evento para cerrar el modal
+  @Input() encuestaId!: number; // ID de la encuesta a publicar
   @Output() close = new EventEmitter<void>();
 
+  icons = { X, QrCode, Mail };
+  surveyLink = '';
+  isLoading = false;
+
+  constructor(private encuestasService: EncuestasService) {}
+
+  ngOnInit() {
+    this.getTokenParticipacion();
+  }
+
+  private getCookie(name: string): string | null {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+    return null;
+  }
+
+  getTokenParticipacion() {
+    this.isLoading = true;
+    const tokenDashboard = this.getCookie('td');
+    
+    if (!tokenDashboard) {
+      this.showToast('No se encontró el token de dashboard', true);
+      this.closeModal();
+      return;
+    }
+
+    this.encuestasService.getTokenParticipacion(tokenDashboard, this.encuestaId).subscribe({
+      next: (response: any) => {
+        this.surveyLink = `http://localhost:4200/response/${response.data.token_respuesta}`;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Error al obtener token:', err);
+        this.showToast('Error al obtener el enlace de participación', true);
+        this.isLoading = false;
+      }
+    });
+  }
+
   copyLink() {
+    if (!this.surveyLink) return;
+    
     navigator.clipboard.writeText(this.surveyLink)
       .then(() => {
         this.showToast('¡Link copiado con éxito!');
@@ -41,13 +79,14 @@ export class ModalPublicarComponent {
     }, 3000);
   }
 
-  // Método para generar QR
   generateQR() {
     console.log('Generando QR para:', this.surveyLink);
+    // Implementar generación de QR aquí
   }
 
-  // Método para compartir por email
   shareByEmail() {
+    if (!this.surveyLink) return;
+    
     const subject = 'Encuesta GAMERS';
     const body = `Por favor completa esta encuesta: ${this.surveyLink}`;
     const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -55,7 +94,6 @@ export class ModalPublicarComponent {
     window.location.href = mailtoLink;
   }
 
-  // Método para cerrar el modal
   closeModal() {
     this.close.emit();
   }

@@ -5,11 +5,11 @@ import { RouterModule } from '@angular/router';
 @Component({
   selector: 'app-header-dashboard',
   standalone: true,
-  imports: [LucideAngularModule,RouterModule],
+  imports: [LucideAngularModule, RouterModule],
   templateUrl: './header-dashboard.component.html',
 })
 export class HeaderDashboardComponent {
-  @Input() email: string | null = null;
+  @Input() creadorEmail: string | null = null; // Nueva propiedad de entrada
   @Input() token: string | null = null;
 
   icons = { Home, ChevronRight };
