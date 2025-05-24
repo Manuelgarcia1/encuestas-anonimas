@@ -1,8 +1,21 @@
 // src/respuestas/respuestas.controller.ts
-import { Body, Controller, Post, Param, HttpStatus, Get, ParseUUIDPipe } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Param,
+  HttpStatus,
+  Get,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { RespuestasService } from './respuestas.service';
 import { CreateRespuestaDto } from './dto/create-respuesta.dto';
-import { ApiTags, ApiResponse as SwaggerApiResponse, ApiParam, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiResponse as SwaggerApiResponse,
+  ApiParam,
+  ApiOperation,
+} from '@nestjs/swagger';
 import { ApiResponse } from '../shared/response.dto';
 
 @ApiTags('Respuestas')
@@ -43,16 +56,14 @@ export class RespuestasController {
   async obtenerResultados(
     @Param('token_resultados', new ParseUUIDPipe()) tokenResultados: string,
   ): Promise<ApiResponse> {
-    const data = await this.respuestasService.obtenerResultados(tokenResultados);
+    const data =
+      await this.respuestasService.obtenerResultados(tokenResultados);
 
     return new ApiResponse(
       'success',
       'Resultados obtenidos correctamente',
       HttpStatus.OK,
       data,
-      {
-        total: data.encuesta.totalRespuestas, // Añade metadatos si es necesario
-      },
     );
   }
 }

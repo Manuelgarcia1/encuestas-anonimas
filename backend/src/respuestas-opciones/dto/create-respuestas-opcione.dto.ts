@@ -1,4 +1,3 @@
-// src/respuestas/dto/respuesta-opcion.dto.ts
 import { IsNumber, IsArray, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 

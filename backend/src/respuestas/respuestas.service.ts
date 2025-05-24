@@ -1,4 +1,3 @@
-// src/respuestas/services/respuestas.service.ts
 import {
   Injectable,
   NotFoundException,
@@ -11,12 +10,18 @@ import { Respuesta } from '../respuestas/entities/respuesta.entity';
 import { RespuestaOpcion } from '../respuestas-opciones/entities/respuestas-opcione.entity';
 import { RespuestaAbierta } from '../respuestas-abiertas/entities/respuestas-abierta.entity';
 import { CreateRespuestaDto } from './dto/create-respuesta.dto';
+import { EncuestasService } from '../encuestas/services/encuestas.service';
 
+/**
+ * Servicio encargado de manejar el almacenamiento de respuestas
+ * a encuestas y la obtención de resultados consolidados.
+ */
 @Injectable()
 export class RespuestasService {
   constructor(
     @InjectRepository(Encuesta)
     private encuestaRepository: Repository<Encuesta>,
+    private readonly encuestasService: EncuestasService,
     @InjectRepository(Respuesta)
     private respuestaRepository: Repository<Respuesta>,
     @InjectRepository(RespuestaOpcion)
@@ -25,17 +30,19 @@ export class RespuestasService {
     private respuestaAbiertaRepository: Repository<RespuestaAbierta>,
   ) {}
 
+  /**
+   * Guarda una nueva respuesta a una encuesta, validando que todas las
+   * preguntas hayan sido respondidas correctamente.
+   */
   async crearRespuesta(tokenRespuesta: string, dto: CreateRespuestaDto) {
-    // 1. Obtener encuesta
-    const encuesta = await this.encuestaRepository.findOne({
-      where: { token_respuesta: tokenRespuesta },
-      relations: ['preguntas', 'preguntas.opciones'],
-    });
+    // Paso 1: Obtener encuesta por token
+    const encuesta =
+      await this.encuestasService.findEncuestaByToken(tokenRespuesta);
     if (!encuesta) {
       throw new NotFoundException('Token inválido o encuesta no existe');
     }
 
-    // 2. Clasificar preguntas
+    // Paso 2: Clasificar preguntas según si tienen opciones o son abiertas
     const preguntasAbiertas = encuesta.preguntas.filter(
       (p) => !p.opciones || p.opciones.length === 0,
     );
@@ -49,10 +56,10 @@ export class RespuestasService {
       preguntasOpciones.flatMap((p) => p.opciones.map((o) => o.id)),
     );
 
-    // ✅ 3. Validar duplicados
+    // Paso 3: Inicializar conjunto para validar duplicados
     const preguntasRespondidas = new Set<number>();
 
-    // 🔍 4. Validar preguntas abiertas
+    // Paso 4: Validar que las preguntas abiertas existan y no se repitan
     for (const abierta of dto.respuestas_abiertas) {
       const id = abierta.id_pregunta;
       if (!idsPreguntasAbiertas.has(id)) {
@@ -66,7 +73,7 @@ export class RespuestasService {
       preguntasRespondidas.add(id);
     }
 
-    // 🔍 5. Validar preguntas de opción
+    // Paso 5: Validar preguntas con opciones múltiples
     for (const opcion of dto.respuestas_opciones) {
       const id = opcion.id_pregunta;
       if (!idsPreguntasOpciones.has(id)) {
@@ -79,6 +86,7 @@ export class RespuestasService {
       }
       preguntasRespondidas.add(id);
 
+      // Validar que las opciones elegidas existan en la encuesta
       for (const idOpcion of opcion.id_opciones) {
         if (!idsOpciones.has(idOpcion)) {
           throw new BadRequestException(
@@ -88,7 +96,7 @@ export class RespuestasService {
       }
     }
 
-    // ✅ 6. Verificar que todas las preguntas fueron respondidas
+    // Paso 6: Verificar que se respondieron todas las preguntas
     const idsEsperados = new Set(encuesta.preguntas.map((p) => p.id));
     if (preguntasRespondidas.size !== idsEsperados.size) {
       const faltantes = [...idsEsperados].filter(
@@ -99,12 +107,12 @@ export class RespuestasService {
       );
     }
 
-    // 🧾 7. Guardar respuesta maestra
+    // Paso 7: Guardar respuesta principal (referencia a la encuesta)
     const respuesta = await this.respuestaRepository.save({
       encuesta: { id: encuesta.id },
     });
 
-    // 8. Guardar respuestas abiertas
+    // Paso 8: Guardar respuestas abiertas asociadas a la respuesta
     for (const abierta of dto.respuestas_abiertas) {
       await this.respuestaAbiertaRepository.save({
         respuesta: { id: respuesta.id },
@@ -113,7 +121,7 @@ export class RespuestasService {
       });
     }
 
-    // 9. Guardar respuestas opciones
+    // Paso 9: Guardar respuestas de opción múltiple
     for (const opcion of dto.respuestas_opciones) {
       for (const idOpcion of opcion.id_opciones) {
         await this.respuestaOpcionRepository.save({
@@ -125,8 +133,12 @@ export class RespuestasService {
     }
   }
 
+  /**
+   * Obtiene un resumen de resultados de una encuesta, incluyendo
+   * respuestas abiertas y conteo/porcentaje de selección por opción.
+   */
   async obtenerResultados(tokenResultados: string) {
-    // 1. Obtener encuesta con relaciones
+    // Paso 1: Obtener encuesta con todas sus relaciones
     const encuesta = await this.encuestaRepository.findOne({
       where: { token_resultados: tokenResultados },
       relations: [
@@ -144,17 +156,17 @@ export class RespuestasService {
       throw new NotFoundException('Encuesta no encontrada');
     }
 
-    // 2. Inicializar estructura de resultados
+    // Paso 2: Inicializar estructura base del resultado
     const resultados = {
       encuesta: {
         id: encuesta.id,
         nombre: encuesta.nombre,
-        totalRespuestas: encuesta.respuestas?.length || 0, // Usamos las respuestas cargadas
+        totalRespuestas: encuesta.respuestas?.length || 0,
         preguntas: [] as any[],
       },
     };
 
-    // 3. Procesar cada pregunta
+    // Paso 3: Procesar cada pregunta para obtener sus resultados
     for (const pregunta of encuesta.preguntas || []) {
       const preguntaResultado = {
         id: pregunta.id,
@@ -164,15 +176,15 @@ export class RespuestasService {
       };
 
       if (pregunta.tipo === 'ABIERTA') {
-        // Procesar respuestas abiertas
+        // Respuestas abiertas: listar los textos de respuesta
         const respuestas = (encuesta.respuestas || [])
           .flatMap((r) => r.respuestasAbiertas || [])
-          .filter((ra) => ra?.pregunta?.id === pregunta.id) // ← Usa la relación pregunta.id
+          .filter((ra) => ra?.pregunta?.id === pregunta.id)
           .map((ra) => ra.texto);
 
         preguntaResultado.respuestas = respuestas;
       } else {
-        // Procesar opciones múltiples
+        // Respuestas con opciones: contar cuántas veces se eligió cada opción
         preguntaResultado.respuestas = (pregunta.opciones || []).map(
           (opcion) => {
             const count = (encuesta.respuestas || [])
