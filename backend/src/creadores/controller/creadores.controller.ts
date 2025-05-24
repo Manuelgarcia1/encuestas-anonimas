@@ -43,7 +43,7 @@ export class CreadoresController {
       : 'Ya te encuentras registrado. Revisa tu correo para acceder al dashboard.';
 
     // Si es nuevo, incluyo token en data; si no, data queda undefined
-    const data = created ? { token } : undefined;
+    const data = created ? { token } : {};
 
     return new CustomApiResponse('success', message, HttpStatus.OK, data);
   }

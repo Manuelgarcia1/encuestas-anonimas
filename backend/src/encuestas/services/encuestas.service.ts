@@ -176,4 +176,30 @@ export class EncuestasService {
     }
     return encuesta;
   }
+
+  /**
+   * Cambia el estado de una encuesta a PUBLICADA
+   */
+  async publicarEncuesta(
+    token_dashboard: string,
+    encuestaId: number,
+  ): Promise<EstadoEncuestaEnum> {
+    // Reutilizamos el método que valida creador y carga la encuesta con sus relaciones
+    const encuesta = await this.obtenerEncuestaPorTokenCreadorYId(
+      token_dashboard,
+      encuestaId,
+    );
+
+    // Cambiamos el enum de estado
+    encuesta.tipo = EstadoEncuestaEnum.PUBLICADA;
+
+    // Guardamos el cambio
+    const updated = await this.encuestasRepository.save(encuesta);
+
+    // Opcional: invalidar cache de listados si usas cache
+    const page1Key = `encuestas:${token_dashboard}:p1:l10:sid:ASC`;
+    this.cache.del(page1Key);
+
+    return updated.tipo;
+  }
 }
