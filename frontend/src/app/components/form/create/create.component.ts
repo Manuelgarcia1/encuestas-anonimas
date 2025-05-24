@@ -1,4 +1,4 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnDestroy } from '@angular/core';
 import {
   LucideAngularModule,
   Plus,
@@ -29,6 +29,7 @@ import { DraftQuestionsService } from '../../../services/borrador.service';
 import { FormsModule } from '@angular/forms';
 import { EncuestasService } from '../../../services/encuestas.service';
 import { Router } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 
 // Definimos una interfaz para el tipo de pregunta
 interface Question {
@@ -54,9 +55,7 @@ interface Question {
   ],
   templateUrl: './create.component.html',
 })
-export class CreateComponent {
-  // Iconos disponibles
-  // En tus imports de Lucide
+export class CreateComponent implements OnDestroy {
   icons = {
     Plus,
     Eye,
@@ -75,7 +74,7 @@ export class CreateComponent {
     MoreVertical,
     Copy,
     Trash2,
-    Check, // Agrega Check
+    Check,
   };
 
   // Estado del sidebar móvil
@@ -105,13 +104,24 @@ export class CreateComponent {
     return this.questions.find((q) => q.active);
   }
 
+  // Nuevas propiedades para control de cambios
+  hasUnsavedChanges = false;
+  isSaving = false;
+  lastSavedState = '';
+  private destroy$ = new Subject<void>();
+
   constructor(
     private draftService: DraftQuestionsService,
     private route: ActivatedRoute,
     private encuestasService: EncuestasService,
     private router: Router
   ) {
-    this.draftService.questions$.subscribe((qs) => (this.questions = qs));
+    this.draftService.questions$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(qs => {
+        this.questions = qs;
+        this.checkForChanges();
+      });
   }
 
   mapTipoBackToFront(tipo: string): string {
@@ -130,29 +140,101 @@ export class CreateComponent {
   ngOnInit() {
     const encuestaId = this.route.snapshot.paramMap.get('id');
     const token_dashboard = this.getTokenFromCookie('td');
+
     if (encuestaId && token_dashboard) {
-      /*
-      this.encuestasService.getEncuestaPorId(token_dashboard, encuestaId).subscribe({
-        next: (encuesta) => {
+      this.cargarEncuestaExistente(parseInt(encuestaId), token_dashboard);
+    }
+
+    this.lastSavedState = this.getCurrentStateSnapshot();
+  }
+
+  private showToast(message: string, isError: boolean = false) {
+    const toast = document.createElement('div');
+    toast.className = `
+    fixed bottom-4 right-4 z-50
+    flex items-center justify-between
+    px-4 py-3 rounded-lg shadow-lg
+    text-white font-medium
+    animate-fade-in
+    ${isError ? 'bg-red-500' : 'bg-green-500'}
+  `;
+
+    toast.innerHTML = `
+    <span>${message}</span>
+    <button onclick="this.parentElement.remove()" class="ml-4">
+      <i-lucide name="X" class="w-5 h-5"></i-lucide>
+    </button>
+  `;
+
+    document.body.appendChild(toast);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      toast.remove();
+    }, 5000);
+  }
+
+  private cargarEncuestaExistente(encuestaId: number, token: string) {
+    this.encuestasService.getEncuestaPorId(token, encuestaId).subscribe({
+      next: (response) => {
+        if (response && response.data) {
+          const encuesta = response.data;
           this.nombreEncuesta = encuesta.nombre;
-          this.questions = (encuesta.preguntas || []).map((p: any, idx: number) => ({
-            id: idx + 1,
-            text: p.texto,
-            type: this.mapTipoBackToFront(p.tipo),
+
+          // Mapear preguntas del backend al formato del frontend
+          this.questions = (encuesta.preguntas || []).map((pregunta: any, index: number) => ({
+            id: index + 1,
+            text: pregunta.texto,
+            type: this.mapTipoBackToFront(pregunta.tipo),
             active: false,
-            required: false,
-            options: p.opciones ? p.opciones.map((o: any) => o.texto) : []
+            required: false, // Puedes ajustar esto según tu modelo
+            options: pregunta.opciones ? pregunta.opciones.map((op: any) => op.texto) : []
           }));
+
+          // Activar la primera pregunta si hay preguntas
           if (this.questions.length > 0) {
             this.setActiveQuestion(this.questions[0].id);
           }
-        },
-        error: (err) => {
-          alert('No se pudo cargar la encuesta');
+
+          // Actualizar el estado guardado
+          this.lastSavedState = this.getCurrentStateSnapshot();
+          this.hasUnsavedChanges = false;
         }
-      });
-      */
-    }
+      },
+      error: (err) => {
+        console.error('Error al cargar la encuesta:', err);
+        this.showToast('No se pudo cargar la encuesta. Intente nuevamente.', true);
+      }
+    });
+  }
+
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // Método para obtener snapshot del estado actual
+  private getCurrentStateSnapshot(): string {
+    return JSON.stringify({
+      nombre: this.nombreEncuesta,
+      questions: this.questions
+    });
+  }
+
+  // Método para verificar cambios
+  private checkForChanges(): void {
+    const currentState = JSON.stringify({
+      nombre: this.nombreEncuesta,
+      questions: this.questions.map(q => ({
+        text: q.text,
+        type: q.type,
+        required: q.required,
+        options: q.options || []
+      }))
+    });
+
+    this.hasUnsavedChanges = currentState !== this.lastSavedState;
   }
 
   @HostListener('window:beforeunload', ['$event'])
@@ -304,6 +386,7 @@ export class CreateComponent {
     if (this.activeQuestion) {
       this.activeQuestion.required = !this.activeQuestion.required;
       this.draftService.updateQuestions(this.questions);
+      this.checkForChanges();
     }
   }
 
@@ -311,12 +394,19 @@ export class CreateComponent {
     if (this.activeQuestion) {
       this.activeQuestion.options = [...this.currentOptions];
       this.draftService.updateQuestions(this.questions);
+      this.checkForChanges();
     }
   }
 
   onQuestionTextChange() {
     this.draftService.updateQuestions(this.questions);
+    this.checkForChanges();
   }
+
+  onNombreEncuestaChange() {
+    this.checkForChanges();
+  }
+
 
   clearDraft() {
     this.draftService.clearDraft();
@@ -343,30 +433,59 @@ export class CreateComponent {
     return match ? match[2] : '';
   }
 
+  // Método para guardar encuesta con validaciones
   guardarEncuesta() {
+    // Validaciones básicas
+    if (!this.nombreEncuesta || this.nombreEncuesta.trim().length < 3) {
+      this.showToast('Nombre de encuesta inválido (mínimo 3 caracteres)', true);
+      return;
+    }
+
+    if (this.questions.length === 0) {
+      this.showToast('Debe agregar al menos una pregunta', true);
+      return;
+    }
+
+    // Validar cada pregunta
+    for (const question of this.questions) {
+      if (!question.text || question.text.trim().length < 5) {
+        this.showToast(`Pregunta ${question.id}: mínimo 5 caracteres`, true);
+        return;
+      }
+
+      if ((question.type === 'radio' || question.type === 'checkbox') &&
+        (!question.options || question.options.length < 2)) {
+        this.showToast(`Pregunta ${question.id}: necesita 2 opciones`, true);
+        return;
+      }
+    }
+
+    this.isSaving = true;
+
     const preguntasBackend = this.questions.map((q, idx) => ({
       numero: idx + 1,
       texto: q.text,
       tipo: this.mapTipoFrontToBack(q.type),
-      opciones:
-        q.options && q.options.length > 0
-          ? q.options.map((opt, idx) => ({
-              texto: opt,
-              numero: idx + 1,
-            }))
-          : undefined,
+      opciones: q.options?.map((opt, idx) => ({
+        texto: opt,
+        numero: idx + 1
+      })) || []
     }));
 
     const encuesta = {
-      nombre: this.nombreEncuesta || 'Encuesta sin nombre',
+      nombre: this.nombreEncuesta.trim(),
       preguntas: preguntasBackend,
     };
 
     const token_dashboard = this.getTokenFromCookie('td');
     this.encuestasService.crearEncuesta(encuesta, token_dashboard).subscribe({
       next: (resp) => {
+        this.isSaving = false;
+        this.lastSavedState = this.getCurrentStateSnapshot();
+        this.hasUnsavedChanges = false;
         this.clearDraft();
-        alert('¡Encuesta guardada como borrador!');
+        this.showToast('¡Encuesta guardada como borrador!');
+
         if (token_dashboard) {
           this.router.navigate(['/dashboard'], {
             queryParams: { token: token_dashboard },
@@ -376,8 +495,12 @@ export class CreateComponent {
         }
       },
       error: (err) => {
-        alert('Error al guardar la encuesta');
-      },
+        this.isSaving = false;
+        this.showToast(
+          err.error?.message || 'Error al guardar. Intente nuevamente',
+          true
+        );
+      }
     });
   }
 }
