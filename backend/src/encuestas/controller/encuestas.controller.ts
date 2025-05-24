@@ -8,6 +8,7 @@ import {
   HttpStatus,
   ParseUUIDPipe,
   ParseIntPipe,
+  Patch,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -100,8 +101,6 @@ export class EncuestasController {
     return new ApiResponse('success', message, HttpStatus.OK, encuesta);
   }
 
-  // HACER UN NUEVO UPDATE PARA CAMBIAR EL ESTADO DE UNA ENCUESTA CUANDO SE LE DEE A BOTON PUBLICAR
-
   //	Devuelve el token_respuesta para compartir
   @Get('/creador/:token_dashboard/:id_encuesta/token-participacion')
   @ApiOperation({
@@ -169,6 +168,41 @@ export class EncuestasController {
       'Encuesta cargada correctamente.',
       HttpStatus.OK,
       payload,
+    );
+  }
+
+  // Publica una encuesta cambiando su estado a PUBLICADA
+  @Patch('creador/:token_dashboard/encuesta/:id/publicar')
+  @ApiOperation({
+    summary: 'Publicar una encuesta (cambiar estado a PUBLICADA)',
+  })
+  @ApiParam({ name: 'token_dashboard', description: 'UUID del creador' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID numérico de la encuesta',
+    type: Number,
+  })
+  @SwaggerApiResponse({
+    status: 200,
+    description: 'Encuesta publicada correctamente.',
+  })
+  @SwaggerApiResponse({
+    status: 404,
+    description: 'Encuesta o creador no encontrados.',
+  })
+  async publicarEncuesta(
+    @Param('token_dashboard', new ParseUUIDPipe()) token: string,
+    @Param('id', ParseIntPipe) encuestaId: number,
+  ): Promise<ApiResponse> {
+    const encuestaPublicada = await this.encuestasService.publicarEncuesta(
+      token,
+      encuestaId,
+    );
+    return new ApiResponse(
+      'success',
+      'Encuesta publicada correctamente.',
+      HttpStatus.OK,
+      { tipo: encuestaPublicada },
     );
   }
 }
