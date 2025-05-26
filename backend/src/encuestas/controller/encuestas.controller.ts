@@ -17,9 +17,11 @@ import {
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
+import { Encuesta } from '../entities/encuesta.entity';
 import { EncuestasService } from '../services/encuestas.service';
 import { CreateEncuestaDto } from '../dto/create-encuesta.dto';
 import { GetEncuestaDto } from '../dto/get-encuesta.dto';
+import { UpdateEncuestaDto } from '../dto/update-encuesta.dto';
 import { ApiResponse } from '../../shared/response.dto';
 
 @ApiTags('Encuestas')
@@ -203,6 +205,41 @@ export class EncuestasController {
       'Encuesta publicada correctamente.',
       HttpStatus.OK,
       { tipo: encuestaPublicada },
+    );
+  }
+
+  @Patch('creador/:token_dashboard/encuesta/:id/actualizar')
+  @ApiOperation({ summary: 'Actualizar datos básicos de una encuesta' })
+  @ApiParam({ name: 'token_dashboard', description: 'UUID del creador' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID numérico de la encuesta',
+    type: Number,
+  })
+  @SwaggerApiResponse({
+    status: 200,
+    description: 'Encuesta actualizada correctamente.',
+    type: ApiResponse,
+  })
+  @SwaggerApiResponse({
+    status: 404,
+    description: 'Encuesta o creador no encontrados.',
+  })
+  async actualizarDatosEncuesta(
+    @Param('token_dashboard', new ParseUUIDPipe()) token: string,
+    @Param('id', new ParseIntPipe()) encuestaId: number,
+    @Body() dto: UpdateEncuestaDto,
+  ): Promise<ApiResponse<Encuesta>> {
+    const updated = await this.encuestasService.updateEncuesta(
+      token,
+      encuestaId,
+      dto,
+    );
+    return new ApiResponse(
+      'success',
+      'Encuesta actualizada correctamente.',
+      HttpStatus.OK,
+      updated,
     );
   }
 }
