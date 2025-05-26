@@ -1,15 +1,12 @@
 <header class="bg-white px-6 py-4 z-40 relative">
-  <nav class="flex items-center gap-2 text-sm text-gray-600">
-    <i-lucide [name]="icons.Home" class="w-4 h-4"></i-lucide>
-    <span
-      [routerLink]="['/dashboard']"
-      [queryParams]="{ token: token }"
-      class="text-blue-500 pl-1 underline"
-      >Dashboard</span
-    >
-    <i-lucide [name]="icons.ChevronRight" class="w-4 h-4"></i-lucide>
-    <span class="text-gray-500 font-mono">
-      {{ email || 'No email' }}
-    </span>
+  <nav class="flex items-center justify-between">
+    <div class="flex items-center gap-2 text-sm text-gray-600">
+      <i-lucide [name]="icons.Home" class="w-4 h-4"></i-lucide>
+      <span class="text-blue-500 pl-1">Dashboard</span>
+      <i-lucide [name]="icons.ChevronRight" class="w-4 h-4"></i-lucide>
+      <span class="text-gray-500 font-medium">
+        {{ creadorEmail || 'Usuario' }}
+      </span>
+    </div>
   </nav>
 </header>

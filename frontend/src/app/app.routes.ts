@@ -6,12 +6,10 @@ import { ResultsComponent } from './components/form/results/results.component';
 import { ResponseComponent } from './components/response/response.component';
 
 export const routes: Routes = [
-  {
-    path: '',
-    component: WelcomeComponent,
-  },
+  { path: '', component: WelcomeComponent},
   { path: 'dashboard', component: DashboardComponent },
+  { path: 'create', component: CreateComponent },
   { path: 'create/:id', component: CreateComponent },
   { path: 'results', component: ResultsComponent },
-  { path: 'response', component: ResponseComponent },
+  { path: 'response/:token', component: ResponseComponent },
 ];

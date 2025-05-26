@@ -1,16 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, ChevronUp, ChevronDown, Check, Send, AlertCircle, Home } from 'lucide-angular';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { LucideAngularModule, Check, AlertCircle, Home } from 'lucide-angular';
+import { EncuestasService } from '../../services/encuestas.service';
+
+interface Option {
+  id: number;
+  texto: string; // Cambiado de 'text' a 'texto' para coincidir con la API
+}
 
 interface Question {
   id: number;
   text: string;
-  type: 'simple' | 'multiple' | 'text';
-  options: string[]; // Made mandatory since all question types use it
-  answer?: string | null;
-  answers?: boolean[];
+  type: string;
+  options?: Option[]; // Usamos la interfaz Option definida arriba
+  answer?: any;
 }
 
 @Component({
@@ -18,43 +23,55 @@ interface Question {
   standalone: true,
   imports: [CommonModule, FormsModule, LucideAngularModule],
   templateUrl: './response.component.html',
-  styles: ``
 })
-export class ResponseComponent {
-  // Icons
-  icons = { ChevronUp, ChevronDown, Check, Send, AlertCircle, Home };
+export class ResponseComponent implements OnInit {
+  icons = { Check, AlertCircle, Home };
 
-  // Survey questions with proper typing
-  questions: Question[] = [
-    {
-      id: 1,
-      text: '¿En qué fecha se creó la plataforma de encuestas?',
-      type: 'simple',
-      options: ['Enero 2023', 'Marzo 2023', 'Septiembre 2024', 'Mayo 2025'],
-      answer: null
-    },
-    {
-      id: 2,
-      text: '¿Qué características te gustan de nuestra plataforma?',
-      type: 'multiple',
-      options: ['Usabilidad', 'Diseño', 'Rendimiento', 'Soporte'],
-      answers: new Array(4).fill(false) // Initialize with false for each option
-    },
-    {
-      id: 3,
-      text: '¿Qué sugerencias tienes para mejorar la plataforma?',
-      type: 'text',
-      options: [], // Empty array for text questions
-      answer: ''
-    }
-  ];
-
+  surveyName: string = '';
+  questions: Question[] = [];
   currentQuestionIndex = 0;
   isSubmitted = false;
   showAlert = false;
   alertMessage = '';
+  isLoading = true;
 
-  constructor(private router: Router) {}
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private encuestasService: EncuestasService
+  ) { }
+
+  ngOnInit(): void {
+    const token = this.route.snapshot.paramMap.get('token');
+    if (token) {
+      this.loadSurvey(token);
+    } else {
+      this.router.navigate(['/']);
+    }
+  }
+
+  loadSurvey(token: string): void {
+    this.encuestasService.getSurveyByToken(token).subscribe({
+      next: (response) => {
+        this.surveyName = response.data.nombre;
+        this.questions = response.data.preguntas.map((p: any) => ({
+          id: p.id,
+          text: p.texto,
+          type: p.tipo,
+          options: p.opciones ? p.opciones.map((o: any) => ({
+            id: o.id,
+            texto: o.texto // Mantenemos el nombre del campo como viene del API
+          })) : [],
+          answer: p.tipo === 'OPCION_MULTIPLE_SELECCION_MULTIPLE' ? [] : null
+        }));
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Error loading survey:', err);
+        this.router.navigate(['/']);
+      }
+    });
+  }
 
   get currentQuestion(): Question {
     return this.questions[this.currentQuestionIndex];
@@ -68,12 +85,8 @@ export class ResponseComponent {
     return this.currentQuestionIndex === 0;
   }
 
-
-  // Navigation methods
   nextQuestion(): void {
-    if (!this.validateCurrentQuestion()) {
-      return;
-    }
+    if (!this.validateCurrentQuestion()) return;
     if (this.currentQuestionIndex < this.questions.length - 1) {
       this.currentQuestionIndex++;
     }
@@ -85,51 +98,57 @@ export class ResponseComponent {
     }
   }
 
-  // Validation
+
   validateCurrentQuestion(): boolean {
-    if (this.currentQuestion.type === 'simple' && !this.currentQuestion.answer) {
-      this.showAlertMessage('Por favor selecciona una opción antes de continuar');
+    const question = this.currentQuestion;
+
+    if (question.type === 'ABIERTA' && !question.answer?.trim()) {
+      this.showAlertMessage('Por favor ingresa tu respuesta');
       return false;
     }
-    if (this.currentQuestion.type === 'multiple' && 
-        this.currentQuestion.answers?.every(a => !a)) {
-      this.showAlertMessage('Por favor selecciona al menos una opción antes de continuar');
+
+    if ((question.type === 'OPCION_MULTIPLE_SELECCION_SIMPLE' ||
+      question.type === 'OPCION_MULTIPLE_SELECCION_MULTIPLE') &&
+      !question.answer) {
+      this.showAlertMessage('Por favor selecciona una opción');
       return false;
     }
-    if (this.currentQuestion.type === 'text' && !this.currentQuestion.answer?.trim()) {
-      this.showAlertMessage('Por favor ingresa tu respuesta antes de continuar');
-      return false;
-    }
+
     return true;
   }
 
   showAlertMessage(message: string): void {
     this.alertMessage = message;
     this.showAlert = true;
-    setTimeout(() => {
-      this.showAlert = false;
-    }, 3000);
+    setTimeout(() => this.showAlert = false, 3000);
   }
 
-  // Submission
   submitForm(): void {
-    if (!this.validateCurrentQuestion()) {
-      return;
-    }
+    if (!this.validateCurrentQuestion()) return;
+
+    // Aquí iría la lógica para enviar las respuestas al backend
+    console.log('Respuestas:', this.questions.map(q => ({
+      questionId: q.id,
+      answer: q.answer
+    })));
+
     this.isSubmitted = true;
-    // Here you would typically send the data to a server
-    console.log('Form submitted:', {
-      questions: this.questions.map(q => ({
-        question: q.text,
-        answer: q.type === 'multiple' 
-          ? q.options?.filter((_, i) => q.answers?.[i]) 
-          : q.answer
-      }))
-    });
+  }
+  toggleOption(optionId: number): void {
+    const question = this.currentQuestion;
+    if (!question.answer) {
+      question.answer = [];
+    }
+
+    const index = question.answer.indexOf(optionId);
+    if (index === -1) {
+      question.answer.push(optionId);
+    } else {
+      question.answer.splice(index, 1);
+    }
   }
 
-  // Navigation
   createNewSurvey(): void {
-    this.router.navigate(['']);
+    this.router.navigate(['/']);
   }
 }

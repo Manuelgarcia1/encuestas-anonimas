@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   LucideAngularModule,
@@ -7,12 +7,11 @@ import {
   Edit,
   ListOrdered,
   Send,
-  Pencil,
   Menu,
   X,
 } from 'lucide-angular';
 import { ModalPublicarComponent } from '../../form/create/modal-publicar/modal-publicar.component';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-header-form',
@@ -21,14 +20,16 @@ import { Router } from '@angular/router';
   templateUrl: './header-form.component.html',
 })
 export class HeaderFormComponent implements OnInit {
-  constructor(private router: Router) {}
+  constructor(private router: Router, private route: ActivatedRoute) { }
 
-  icons = { Home, ChevronRight, Edit, ListOrdered, Send, Pencil, Menu, X };
+  @Input() nombreEncuesta: string = 'Mi Formulario'; // Recibe el nombre desde el padre
+  @Input() encuestaId!: number;
+
+  icons = { Home, ChevronRight, Edit, ListOrdered, Send, Menu, X };
   activeTab: 'edit' | 'results' = 'edit';
-  formName = 'Mi Formulario';
-  isEditingName = false;
   mobileMenuOpen = false;
   showPublishModal = false;
+  token: string | null = null;
 
   ngOnInit(): void {
     const currentUrl = this.router.url;
@@ -36,6 +37,28 @@ export class HeaderFormComponent implements OnInit {
       this.activeTab = 'results';
     } else if (currentUrl.includes('/create')) {
       this.activeTab = 'edit';
+    }
+
+    // Obtener el ID de la encuesta de la ruta
+    this.route.params.subscribe(params => {
+      this.encuestaId = +params['id'];
+    });
+
+    this.token = this.getCookie('td');
+  }
+
+  private getCookie(name: string): string | null {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+    return null;
+  }
+
+  navigateToDashboard() {
+    if (this.token) {
+      this.router.navigate(['/dashboard'], { queryParams: { token: this.token } });
+    } else {
+      this.router.navigate(['/dashboard']);
     }
   }
 
@@ -50,25 +73,23 @@ export class HeaderFormComponent implements OnInit {
     }
   }
 
-  toggleEditName() {
-    this.isEditingName = !this.isEditingName;
-  }
-
-  saveFormName(newName: string) {
-    this.formName = newName || 'Mi Formulario';
-    this.isEditingName = false;
-  }
-
   toggleMobileMenu() {
     this.mobileMenuOpen = !this.mobileMenuOpen;
   }
 
-  // Método para abrir el modal de publicación
   openPublishModal() {
-    this.showPublishModal = true;
+    // Obtener el ID de la encuesta de la URL
+    const currentUrl = this.router.url;
+    const encuestaId = currentUrl.split('/').pop();
+
+    if (encuestaId && !isNaN(Number(encuestaId))) {
+      this.showPublishModal = true;
+    } else {
+      console.error('No se pudo obtener el ID de la encuesta');
+      // Mostrar mensaje de error al usuario
+    }
   }
 
-  // Método para manejar el cierre del modal
   onCloseModal() {
     this.showPublishModal = false;
   }

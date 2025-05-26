@@ -7,10 +7,11 @@ import { Encuesta } from './entities/encuesta.entity';
 import { Pregunta } from './../preguntas/entities/pregunta.entity';
 import { CreadoresModule } from './../creadores/creadores.module';
 import { LocalCacheService } from '../cache/local-cache.service';
+import { Opcion } from '../opciones/entities/opcion.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Creador, Encuesta, Pregunta]),
+    TypeOrmModule.forFeature([Creador, Encuesta, Pregunta, Opcion]),
     CreadoresModule,
   ],
   controllers: [EncuestasController],
