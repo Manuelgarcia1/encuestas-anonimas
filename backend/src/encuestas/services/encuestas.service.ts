@@ -140,13 +140,7 @@ export class EncuestasService {
     const saved = await this.encuestasRepository.save(encuesta);
 
     // INVALIDAR CACHE de la lista de encuestas de este creador
-    // Usamos la misma clave que en obtenerEncuestasPorTokenCreador
-    const page1Key = `encuestas:${token_dashboard}:p1:l10:sid:ASC`;
-    this.cache.del(page1Key);
-    // Si tienes más combinaciones de page/limit/sort,
-    // podrías limpiar todas con flush():
-    // this.cache.flush();
-
+    this.cache.flush();
     return saved;
   }
 
@@ -358,7 +352,10 @@ export class EncuestasService {
       }
     }
 
-    // 5. Devolver la encuesta actualizada
+    // 5) Invalidar cache de listado de encuestas
+    this.cache.flush();
+
+    // 6) Devolvemos la encuesta recargada
     return this.encuestasRepository.findOneOrFail({
       where: { id: encuestaId },
       relations: ['preguntas', 'preguntas.opciones'],
