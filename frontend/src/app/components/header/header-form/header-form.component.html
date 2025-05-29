@@ -15,13 +15,13 @@
     </nav>
 
     <!-- Desktop Navigation -->
-    <div class="hidden sm:flex items-center gap-4">
-      <button (click)="setActiveTab('edit')" class="flex items-center gap-2 px-4 py-1 rounded-md transition-colors"
-        [class.text-blue-600]="activeTab === 'edit'" [class.bg-blue-50]="activeTab === 'edit'"
-        [class.text-gray-600]="activeTab !== 'edit'">
-        <i-lucide [name]="icons.Edit" class="w-4 h-4"></i-lucide>
-        <span>Editar</span>
-      </button>
+    <div class="hidden sm:flex items-center gap-4">  
+        <!-- <button (click)="setActiveTab('edit')" class="flex items-center gap-2 px-4 py-1 rounded-md transition-colors"
+          [class.text-blue-600]="activeTab === 'edit'" [class.bg-blue-50]="activeTab === 'edit'"
+          [class.text-gray-600]="activeTab !== 'edit'">
+          <i-lucide [name]="icons.Edit" class="w-4 h-4"></i-lucide>
+          <span>Editar</span>
+        </button> -->
 
       <button (click)="setActiveTab('results')" class="flex items-center gap-2 px-4 py-1 rounded-md transition-colors"
         [class.text-blue-600]="activeTab === 'results'" [class.bg-blue-50]="activeTab === 'results'"

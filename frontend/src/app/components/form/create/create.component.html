@@ -244,7 +244,7 @@
                             @if (isSaving) {
                             <span>Guardando...</span>
                             } @else {
-                            <span>Guardar borrador</span>
+                            <span>{{ isEditMode ? 'Guardar cambios' : 'Guardar encuesta' }}</span>
                             }
                         </button>
                     </div>
