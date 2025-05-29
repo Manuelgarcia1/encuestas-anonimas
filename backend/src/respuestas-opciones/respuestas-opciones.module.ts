@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { RespuestasOpcionesService } from './respuestas-opciones.service';
-import { RespuestasOpcionesController } from './respuestas-opciones.controller';
+import { RespuestasOpcionesService } from './services/respuestas-opciones.service';
+import { RespuestasOpcionesController } from './controller/respuestas-opciones.controller';
 
 @Module({
   controllers: [RespuestasOpcionesController],

@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { CreateRespuestasOpcioneDto } from './dto/create-respuestas-opcione.dto';
-import { UpdateRespuestasOpcioneDto } from './dto/update-respuestas-opcione.dto';
+import { RespuestaOpcionDto } from './../dto/create-respuestas-opcione.dto';
+import { UpdateRespuestasOpcioneDto } from './../dto/update-respuestas-opcione.dto';
 
 @Injectable()
 export class RespuestasOpcionesService {
-  create(createRespuestasOpcioneDto: CreateRespuestasOpcioneDto) {
+  create(RespuestaOpcionDto: RespuestaOpcionDto) {
     return 'This action adds a new respuestasOpcione';
   }
 

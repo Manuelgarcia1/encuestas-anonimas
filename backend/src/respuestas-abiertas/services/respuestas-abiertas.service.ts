@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { CreateRespuestasAbiertaDto } from './dto/create-respuestas-abierta.dto';
-import { UpdateRespuestasAbiertaDto } from './dto/update-respuestas-abierta.dto';
+import { RespuestaAbiertaDto } from './../dto/create-respuestas-abierta.dto';
+import { UpdateRespuestasAbiertaDto } from './../dto/update-respuestas-abierta.dto';
 
 @Injectable()
 export class RespuestasAbiertasService {
-  create(createRespuestasAbiertaDto: CreateRespuestasAbiertaDto) {
+  create(RespuestaAbiertaDto: RespuestaAbiertaDto) {
     return 'This action adds a new respuestasAbierta';
   }
 

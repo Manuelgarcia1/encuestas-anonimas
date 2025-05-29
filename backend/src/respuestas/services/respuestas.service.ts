@@ -5,12 +5,12 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Encuesta } from '../encuestas/entities/encuesta.entity';
-import { Respuesta } from '../respuestas/entities/respuesta.entity';
-import { RespuestaOpcion } from '../respuestas-opciones/entities/respuestas-opcione.entity';
-import { RespuestaAbierta } from '../respuestas-abiertas/entities/respuestas-abierta.entity';
-import { CreateRespuestaDto } from './dto/create-respuesta.dto';
-import { EncuestasService } from '../encuestas/services/encuestas.service';
+import { Encuesta } from '../../encuestas/entities/encuesta.entity';
+import { Respuesta } from '../../respuestas/entities/respuesta.entity';
+import { RespuestaOpcion } from '../../respuestas-opciones/entities/respuestas-opcione.entity';
+import { RespuestaAbierta } from '../../respuestas-abiertas/entities/respuestas-abierta.entity';
+import { CreateRespuestaDto } from './../dto/create-respuesta.dto';
+import { EncuestasService } from '../../encuestas/services/encuestas.service';
 
 /**
  * Servicio encargado de manejar el almacenamiento de respuestas
