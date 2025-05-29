@@ -9,6 +9,9 @@ import { CreadoresModule } from './creadores/creadores.module';
 import { PreguntasModule } from './preguntas/preguntas.module';
 import { OpcionesModule } from './opciones/opciones.module';
 import { LocalCacheService } from './cache/local-cache.service';
+import { RespuestasModule } from './respuestas/respuestas.module';
+import { RespuestasAbiertasModule } from './respuestas-abiertas/respuestas-abiertas.module';
+import { RespuestasOpcionesModule } from './respuestas-opciones/respuestas-opciones.module';
 
 @Module({
   imports: [
@@ -41,6 +44,9 @@ import { LocalCacheService } from './cache/local-cache.service';
     CreadoresModule,
     PreguntasModule,
     OpcionesModule,
+    RespuestasModule,
+    RespuestasAbiertasModule,
+    RespuestasOpcionesModule,
   ],
   controllers: [AppController],
   providers: [LocalCacheService],

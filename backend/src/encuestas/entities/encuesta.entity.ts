@@ -9,6 +9,7 @@ import {
 import { Pregunta } from '../../preguntas/entities/pregunta.entity';
 import { Creador } from '../../creadores/entities/creador.entity';
 import { EstadoEncuestaEnum } from '../enums/estado-encuestas.enum';
+import { Respuesta } from '../../respuestas/entities/respuesta.entity';
 
 @Entity('encuestas')
 export class Encuesta {
@@ -37,4 +38,7 @@ export class Encuesta {
     eager: true, // opcional
   })
   preguntas: Pregunta[];
+
+  @OneToMany(() => Respuesta, (respuesta) => respuesta.encuesta)
+  respuestas: Respuesta[];
 }

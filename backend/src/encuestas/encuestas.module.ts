@@ -16,5 +16,6 @@ import { Opcion } from '../opciones/entities/opcion.entity';
   ],
   controllers: [EncuestasController],
   providers: [EncuestasService, LocalCacheService],
+  exports: [EncuestasService, TypeOrmModule],
 })
 export class EncuestasModule {}

@@ -4,10 +4,13 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Pregunta } from './../../preguntas/entities/pregunta.entity';
+import { RespuestaOpcion } from '../../respuestas-opciones/entities/respuestas-opcione.entity';
+
 import { Exclude, Expose } from 'class-transformer';
-import { Pregunta } from '../../preguntas/entities/pregunta.entity';
 
 @Entity({ name: 'opciones' })
 export class Opcion {
@@ -28,4 +31,7 @@ export class Opcion {
   @JoinColumn({ name: 'id_pregunta' })
   @Exclude() // sigues excluyendo la relación completa
   pregunta: Pregunta;
+
+  @OneToMany(() => RespuestaOpcion, (respuestaOpcion) => respuestaOpcion.opcion)
+  respuestasOpciones: RespuestaOpcion[]; // Nombre consistente
 }
