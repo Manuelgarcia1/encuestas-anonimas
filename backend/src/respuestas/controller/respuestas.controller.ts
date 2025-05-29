@@ -8,15 +8,15 @@ import {
   Get,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { RespuestasService } from './respuestas.service';
-import { CreateRespuestaDto } from './dto/create-respuesta.dto';
+import { RespuestasService } from '../services/respuestas.service';
+import { CreateRespuestaDto } from './../dto/create-respuesta.dto';
 import {
   ApiTags,
   ApiResponse as SwaggerApiResponse,
   ApiParam,
   ApiOperation,
 } from '@nestjs/swagger';
-import { ApiResponse } from '../shared/response.dto';
+import { ApiResponse } from '../../shared/response.dto';
 
 @ApiTags('Respuestas')
 @Controller('respuestas')
