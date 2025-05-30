@@ -5,6 +5,8 @@ import {
   Column,
   OneToMany,
   ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Pregunta } from '../../preguntas/entities/pregunta.entity';
 import { Creador } from '../../creadores/entities/creador.entity';
@@ -41,4 +43,10 @@ export class Encuesta {
 
   @OneToMany(() => Respuesta, (respuesta) => respuesta.encuesta)
   respuestas: Respuesta[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
