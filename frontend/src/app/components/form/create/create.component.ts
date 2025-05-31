@@ -1,4 +1,9 @@
 import { Component, HostListener, OnDestroy } from '@angular/core';
+import { Encuesta } from '../../../interfaces/encuesta.interface';
+import { Pregunta } from '../../../interfaces/pregunta.interface';
+import { Opcion } from '../../../interfaces/opcion.interace';
+import { TiposRespuestaEnum } from '../../../enums/tipos-respuesta.enum';
+import { CreateEncuestaDto } from '../../../dto/create-encuesta.dto';
 import {
   LucideAngularModule,
   Plus,
@@ -118,7 +123,7 @@ export class CreateComponent implements OnDestroy {
   ) {
     this.draftService.questions$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(qs => {
+      .subscribe((qs) => {
         this.questions = qs;
         this.checkForChanges();
       });
@@ -177,19 +182,21 @@ export class CreateComponent implements OnDestroy {
   private cargarEncuestaExistente(encuestaId: number, token: string) {
     this.encuestasService.getEncuestaPorId(token, encuestaId).subscribe({
       next: (response) => {
+        const encuesta: Encuesta = response?.data;
         if (response && response.data) {
-          const encuesta = response.data;
           this.nombreEncuesta = encuesta.nombre;
 
           // Mapear preguntas del backend al formato del frontend
-          this.questions = (encuesta.preguntas || []).map((pregunta: any, index: number) => ({
-            id: index + 1,
-            text: pregunta.texto,
-            type: this.mapTipoBackToFront(pregunta.tipo),
-            active: false,
-            required: false, // Puedes ajustar esto según tu modelo
-            options: pregunta.opciones ? pregunta.opciones.map((op: any) => op.texto) : []
-          }));
+          this.questions = (encuesta.preguntas || []).map(
+            (pregunta: Pregunta, index: number) => ({
+              id: index + 1,
+              text: pregunta.texto,
+              type: this.mapTipoBackToFront(pregunta.tipo),
+              active: false,
+              required: false, // Puedes ajustar esto según tu modelo
+              options: pregunta.opciones?.map((op: Opcion) => op.texto) || [],
+            })
+          );
 
           // Activar la primera pregunta si hay preguntas
           if (this.questions.length > 0) {
@@ -203,11 +210,13 @@ export class CreateComponent implements OnDestroy {
       },
       error: (err) => {
         console.error('Error al cargar la encuesta:', err);
-        this.showToast('No se pudo cargar la encuesta. Intente nuevamente.', true);
-      }
+        this.showToast(
+          'No se pudo cargar la encuesta. Intente nuevamente.',
+          true
+        );
+      },
     });
   }
-
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -218,7 +227,7 @@ export class CreateComponent implements OnDestroy {
   private getCurrentStateSnapshot(): string {
     return JSON.stringify({
       nombre: this.nombreEncuesta,
-      questions: this.questions
+      questions: this.questions,
     });
   }
 
@@ -226,12 +235,12 @@ export class CreateComponent implements OnDestroy {
   private checkForChanges(): void {
     const currentState = JSON.stringify({
       nombre: this.nombreEncuesta,
-      questions: this.questions.map(q => ({
+      questions: this.questions.map((q) => ({
         text: q.text,
         type: q.type,
         required: q.required,
-        options: q.options || []
-      }))
+        options: q.options || [],
+      })),
     });
 
     this.hasUnsavedChanges = currentState !== this.lastSavedState;
@@ -407,7 +416,6 @@ export class CreateComponent implements OnDestroy {
     this.checkForChanges();
   }
 
-
   clearDraft() {
     this.draftService.clearDraft();
   }
@@ -453,8 +461,10 @@ export class CreateComponent implements OnDestroy {
         return;
       }
 
-      if ((question.type === 'radio' || question.type === 'checkbox') &&
-        (!question.options || question.options.length < 2)) {
+      if (
+        (question.type === 'radio' || question.type === 'checkbox') &&
+        (!question.options || question.options.length < 2)
+      ) {
         this.showToast(`Pregunta ${question.id}: necesita 2 opciones`, true);
         return;
       }
@@ -465,16 +475,30 @@ export class CreateComponent implements OnDestroy {
     const preguntasBackend = this.questions.map((q, idx) => ({
       numero: idx + 1,
       texto: q.text,
-      tipo: this.mapTipoFrontToBack(q.type),
-      opciones: q.options?.map((opt, idx) => ({
-        texto: opt,
-        numero: idx + 1
-      })) || []
+      tipo: TiposRespuestaEnum[
+        this.mapTipoFrontToBack(q.type) as keyof typeof TiposRespuestaEnum
+      ],
+      opciones:
+        q.options?.map((opt, idx) => ({
+          texto: opt,
+          numero: idx + 1,
+        })) || [],
     }));
 
-    const encuesta = {
+    const encuesta: CreateEncuestaDto = {
       nombre: this.nombreEncuesta.trim(),
-      preguntas: preguntasBackend,
+      preguntas: this.questions.map((q, idx) => ({
+        numero: idx + 1,
+        texto: q.text,
+        tipo: TiposRespuestaEnum[
+          this.mapTipoFrontToBack(q.type) as keyof typeof TiposRespuestaEnum
+        ],
+        opciones:
+          q.options?.map((opt, idx) => ({
+            texto: opt,
+            numero: idx + 1,
+          })) || [],
+      })),
     };
 
     const token_dashboard = this.getTokenFromCookie('td');
@@ -500,7 +524,7 @@ export class CreateComponent implements OnDestroy {
           err.error?.message || 'Error al guardar. Intente nuevamente',
           true
         );
-      }
+      },
     });
   }
 }

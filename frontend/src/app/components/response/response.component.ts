@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule, Check, AlertCircle, Home } from 'lucide-angular';
 import { EncuestasService } from '../../services/encuestas.service';
+import { EnviarRespuestasPayload } from '../../services/encuestas.service';
 
 interface Option {
   id: number;
@@ -28,6 +29,7 @@ export class ResponseComponent implements OnInit {
   icons = { Check, AlertCircle, Home };
 
   surveyName: string = '';
+  surveyToken: string = '';
   questions: Question[] = [];
   currentQuestionIndex = 0;
   isSubmitted = false;
@@ -51,6 +53,7 @@ export class ResponseComponent implements OnInit {
   }
 
   loadSurvey(token: string): void {
+    this.surveyToken = token;
     this.encuestasService.getSurveyByToken(token).subscribe({
       next: (response) => {
         this.surveyName = response.data.nombre;
@@ -124,16 +127,39 @@ export class ResponseComponent implements OnInit {
   }
 
   submitForm(): void {
-    if (!this.validateCurrentQuestion()) return;
+    const respuestas_abiertas = this.questions
+      .filter(q => q.type === 'ABIERTA')
+      .map(q => ({
+        id_pregunta: q.id,
+        texto: q.answer
+      }));
 
-    // Aquí iría la lógica para enviar las respuestas al backend
-    console.log('Respuestas:', this.questions.map(q => ({
-      questionId: q.id,
-      answer: q.answer
-    })));
+    const respuestas_opciones = this.questions
+      .filter(q => q.type !== 'ABIERTA')
+      .map(q => ({
+        id_pregunta: q.id,
+        id_opciones: Array.isArray(q.answer) ? q.answer : [q.answer]
+      }));
 
-    this.isSubmitted = true;
+    const payload: EnviarRespuestasPayload = {
+      respuestas_abiertas,
+      respuestas_opciones
+    };
+
+    console.log('Payload de respuestas enviado:', payload);
+
+    this.encuestasService.enviarRespuestas(this.surveyToken, payload).subscribe({
+      next: () => {
+        this.isSubmitted = true;
+        this.showAlertMessage('¡Respuestas enviadas correctamente!');
+      },
+      error: (err) => {
+        this.showAlertMessage('Error al enviar respuestas');
+        console.error(err);
+      }
+    });
   }
+
   toggleOption(optionId: number): void {
     const question = this.currentQuestion;
     if (!question.answer) {
