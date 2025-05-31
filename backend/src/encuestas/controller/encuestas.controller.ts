@@ -209,7 +209,7 @@ export class EncuestasController {
     );
   }
 
-  @Patch('creador/:token_dashboard/encuesta/:id/actualizar')
+  @Put('creador/:token_dashboard/encuesta/:id/actualizar')
   @ApiOperation({ summary: 'Actualizar datos básicos de una encuesta' })
   @ApiParam({ name: 'token_dashboard', description: 'UUID del creador' })
   @ApiParam({
