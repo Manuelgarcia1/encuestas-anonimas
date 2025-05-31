@@ -17,18 +17,27 @@ import {
   Check,
 } from 'lucide-angular';
 import { HeaderDashboardComponent } from '../header/header-dashboard/header-dashboard.component';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [LucideAngularModule, HeaderDashboardComponent],
+  imports: [
+    CommonModule,
+    LucideAngularModule,
+    HeaderDashboardComponent,
+    FormsModule
+  ],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent {
   forms: any[] = [];
-  creadorEmail: string | null = null; // Nueva propiedad para el email del creador
+  filteredForms: any[] = [];
+  searchTerm: string = '';
+  creadorEmail: string | null = null;
   filters = [
-    { id: 1, name: 'Fecha de creación', checked: false },
+    { id: 1, name: 'Fecha de creación', checked: true }, // Cambiado a true
     { id: 2, name: 'Número de Respuestas', checked: false },
     { id: 3, name: 'Orden Alfabético', checked: false },
   ];
@@ -56,37 +65,97 @@ export class DashboardComponent {
     this.route.queryParamMap.subscribe((params) => {
       const token = params.get('token');
       if (token) {
-        document.cookie = `td=${token}; path=/; SameSite=Strict; Secure`;
-        this.encuestasService.getEncuestasPorToken(token).subscribe({
-          next: (response) => {
-            let encuestas: any[] = [];
-            if (Array.isArray(response.data)) {
-              encuestas = response.data;
-            } else if (response.data) {
-              encuestas = [response.data];
-            }
-            console.log('Respuesta completa:', response);
-            
-            // Obtener el email del creador desde la respuesta
-            if (response.creadorEmail) {
-              this.creadorEmail = response.creadorEmail;
-              console.log('Email del creador:', this.creadorEmail);
-            }
-
-            this.forms = encuestas.map((encuesta: any) => ({
-              id: encuesta.id,
-              name: encuesta.nombre,
-              creationDate: encuesta.createdAt || '',
-              status: encuesta.tipo?.toLowerCase() || 'borrador',
-              ...encuesta,
-            }));
-          },
-          error: (err) => {
-            console.error('Error al obtener encuestas:', err);
-          },
-        });
+        this.loadForms(token);
       }
     });
+  }
+
+  private loadForms(token: string): void {
+    document.cookie = `td=${token}; path=/; SameSite=Strict; Secure`;
+    this.encuestasService.getEncuestasPorToken(token).subscribe({
+      next: (response) => {
+        let encuestas: any[] = Array.isArray(response.data)
+          ? response.data
+          : response.data ? [response.data] : [];
+
+        if (response.creadorEmail) {
+          this.creadorEmail = response.creadorEmail;
+        }
+
+        this.forms = encuestas.map(encuesta => ({
+          id: encuesta.id,
+          name: encuesta.nombre,
+          creationDate: encuesta.createdAt || '',
+          status: encuesta.tipo?.toLowerCase() || 'borrador',
+          ...encuesta,
+        }));
+
+        // Orden inicial por fecha de creación (más reciente primero)
+        this.forms.sort((a, b) =>
+          new Date(b.creationDate).getTime() - new Date(a.creationDate).getTime()
+        );
+
+        this.updateDisplayedForms();
+      },
+      error: (err) => {
+        console.error('Error al obtener encuestas:', err);
+      },
+    });
+  }
+
+  toggleFilter(filter: any): void {
+    // Solo permitir un filtro activo a la vez
+    this.filters.forEach(f => {
+      if (f.id !== filter.id) {
+        f.checked = false;
+      }
+    });
+
+    filter.checked = !filter.checked;
+    this.updateDisplayedForms();
+  }
+
+  updateDisplayedForms(): void {
+    // 1. Aplicar filtro de búsqueda primero
+    let result = [...this.forms];
+
+    if (this.searchTerm.trim()) {
+      const searchTermLower = this.searchTerm.toLowerCase().trim();
+      result = result.filter(form =>
+        form.name.toLowerCase().includes(searchTermLower)
+      );
+    }
+
+    // 2. Aplicar ordenamiento si hay un filtro activo
+    const activeFilter = this.filters.find(f => f.checked);
+    if (activeFilter) {
+      switch (activeFilter.id) {
+        case 1: // Fecha de creación (más reciente primero)
+          result.sort((a, b) =>
+            new Date(b.creationDate).getTime() - new Date(a.creationDate).getTime()
+          );
+          break;
+        case 2: // Número de respuestas (implementar cuando tengamos los datos)
+          // result.sort((a, b) => b.responses - a.responses);
+          break;
+        case 3: // Orden Alfabético
+          result.sort((a, b) =>
+            a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
+          );
+          break;
+      }
+    } else {
+      // Si no hay filtros activos, ordenar por fecha de creación (más reciente primero)
+      result.sort((a, b) =>
+        new Date(b.creationDate).getTime() - new Date(a.creationDate).getTime()
+      );
+    }
+
+    this.filteredForms = result;
+  }
+
+  filterForms(): void {
+    this.updateDisplayedForms();
   }
 
   navigateToCreateForm() {

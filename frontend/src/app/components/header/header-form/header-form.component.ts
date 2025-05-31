@@ -22,13 +22,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 export class HeaderFormComponent implements OnInit {
   constructor(private router: Router, private route: ActivatedRoute) { }
 
-  @Input() nombreEncuesta: string = 'Mi Formulario'; // Recibe el nombre desde el padre
+  @Input() nombreEncuesta: string = 'Mi Formulario';
   @Input() encuestaId!: number;
 
   icons = { Home, ChevronRight, Edit, ListOrdered, Send, Menu, X };
   activeTab: 'edit' | 'results' = 'edit';
   mobileMenuOpen = false;
   showPublishModal = false;
+  showConfirmPublishModal = false; // Nueva propiedad para el modal de confirmación
   token: string | null = null;
 
   ngOnInit(): void {
@@ -39,7 +40,6 @@ export class HeaderFormComponent implements OnInit {
       this.activeTab = 'edit';
     }
 
-    // Obtener el ID de la encuesta de la ruta
     this.route.params.subscribe(params => {
       this.encuestaId = +params['id'];
     });
@@ -78,6 +78,14 @@ export class HeaderFormComponent implements OnInit {
   }
 
   openPublishModal() {
+    // Mostrar primero el modal de confirmación
+    this.showConfirmPublishModal = true;
+  }
+
+  confirmPublish() {
+    // Ocultar modal de confirmación
+    this.showConfirmPublishModal = false;
+
     // Obtener el ID de la encuesta de la URL
     const currentUrl = this.router.url;
     const encuestaId = currentUrl.split('/').pop();
