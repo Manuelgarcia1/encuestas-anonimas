@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule, Check, AlertCircle, Home } from 'lucide-angular';
 import { EncuestasService } from '../../services/encuestas.service';
+import { EnviarRespuestasPayload } from '../../services/encuestas.service';
 
 interface Option {
   id: number;
@@ -140,12 +141,12 @@ export class ResponseComponent implements OnInit {
         id_opciones: Array.isArray(q.answer) ? q.answer : [q.answer]
       }));
 
-    const payload = {
+    const payload: EnviarRespuestasPayload = {
       respuestas_abiertas,
       respuestas_opciones
     };
 
-    console.log('Payload enviado:', payload);
+    console.log('Payload de respuestas enviado:', payload);
 
     this.encuestasService.enviarRespuestas(this.surveyToken, payload).subscribe({
       next: () => {
