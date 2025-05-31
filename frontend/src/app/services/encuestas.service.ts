@@ -17,6 +17,12 @@ export interface EnviarRespuestasPayload {
   respuestas_opciones: RespuestaOpcion[];
 }
 
+export interface EnviarRespuestasResponse {
+  status: string;
+  message: string;
+  statusCode: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class EncuestasService {
   private apiUrl = '/api/v1/encuestas/creador';
@@ -43,7 +49,7 @@ export class EncuestasService {
     return this.http.get(`/api/v1/encuestas/participacion/${token}`);
   }
 
-  enviarRespuestas(token: string, payload: EnviarRespuestasPayload): Observable<any> {
-    return this.http.post(`/api/v1/respuestas/${token}`, payload);
+  enviarRespuestas(token: string, payload: EnviarRespuestasPayload): Observable<EnviarRespuestasResponse> {
+    return this.http.post<EnviarRespuestasResponse>(`/api/v1/respuestas/${token}`, payload);
   }
 }
