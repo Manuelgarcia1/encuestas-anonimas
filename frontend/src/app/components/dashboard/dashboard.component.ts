@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EncuestasService } from '../../services/encuestas.service';
+import { Encuesta } from '../../interfaces/encuesta.interface'; // adaptá la ruta según tu estructura
 import {
   LucideAngularModule,
   Plus,
@@ -59,26 +60,25 @@ export class DashboardComponent {
         document.cookie = `td=${token}; path=/; SameSite=Strict; Secure`;
         this.encuestasService.getEncuestasPorToken(token).subscribe({
           next: (response) => {
-            let encuestas: any[] = [];
+            let encuestas: Encuesta[] = [];
             if (Array.isArray(response.data)) {
               encuestas = response.data;
             } else if (response.data) {
               encuestas = [response.data];
             }
             console.log('Respuesta completa:', response);
-            
+
             // Obtener el email del creador desde la respuesta
             if (response.creadorEmail) {
               this.creadorEmail = response.creadorEmail;
               console.log('Email del creador:', this.creadorEmail);
             }
 
-            this.forms = encuestas.map((encuesta: any) => ({
-              id: encuesta.id,
+            this.forms = encuestas.map((encuesta: Encuesta) => ({
+              ...encuesta,
               name: encuesta.nombre,
               creationDate: encuesta.createdAt || '',
               status: encuesta.tipo?.toLowerCase() || 'borrador',
-              ...encuesta,
             }));
           },
           error: (err) => {

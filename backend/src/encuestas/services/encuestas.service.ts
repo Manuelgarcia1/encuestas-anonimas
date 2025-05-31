@@ -154,6 +154,7 @@ export class EncuestasService {
     });
 
     const saved = await this.encuestasRepository.save(encuesta);
+    this.clearCacheForEncuestas(token_dashboard);
 
     return saved;
   }
@@ -181,6 +182,7 @@ export class EncuestasService {
    * Busca la encuesta por token_respuesta e incluye preguntas y sus opciones.
    * Lanza 404 si no existe.
    */
+
   async findEncuestaByToken(token: string): Promise<Encuesta> {
     const encuesta = await this.encuestasRepository.findOne({
       where: { token_respuesta: token },
@@ -192,9 +194,8 @@ export class EncuestasService {
     return encuesta;
   }
 
-  /**
-   * Cambia el estado de una encuesta a PUBLICADA
-   */
+  // Cambia el estado de una encuesta a PUBLICADA
+
   async publicarEncuesta(
     token_dashboard: string,
     encuestaId: number,
