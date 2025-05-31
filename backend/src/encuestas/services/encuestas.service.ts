@@ -277,10 +277,23 @@ export class EncuestasService {
           await this.preguntaRepository.save(pregunta);
         }
 
-        // 4.c) Reemplazo total de opciones si viene array
+        // 4.c) Eliminar opciones específicas si se indica eliminarOpciones
+        if (
+          Array.isArray(pq.eliminarOpciones) &&
+          pq.eliminarOpciones.length > 0
+        ) {
+          await this.opcionRepository.delete({
+            id: In(pq.eliminarOpciones),
+            pregunta: { id: pregunta.id },
+          });
+        }
+
+        // 4.d) Reemplazo total de opciones si se incluye el array completo
         if (Array.isArray(pq.opciones)) {
+          // Primero eliminamos TODAS las opciones existentes
           await this.opcionRepository.delete({ pregunta: { id: pregunta.id } });
 
+          // Luego insertamos todas las nuevas opciones
           for (const oDto of pq.opciones) {
             if (!oDto.texto || oDto.numero == null) continue;
 
@@ -294,31 +307,30 @@ export class EncuestasService {
           }
         }
       } else {
-        // 4.d) Crear nueva pregunta
-        const maxNumero = Math.max(
-          ...encuesta.preguntas.map((p) => p.numero ?? 0),
-          0,
-        );
+        // 4.e) Crear nueva pregunta
+        const cantidadPreguntas = await this.preguntaRepository.count({
+          where: { encuesta: { id: encuestaId } },
+        });
 
         const nuevaPregunta = this.preguntaRepository.create({
-          numero: maxNumero + 1,
+          numero: cantidadPreguntas + 1,
           texto: pq.texto!,
           tipo: pq.tipo!,
           encuesta,
         });
 
-        const savedPreg = await this.preguntaRepository.save(nuevaPregunta);
+        const savedPregunta = await this.preguntaRepository.save(nuevaPregunta);
 
         for (const oDto of pq.opciones ?? []) {
           if (!oDto.texto || oDto.numero == null) continue;
 
-          const nuevaOp = this.opcionRepository.create({
+          const nuevaOpcion = this.opcionRepository.create({
             texto: oDto.texto,
             numero: oDto.numero,
-            pregunta: savedPreg,
+            pregunta: savedPregunta,
           });
 
-          await this.opcionRepository.save(nuevaOp);
+          await this.opcionRepository.save(nuevaOpcion);
         }
       }
     }
