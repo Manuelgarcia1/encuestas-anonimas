@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class EncuestasService {
   private apiUrl = '/api/v1/encuestas/creador';
+  private apiUrlParticipación = '/api/v1/encuestas/participacion';
 
   constructor(private http: HttpClient) { }
 
@@ -25,6 +26,14 @@ export class EncuestasService {
   }
 
   getSurveyByToken(token: string): Observable<any> {
-    return this.http.get(`/api/v1/encuestas/participacion/${token}`);
+    return this.http.get(`${this.apiUrlParticipación}/${token}`);
   }
+
+  enviarRespuestas(token: string, payload: any) {
+    return this.http.post(`/api/v1/respuestas/${token}`, payload);
+  }
+
+  // enviarRespuestas(token: string, respuestas: any[]) {
+  //   return this.http.post(`${this.apiUrlParticipación}/${token}/responder`, { respuestas });
+  // }
 }
