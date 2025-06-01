@@ -26,6 +26,7 @@ export interface EnviarRespuestasResponse {
 @Injectable({ providedIn: 'root' })
 export class EncuestasService {
   private apiUrl = '/api/v1/encuestas/creador';
+  private respuestasApiUrl = '/api/v1/respuestas';
 
   constructor(private http: HttpClient) { }
 
@@ -52,12 +53,16 @@ export class EncuestasService {
   updateEncuesta(token: string, encuestaId: number, payload: any): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/${token}/encuesta/${encuestaId}/actualizar`, payload);
   }
-    
+
   publicarEncuesta(token: string, encuestaId: number): Observable<any> {
     return this.http.patch<any>(`${this.apiUrl}/${token}/encuesta/${encuestaId}/publicar`, {});
   }
 
   enviarRespuestas(token: string, payload: EnviarRespuestasPayload): Observable<EnviarRespuestasResponse> {
     return this.http.post<EnviarRespuestasResponse>(`/api/v1/respuestas/${token}`, payload);
+  }
+
+  getResultadosPorTokenResultados(token_resultados: string): Observable<any> {
+    return this.http.get<any>(`${this.respuestasApiUrl}/resultados/${token_resultados}`);
   }
 }
