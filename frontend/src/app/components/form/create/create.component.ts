@@ -33,13 +33,20 @@ import { Subject, takeUntil } from 'rxjs';
 
 // Definimos una interfaz para el tipo de pregunta
 interface Question {
-  id: number;
+  id?: number; 
+  _tempId?: number;
   text: string;
   type: string;
   active: boolean;
   required: boolean; // Nuevo campo
   showMenu?: boolean;
-  options?: string[];
+  options?: Option[];
+}
+
+interface Option {
+  id?: number; 
+  texto: string;
+  numero: number;
 }
 
 @Component({
@@ -80,6 +87,8 @@ export class CreateComponent implements OnDestroy {
   // Estado del sidebar móvil
   mobileSidebarOpen = false;
 
+  public isInputFocused = false;
+
   // Mapeo de tipos de pregunta a iconos
   questionTypeIcons: { [key: string]: any } = {
     multiple_choice: this.icons.ListChecks,
@@ -96,7 +105,7 @@ export class CreateComponent implements OnDestroy {
   // Estado del modal
   showModal = false;
   questions: Question[] = [];
-  currentOptions: string[] = [];
+  currentOptions: Option[] = [];
   nombreEncuesta: string = '';
 
   // Getter para obtener la pregunta activa
@@ -137,12 +146,22 @@ export class CreateComponent implements OnDestroy {
     }
   }
 
+  isEditMode = false;
+
   ngOnInit() {
     const encuestaId = this.route.snapshot.paramMap.get('id');
     const token_dashboard = this.getTokenFromCookie('td');
 
     if (encuestaId && token_dashboard) {
+      this.isEditMode = true;
       this.cargarEncuestaExistente(parseInt(encuestaId), token_dashboard);
+    } else {
+      this.draftService.questions$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(qs => {
+        this.questions = qs;
+        this.checkForChanges();
+      });
     }
 
     this.lastSavedState = this.getCurrentStateSnapshot();
@@ -182,14 +201,22 @@ export class CreateComponent implements OnDestroy {
           this.nombreEncuesta = encuesta.nombre;
 
           // Mapear preguntas del backend al formato del frontend
-          this.questions = (encuesta.preguntas || []).map((pregunta: any, index: number) => ({
-            id: index + 1,
+          const preguntasMapeadas = (encuesta.preguntas || []).map((pregunta: any, index: number) => ({
+            id: pregunta.id,
+            _tempId: pregunta.id ? undefined : Date.now() + Math.random(),
             text: pregunta.texto,
             type: this.mapTipoBackToFront(pregunta.tipo),
             active: false,
-            required: false, // Puedes ajustar esto según tu modelo
-            options: pregunta.opciones ? pregunta.opciones.map((op: any) => op.texto) : []
+            required: false,
+            options: pregunta.opciones
+              ? pregunta.opciones.map((op: any, idx: number) => ({
+                  id: op.id,
+                  texto: op.texto,
+                  numero: op.numero ?? idx + 1
+                }))
+              : []
           }));
+          this.draftService.updateQuestions(preguntasMapeadas);
 
           // Activar la primera pregunta si hay preguntas
           if (this.questions.length > 0) {
@@ -245,7 +272,7 @@ export class CreateComponent implements OnDestroy {
   }
 
   // Activa una pregunta específica
-  setActiveQuestion(questionId: number) {
+  setActiveQuestion(questionId?: number) {
     this.questions.forEach((q) => {
       q.active = q.id === questionId;
       q.showMenu = false;
@@ -255,28 +282,25 @@ export class CreateComponent implements OnDestroy {
           q.type === 'checkbox' ||
           q.type === 'radio')
       ) {
-        this.currentOptions = q.options
-          ? [...q.options]
-          : ['Opción 1', 'Opción 2'];
+        this.currentOptions = q.options ? [...q.options] : [
+          { texto: 'Opción 1', numero: 1 },
+          { texto: 'Opción 2', numero: 2 }
+        ];
       }
     });
   }
 
   // Método para añadir una nueva opción
   addOption() {
-    if (
-      this.activeQuestion &&
-      (this.activeQuestion.type === 'multiple_choice' ||
-        this.activeQuestion.type === 'checkbox' ||
-        this.activeQuestion.type === 'radio')
-    ) {
-      const newOptionNumber = this.currentOptions.length + 1;
-      this.currentOptions.push(`Opción ${newOptionNumber}`);
-
-      // Actualizar las opciones en la pregunta activa
-      if (this.activeQuestion) {
-        this.activeQuestion.options = [...this.currentOptions];
-      }
+    if (this.activeQuestion) {
+      const newOptionNumber = (this.activeQuestion.options?.length ?? 0) + 1;
+      const newOption: Option = {
+        texto: `Opción ${newOptionNumber}`,
+        numero: newOptionNumber
+      };
+      this.activeQuestion.options = [...(this.activeQuestion.options || []), newOption];
+      this.currentOptions = [...this.activeQuestion.options];
+      this.draftService.updateQuestions(this.questions);
     }
   }
 
@@ -289,11 +313,9 @@ export class CreateComponent implements OnDestroy {
         this.activeQuestion.type === 'radio')
     ) {
       this.currentOptions.splice(index, 1);
-
-      // Actualizar las opciones en la pregunta activa
-      if (this.activeQuestion) {
-        this.activeQuestion.options = [...this.currentOptions];
-      }
+      this.activeQuestion.options = [...this.currentOptions];
+      this.draftService.updateQuestions(this.questions);
+      this.checkForChanges();
     }
   }
 
@@ -313,13 +335,14 @@ export class CreateComponent implements OnDestroy {
   }
 
   // Método para duplicar pregunta
-  duplicateQuestion(questionId: number) {
+  duplicateQuestion(questionId?: number) {
     const questionToDuplicate = this.questions.find((q) => q.id === questionId);
     if (questionToDuplicate) {
-      const newId = Math.max(...this.questions.map((q) => q.id)) + 1;
+    
       const duplicated = {
         ...questionToDuplicate,
-        id: newId,
+        id: undefined,
+        _tempId: Date.now() + Math.random(),
         active: false,
         showMenu: false,
       };
@@ -328,21 +351,22 @@ export class CreateComponent implements OnDestroy {
     }
   }
 
-  // Método para borrar pregunta
-  deleteQuestion(questionId: number) {
-    const updated = this.questions.filter((q) => q.id !== questionId);
-    this.draftService.updateQuestions(updated);
-    if (updated.length > 0 && !this.activeQuestion) {
-      this.setActiveQuestion(updated[0].id);
+   preguntasAEliminar: number[] = [];
+
+  deleteQuestion(questionId?: number) {
+    if (questionId === undefined) return;
+    const question = this.questions.find(q => q.id === questionId);
+    if (question && question.id) {
+      this.preguntasAEliminar = this.preguntasAEliminar || [];
+      this.preguntasAEliminar.push(question.id);
     }
+    this.questions = this.questions.filter(q => q.id !== questionId);
+    this.draftService.updateQuestions(this.questions);
+    this.checkForChanges();
   }
 
   // Añade una nueva pregunta del tipo seleccionado
   addQuestion(type: string) {
-    const newId =
-      this.questions.length > 0
-        ? Math.max(...this.questions.map((q) => q.id)) + 1
-        : 1;
     const defaultTexts = {
       multiple_choice: 'Nueva pregunta de opción múltiple',
       text: 'Nueva pregunta de texto abierto',
@@ -356,7 +380,7 @@ export class CreateComponent implements OnDestroy {
     };
 
     const newQuestion: Question = {
-      id: newId,
+      _tempId: Date.now() + Math.random(),
       text: defaultTexts[type as keyof typeof defaultTexts] || 'Nueva pregunta',
       type: type,
       active: false,
@@ -366,12 +390,15 @@ export class CreateComponent implements OnDestroy {
 
     // Inicializar opciones para preguntas que las necesiten
     if (type === 'multiple_choice' || type === 'checkbox' || type === 'radio') {
-      newQuestion.options = ['Opción 1', 'Opción 2'];
+      newQuestion.options = [
+        { texto: 'Opción 1', numero: 1 },
+        { texto: 'Opción 2', numero: 2 }
+      ];
       this.currentOptions = [...newQuestion.options];
     }
 
     this.draftService.addQuestion(newQuestion);
-    this.setActiveQuestion(newId);
+    this.setActiveQuestion(this.questions.length > 0 ? this.questions[this.questions.length - 1].id : undefined);
     this.closeModal();
     this.mobileSidebarOpen = false;
   }
@@ -467,8 +494,8 @@ export class CreateComponent implements OnDestroy {
       texto: q.text,
       tipo: this.mapTipoFrontToBack(q.type),
       opciones: q.options?.map((opt, idx) => ({
-        texto: opt,
-        numero: idx + 1
+        texto: opt.texto,
+        numero: opt.numero ?? idx + 1
       })) || []
     }));
 
@@ -480,6 +507,23 @@ export class CreateComponent implements OnDestroy {
     const token_dashboard = this.getTokenFromCookie('td');
     this.encuestasService.crearEncuesta(encuesta, token_dashboard).subscribe({
       next: (resp) => {
+        if (resp && resp.preguntas) {
+          const preguntasMapeadas = resp.preguntas.map((pregunta: any) => ({
+            id: pregunta.id,
+            text: pregunta.texto,
+            type: this.mapTipoBackToFront(pregunta.tipo),
+            active: false,
+            required: false,
+            options: pregunta.opciones
+              ? pregunta.opciones.map((op: any) => ({
+                  id: op.id,
+                  texto: op.texto,
+                  numero: op.numero ?? 1
+                }))
+              : []
+          }));
+          this.draftService.updateQuestions(preguntasMapeadas);
+        }
         this.isSaving = false;
         this.lastSavedState = this.getCurrentStateSnapshot();
         this.hasUnsavedChanges = false;
@@ -502,5 +546,63 @@ export class CreateComponent implements OnDestroy {
         );
       }
     });
+  }
+
+  actualizarEncuesta() {
+    const token_dashboard = this.getTokenFromCookie('td');
+    const encuestaId = Number(this.route.snapshot.paramMap.get('id'));
+
+    const payload = {
+      nombre: this.nombreEncuesta,
+      preguntas: this.questions.map((q, idx) => ({
+        ...(q.id && { id: q.id }),
+        texto: q.text,
+        tipo: this.mapTipoFrontToBack(q.type),
+        opciones: q.options?.map((opt) => ({
+          ...(opt.id && { id: opt.id }),
+          texto: opt.texto,
+          numero: opt.numero
+        })) || []
+      }))
+    };
+
+    console.log('Payload enviado:', JSON.stringify(payload, null, 2));
+
+    this.encuestasService.updateEncuesta(token_dashboard, encuestaId, payload).subscribe({
+      next: (resp) => {
+         if (resp && resp.preguntas) {
+          const preguntasMapeadas = resp.preguntas.map((pregunta: any) => ({
+            id: pregunta.id,
+            text: pregunta.texto,
+            type: this.mapTipoBackToFront(pregunta.tipo),
+            active: false,
+            required: false,
+            options: pregunta.opciones
+              ? pregunta.opciones.map((op: any) => ({
+                  id: op.id,
+                  texto: op.texto,
+                  numero: op.numero ?? 1
+                }))
+              : []
+          }));
+          this.draftService.updateQuestions(preguntasMapeadas);
+        }
+        this.showToast('¡Encuesta actualizada!');
+        this.preguntasAEliminar = [];
+      },
+      error: (err) => {
+        this.showToast('Error al actualizar encuesta', true);
+      }
+    });
+  }
+
+  trackByPreguntaKey(index: number, item: any): any {
+    const key = item?.id ?? index;
+    return key;
+  }
+
+  get activeQuestionNumber(): number {
+    const idx = this.questions.findIndex(q => q.id === this.activeQuestion?.id);
+    return idx >= 0 ? idx + 1 : 0;
   }
 }
