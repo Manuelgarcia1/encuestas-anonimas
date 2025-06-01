@@ -6,6 +6,7 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
+  CreateDateColumn,
 } from 'typeorm';
 import { Encuesta } from '../../encuestas/entities/encuesta.entity';
 import { RespuestaOpcion } from '../../respuestas-opciones/entities/respuestas-opcione.entity';
@@ -16,7 +17,7 @@ export class Respuesta {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: true }) // Opcional: Puede ser útil para analytics no identificables
+  @CreateDateColumn({ name: 'fecha_respuesta' })
   fecha_respuesta: Date;
 
   @ManyToOne(() => Encuesta)
