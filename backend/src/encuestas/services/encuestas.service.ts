@@ -7,7 +7,7 @@ import { Encuesta } from '../entities/encuesta.entity';
 import { Pregunta } from '../../preguntas/entities/pregunta.entity';
 import { Opcion } from '../../opciones/entities/opcion.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, Not } from 'typeorm';
 import { v4 } from 'uuid';
 import { EstadoEncuestaEnum } from '../enums/estado-encuestas.enum';
 import { Creador } from '../../creadores/entities/creador.entity';
@@ -154,6 +154,7 @@ export class EncuestasService {
     });
 
     const saved = await this.encuestasRepository.save(encuesta);
+    this.clearCacheForEncuestas(token_dashboard);
 
     return saved;
   }
@@ -181,6 +182,7 @@ export class EncuestasService {
    * Busca la encuesta por token_respuesta e incluye preguntas y sus opciones.
    * Lanza 404 si no existe.
    */
+
   async findEncuestaByToken(token: string): Promise<Encuesta> {
     const encuesta = await this.encuestasRepository.findOne({
       where: { token_respuesta: token },
@@ -192,9 +194,8 @@ export class EncuestasService {
     return encuesta;
   }
 
-  /**
-   * Cambia el estado de una encuesta a PUBLICADA
-   */
+  // Cambia el estado de una encuesta a PUBLICADA
+
   async publicarEncuesta(
     token_dashboard: string,
     encuestaId: number,
@@ -229,17 +230,18 @@ export class EncuestasService {
       where: { id: encuestaId, creador: { token_dashboard } },
       relations: ['preguntas', 'preguntas.opciones'],
     });
+
     if (!encuesta) {
       throw new NotFoundException('Encuesta no encontrada o creador inválido.');
     }
 
-    // 2. Renombrar encuesta si viene nuevo nombre
+    // 2. Renombrar encuesta si se indica
     if (dto.nombre !== undefined) {
       encuesta.nombre = dto.nombre;
       await this.encuestasRepository.save(encuesta);
     }
 
-    // 3. Eliminar preguntas si se indicaron
+    // 3. Eliminar preguntas completas si se especifica
     if (dto.eliminarPreguntas?.length) {
       const ids = dto.eliminarPreguntas;
 
@@ -253,11 +255,30 @@ export class EncuestasService {
       await this.preguntaRepository.delete({ id: In(ids) });
     }
 
+    // 3.b Eliminar preguntas que no estén en el array 
+    const idsEnviados = (dto.preguntas ?? []).filter(p => p.id).map(p => p.id);
+    if (idsEnviados.length > 0) {
+      const preguntasAEliminar = await this.preguntaRepository.find({
+        where: {
+          encuesta: { id: encuestaId },
+          id: Not(In(idsEnviados)),
+        },
+        relations: ['opciones'],
+      });
+
+      const idsAEliminar = preguntasAEliminar.map(p => p.id);
+      if (idsAEliminar.length > 0) {
+        await this.opcionRepository.delete({ pregunta: { id: In(idsAEliminar) } });
+        await this.preguntaRepository.delete({ id: In(idsAEliminar) });
+      }
+    }  
+
     // 4. Procesar cada pregunta del DTO
     for (const pq of dto.preguntas ?? []) {
       const esEdicion = pq.id !== undefined && pq.id !== null;
 
       if (esEdicion) {
+        // 4.a) Buscar la pregunta existente
         const pregunta = await this.preguntaRepository.findOne({
           where: { id: pq.id, encuesta: { id: encuestaId } },
           relations: ['opciones'],
@@ -268,67 +289,77 @@ export class EncuestasService {
           continue;
         }
 
-        if (pq.texto !== undefined) pregunta.texto = pq.texto;
+        // 4.b) Actualizar texto y tipo SIEMPRE si se indica
+        if (pq.texto !== undefined) {
+          pregunta.texto = pq.texto;
+        }
+        if (pq.tipo !== undefined) {
+          pregunta.tipo = pq.tipo;
+        }
         await this.preguntaRepository.save(pregunta);
 
-        if (pq.eliminarOpciones?.length) {
+        // 4.c) Eliminar opciones específicas si se indica eliminarOpciones
+        if (
+          Array.isArray(pq.eliminarOpciones) &&
+          pq.eliminarOpciones.length > 0
+        ) {
           await this.opcionRepository.delete({
             id: In(pq.eliminarOpciones),
+            pregunta: { id: pregunta.id },
           });
         }
 
-        for (const oDto of pq.opciones ?? []) {
-          if (oDto.id !== undefined && oDto.id !== null) {
-            const opcion = await this.opcionRepository.findOne({
-              where: { id: oDto.id },
+        // 4.d) Reemplazo total de opciones si se incluye el array completo
+        if (Array.isArray(pq.opciones)) {
+          // Primero eliminamos TODAS las opciones existentes
+          await this.opcionRepository.delete({ pregunta: { id: pregunta.id } });
+
+          // Luego insertamos todas las nuevas opciones
+          for (const oDto of pq.opciones) {
+            if (!oDto.texto || oDto.numero == null) continue;
+
+            const nuevaOpcion = this.opcionRepository.create({
+              texto: oDto.texto,
+              numero: oDto.numero,
+              pregunta: { id: pregunta.id },
             });
 
-            if (opcion) {
-              if (oDto.texto !== undefined) opcion.texto = oDto.texto;
-              if (oDto.numero !== undefined) opcion.numero = oDto.numero;
-              await this.opcionRepository.save(opcion);
-              continue;
-            }
+            await this.opcionRepository.save(nuevaOpcion);
           }
-
-          const nuevaOp = this.opcionRepository.create({
-            texto: oDto.texto!,
-            numero: oDto.numero!,
-            pregunta,
-          });
-          await this.opcionRepository.save(nuevaOp);
         }
       } else {
-        // Crear nueva pregunta (sin ID)
-        const maxNumero = Math.max(
-          ...encuesta.preguntas.map((p) => p.numero ?? 0),
-          0,
-        );
+        // 4.e) Crear nueva pregunta
+        const cantidadPreguntas = await this.preguntaRepository.count({
+          where: { encuesta: { id: encuestaId } },
+        });
 
         const nuevaPregunta = this.preguntaRepository.create({
-          numero: maxNumero + 1,
+          numero: cantidadPreguntas + 1,
           texto: pq.texto!,
           tipo: pq.tipo!,
           encuesta,
         });
 
-        const savedPreg = await this.preguntaRepository.save(nuevaPregunta);
+        const savedPregunta = await this.preguntaRepository.save(nuevaPregunta);
 
         for (const oDto of pq.opciones ?? []) {
-          const nuevaOp = this.opcionRepository.create({
-            texto: oDto.texto!,
-            numero: oDto.numero!,
-            pregunta: savedPreg,
+          if (!oDto.texto || oDto.numero == null) continue;
+
+          const nuevaOpcion = this.opcionRepository.create({
+            texto: oDto.texto,
+            numero: oDto.numero,
+            pregunta: savedPregunta,
           });
-          await this.opcionRepository.save(nuevaOp);
+
+          await this.opcionRepository.save(nuevaOpcion);
         }
       }
     }
 
-    // 5. Limpiar caché asociada al token_dashboard
+    // 5. Limpiar caché asociada al dashboard
     this.clearCacheForEncuestas(token_dashboard);
 
-    // 6. Devolver encuesta actualizada
+    // 6. Devolver la encuesta actualizada con relaciones
     return this.encuestasRepository.findOneOrFail({
       where: { id: encuestaId },
       relations: ['preguntas', 'preguntas.opciones'],

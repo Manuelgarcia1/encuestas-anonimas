@@ -33,14 +33,13 @@ import { Subject, takeUntil } from 'rxjs';
 
 // Definimos una interfaz para el tipo de pregunta
 interface Question {
-  id: number;
+  id?: number;
   text: string;
   type: string;
   active: boolean;
   required: boolean; // Nuevo campo
   showMenu?: boolean;
   options?: Option[];
-  eliminarOpciones?: number[];
 }
 
 interface Option {
@@ -200,7 +199,7 @@ export class CreateComponent implements OnDestroy {
 
           // Mapear preguntas del backend al formato del frontend
           this.questions = (encuesta.preguntas || []).map((pregunta: any, index: number) => ({
-            id: index + 1,
+            id: pregunta.id,
             text: pregunta.texto,
             type: this.mapTipoBackToFront(pregunta.tipo),
             active: false,
@@ -268,7 +267,7 @@ export class CreateComponent implements OnDestroy {
   }
 
   // Activa una pregunta específica
-  setActiveQuestion(questionId: number) {
+  setActiveQuestion(questionId?: number) {
     this.questions.forEach((q) => {
       q.active = q.id === questionId;
       q.showMenu = false;
@@ -310,6 +309,8 @@ export class CreateComponent implements OnDestroy {
     ) {
       this.currentOptions.splice(index, 1);
       this.activeQuestion.options = [...this.currentOptions];
+      this.draftService.updateQuestions(this.questions);
+      this.checkForChanges();
     }
   }
 
@@ -329,13 +330,13 @@ export class CreateComponent implements OnDestroy {
   }
 
   // Método para duplicar pregunta
-  duplicateQuestion(questionId: number) {
+  duplicateQuestion(questionId?: number) {
     const questionToDuplicate = this.questions.find((q) => q.id === questionId);
     if (questionToDuplicate) {
-      const newId = Math.max(...this.questions.map((q) => q.id)) + 1;
+    
       const duplicated = {
         ...questionToDuplicate,
-        id: newId,
+        id: undefined,
         active: false,
         showMenu: false,
       };
@@ -344,35 +345,22 @@ export class CreateComponent implements OnDestroy {
     }
   }
 
-  // Método para borrar pregunta
-  // deleteQuestion(questionId: number) {
-  //   const updated = this.questions.filter((q) => q.id !== questionId);
-  //   this.draftService.updateQuestions(updated);
-  //   if (updated.length > 0 && !this.activeQuestion) {
-  //     this.setActiveQuestion(updated[0].id);
-  //   }
-  // }
-
    preguntasAEliminar: number[] = [];
 
-  deleteQuestion(questionId: number) {
+  deleteQuestion(questionId?: number) {
+    if (questionId === undefined) return;
     const question = this.questions.find(q => q.id === questionId);
-    if (question && typeof question.id === 'number') {
+    if (question && question.id) {
+      this.preguntasAEliminar = this.preguntasAEliminar || [];
       this.preguntasAEliminar.push(question.id);
     }
-    const updated = this.questions.filter((q) => q.id !== questionId);
-    this.draftService.updateQuestions(updated);
-    if (updated.length > 0 && !this.activeQuestion) {
-      this.setActiveQuestion(updated[0].id);
-    }
+    this.questions = this.questions.filter(q => q.id !== questionId);
+    this.draftService.updateQuestions(this.questions);
+    this.checkForChanges();
   }
 
   // Añade una nueva pregunta del tipo seleccionado
   addQuestion(type: string) {
-    const newId =
-      this.questions.length > 0
-        ? Math.max(...this.questions.map((q) => q.id)) + 1
-        : 1;
     const defaultTexts = {
       multiple_choice: 'Nueva pregunta de opción múltiple',
       text: 'Nueva pregunta de texto abierto',
@@ -386,7 +374,6 @@ export class CreateComponent implements OnDestroy {
     };
 
     const newQuestion: Question = {
-      id: newId,
       text: defaultTexts[type as keyof typeof defaultTexts] || 'Nueva pregunta',
       type: type,
       active: false,
@@ -404,7 +391,7 @@ export class CreateComponent implements OnDestroy {
     }
 
     this.draftService.addQuestion(newQuestion);
-    this.setActiveQuestion(newId);
+    this.setActiveQuestion(this.questions.length > 0 ? this.questions[this.questions.length - 1].id : undefined);
     this.closeModal();
     this.mobileSidebarOpen = false;
   }
@@ -513,6 +500,22 @@ export class CreateComponent implements OnDestroy {
     const token_dashboard = this.getTokenFromCookie('td');
     this.encuestasService.crearEncuesta(encuesta, token_dashboard).subscribe({
       next: (resp) => {
+        if (resp && resp.preguntas) {
+          this.questions = resp.preguntas.map((pregunta: any) => ({
+            id: pregunta.id,
+            text: pregunta.texto,
+            type: this.mapTipoBackToFront(pregunta.tipo),
+            active: false,
+            required: false,
+            options: pregunta.opciones
+              ? pregunta.opciones.map((op: any) => ({
+                  id: op.id,
+                  texto: op.texto,
+                  numero: op.numero ?? 1
+                }))
+              : []
+          }));
+        }
         this.isSaving = false;
         this.lastSavedState = this.getCurrentStateSnapshot();
         this.hasUnsavedChanges = false;
@@ -551,16 +554,30 @@ export class CreateComponent implements OnDestroy {
           ...(opt.id && { id: opt.id }),
           texto: opt.texto,
           numero: opt.numero
-        })),
-        ...(q.eliminarOpciones && { eliminarOpciones: q.eliminarOpciones })
-      })),
-      eliminarPreguntas: this.preguntasAEliminar
+        })) || []
+      }))
     };
 
     console.log('Payload enviado:', JSON.stringify(payload, null, 2));
 
     this.encuestasService.updateEncuesta(token_dashboard, encuestaId, payload).subscribe({
       next: (resp) => {
+         if (resp && resp.preguntas) {
+          this.questions = resp.preguntas.map((pregunta: any) => ({
+            id: pregunta.id,
+            text: pregunta.texto,
+            type: this.mapTipoBackToFront(pregunta.tipo),
+            active: false,
+            required: false,
+            options: pregunta.opciones
+              ? pregunta.opciones.map((op: any) => ({
+                  id: op.id,
+                  texto: op.texto,
+                  numero: op.numero ?? 1
+                }))
+              : []
+          }));
+        }
         this.showToast('¡Encuesta actualizada!');
         this.preguntasAEliminar = [];
       },
@@ -570,12 +587,12 @@ export class CreateComponent implements OnDestroy {
     });
   }
 
-  eliminarOpcionDePregunta(idPregunta: number, idOpcion: number) {
-    const pregunta = this.questions.find(q => q.id === idPregunta);
-    if (pregunta) {
-      pregunta.eliminarOpciones = pregunta.eliminarOpciones || [];
-      pregunta.eliminarOpciones.push(idOpcion);
-      pregunta.options = pregunta.options?.filter(opt => opt.id !== idOpcion);
-    }
+  trackByPreguntaId(index: number, pregunta: Question) {
+    return pregunta.id ?? index;
+  }
+
+  get activeQuestionNumber(): number {
+    const idx = this.questions.findIndex(q => q.id === this.activeQuestion?.id);
+    return idx >= 0 ? idx + 1 : 0;
   }
 }

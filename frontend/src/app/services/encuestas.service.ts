@@ -50,7 +50,7 @@ export class EncuestasService {
   }
 
   updateEncuesta(token: string, encuestaId: number, payload: any): Observable<any> {
-    return this.http.patch<any>(`${this.apiUrl}/${token}/encuesta/${encuestaId}/actualizar`, payload);
+    return this.http.put<any>(`${this.apiUrl}/${token}/encuesta/${encuestaId}/actualizar`, payload);
   }
 
   enviarRespuestas(token: string, payload: EnviarRespuestasPayload): Observable<EnviarRespuestasResponse> {

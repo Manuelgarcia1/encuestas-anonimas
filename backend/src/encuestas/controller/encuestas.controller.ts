@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   ParseIntPipe,
   Patch,
+  Put,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -174,7 +175,7 @@ export class EncuestasController {
   }
 
   // Publica una encuesta cambiando su estado a PUBLICADA
-  @Patch('creador/:token_dashboard/encuesta/:id/publicar')
+  @Put('creador/:token_dashboard/encuesta/:id/publicar')
   @ApiOperation({
     summary: 'Publicar una encuesta (cambiar estado a PUBLICADA)',
   })
@@ -208,7 +209,7 @@ export class EncuestasController {
     );
   }
 
-  @Patch('creador/:token_dashboard/encuesta/:id/actualizar')
+  @Put('creador/:token_dashboard/encuesta/:id/actualizar')
   @ApiOperation({ summary: 'Actualizar datos básicos de una encuesta' })
   @ApiParam({ name: 'token_dashboard', description: 'UUID del creador' })
   @ApiParam({

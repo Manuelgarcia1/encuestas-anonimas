@@ -23,7 +23,7 @@
                 </div>
 
                 <ul class="space-y-2">
-                    @for (question of questions; track question.id) {
+                    @for (question of questions; let i = $index; track trackByPreguntaId) {
                     <li (click)="setActiveQuestion(question.id); mobileSidebarOpen = false"
                         class="group p-3 rounded-md cursor-pointer transition-colors relative"
                         [class.bg-blue-100]="question.active" [class.hover:bg-gray-100]="!question.active">
@@ -31,7 +31,6 @@
                             <i-lucide [name]="questionTypeIcons[question.type]"
                                 class="w-4 h-4 mt-0.5 text-gray-500 flex-shrink-0">
                             </i-lucide>
-                            <span class="font-medium text-gray-700">{{ question.id }}.</span>
                             <p class="text-gray-600 text-sm truncate max-w-[150px]">{{ question.text | truncate:20 }}
                             </p>
                         </div>
@@ -81,7 +80,7 @@
                 </div>
 
                 <ul class="space-y-2">
-                    @for (question of questions; track question.id) {
+                    @for (question of questions; let i = $index; track trackByPreguntaId) {
                     <li (click)="setActiveQuestion(question.id)"
                         class="group p-3 rounded-md cursor-pointer transition-colors relative"
                         [class.bg-blue-100]="question.active" [class.hover:bg-gray-100]="!question.active">
@@ -89,7 +88,9 @@
                             <i-lucide [name]="questionTypeIcons[question.type]"
                                 class="w-4 h-4 mt-0.5 text-gray-500 flex-shrink-0">
                             </i-lucide>
-                            <span class="font-medium text-gray-700">{{ question.id }}.</span>
+                            <span class="font-medium text-gray-700">
+                                {{ i + 1 }}.
+                            </span>
                             <p class="text-gray-600 text-sm truncate max-w-[150px]">{{ question.text | truncate:20 }}
                             </p>
                         </div>
@@ -140,7 +141,7 @@
                     <div class="flex justify-between items-center mb-6">
                         <div class="flex items-center gap-2">
                             <span class="font-medium text-gray-700">
-                                {{ activeQuestion.id }}.
+                                {{ activeQuestionNumber }}.
                             </span>
                         </div>
 
