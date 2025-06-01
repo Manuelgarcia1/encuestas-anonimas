@@ -33,7 +33,8 @@ import { Subject, takeUntil } from 'rxjs';
 
 // Definimos una interfaz para el tipo de pregunta
 interface Question {
-  id?: number;
+  id?: number; 
+  _tempId?: number;
   text: string;
   type: string;
   active: boolean;
@@ -85,6 +86,8 @@ export class CreateComponent implements OnDestroy {
 
   // Estado del sidebar móvil
   mobileSidebarOpen = false;
+
+  public isInputFocused = false;
 
   // Mapeo de tipos de pregunta a iconos
   questionTypeIcons: { [key: string]: any } = {
@@ -198,8 +201,9 @@ export class CreateComponent implements OnDestroy {
           this.nombreEncuesta = encuesta.nombre;
 
           // Mapear preguntas del backend al formato del frontend
-          this.questions = (encuesta.preguntas || []).map((pregunta: any, index: number) => ({
+          const preguntasMapeadas = (encuesta.preguntas || []).map((pregunta: any, index: number) => ({
             id: pregunta.id,
+            _tempId: pregunta.id ? undefined : Date.now() + Math.random(),
             text: pregunta.texto,
             type: this.mapTipoBackToFront(pregunta.tipo),
             active: false,
@@ -212,6 +216,7 @@ export class CreateComponent implements OnDestroy {
                 }))
               : []
           }));
+          this.draftService.updateQuestions(preguntasMapeadas);
 
           // Activar la primera pregunta si hay preguntas
           if (this.questions.length > 0) {
@@ -337,6 +342,7 @@ export class CreateComponent implements OnDestroy {
       const duplicated = {
         ...questionToDuplicate,
         id: undefined,
+        _tempId: Date.now() + Math.random(),
         active: false,
         showMenu: false,
       };
@@ -374,6 +380,7 @@ export class CreateComponent implements OnDestroy {
     };
 
     const newQuestion: Question = {
+      _tempId: Date.now() + Math.random(),
       text: defaultTexts[type as keyof typeof defaultTexts] || 'Nueva pregunta',
       type: type,
       active: false,
@@ -501,7 +508,7 @@ export class CreateComponent implements OnDestroy {
     this.encuestasService.crearEncuesta(encuesta, token_dashboard).subscribe({
       next: (resp) => {
         if (resp && resp.preguntas) {
-          this.questions = resp.preguntas.map((pregunta: any) => ({
+          const preguntasMapeadas = resp.preguntas.map((pregunta: any) => ({
             id: pregunta.id,
             text: pregunta.texto,
             type: this.mapTipoBackToFront(pregunta.tipo),
@@ -515,6 +522,7 @@ export class CreateComponent implements OnDestroy {
                 }))
               : []
           }));
+          this.draftService.updateQuestions(preguntasMapeadas);
         }
         this.isSaving = false;
         this.lastSavedState = this.getCurrentStateSnapshot();
@@ -563,7 +571,7 @@ export class CreateComponent implements OnDestroy {
     this.encuestasService.updateEncuesta(token_dashboard, encuestaId, payload).subscribe({
       next: (resp) => {
          if (resp && resp.preguntas) {
-          this.questions = resp.preguntas.map((pregunta: any) => ({
+          const preguntasMapeadas = resp.preguntas.map((pregunta: any) => ({
             id: pregunta.id,
             text: pregunta.texto,
             type: this.mapTipoBackToFront(pregunta.tipo),
@@ -577,6 +585,7 @@ export class CreateComponent implements OnDestroy {
                 }))
               : []
           }));
+          this.draftService.updateQuestions(preguntasMapeadas);
         }
         this.showToast('¡Encuesta actualizada!');
         this.preguntasAEliminar = [];
@@ -587,8 +596,9 @@ export class CreateComponent implements OnDestroy {
     });
   }
 
-  trackByPreguntaId(index: number, pregunta: Question) {
-    return pregunta.id ?? index;
+  trackByPreguntaKey(index: number, item: any): any {
+    const key = item?.id ?? index;
+    return key;
   }
 
   get activeQuestionNumber(): number {

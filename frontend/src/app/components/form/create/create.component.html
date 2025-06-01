@@ -23,7 +23,7 @@
                 </div>
 
                 <ul class="space-y-2">
-                    @for (question of questions; let i = $index; track trackByPreguntaId) {
+                    @for (question of questions; let i = $index; track trackByPreguntaKey(i, question)) {
                     <li (click)="setActiveQuestion(question.id); mobileSidebarOpen = false"
                         class="group p-3 rounded-md cursor-pointer transition-colors relative"
                         [class.bg-blue-100]="question.active" [class.hover:bg-gray-100]="!question.active">
@@ -80,7 +80,7 @@
                 </div>
 
                 <ul class="space-y-2">
-                    @for (question of questions; let i = $index; track trackByPreguntaId) {
+                    @for (question of questions; let i = $index; track trackByPreguntaKey(i, question)) {
                     <li (click)="setActiveQuestion(question.id)"
                         class="group p-3 rounded-md cursor-pointer transition-colors relative"
                         [class.bg-blue-100]="question.active" [class.hover:bg-gray-100]="!question.active">
@@ -168,7 +168,10 @@
                         <!-- Texto de la pregunta -->
                         <input type="text"
                             class="w-full border-b-2 border-gray-200 py-2 text-lg focus:border-blue-500 outline-none"
-                            placeholder="Escribe tu pregunta aquí..." [(ngModel)]="activeQuestion.text"
+                            [attr.placeholder]="isInputFocused ? '' : 'Escribe tu pregunta aquí...'"
+                            [(ngModel)]="activeQuestion.text"
+                            (focus)="isInputFocused = true"
+                            (blur)="isInputFocused = false"
                             (ngModelChange)="onQuestionTextChange()" />
 
                         <!-- Opciones (para preguntas de opción múltiple) -->
