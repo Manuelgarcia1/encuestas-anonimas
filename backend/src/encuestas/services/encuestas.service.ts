@@ -7,7 +7,7 @@ import { Encuesta } from '../entities/encuesta.entity';
 import { Pregunta } from '../../preguntas/entities/pregunta.entity';
 import { Opcion } from '../../opciones/entities/opcion.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, Not } from 'typeorm';
 import { v4 } from 'uuid';
 import { EstadoEncuestaEnum } from '../enums/estado-encuestas.enum';
 import { Creador } from '../../creadores/entities/creador.entity';
@@ -255,6 +255,24 @@ export class EncuestasService {
       await this.preguntaRepository.delete({ id: In(ids) });
     }
 
+    // 3.b Eliminar preguntas que no estén en el array 
+    const idsEnviados = (dto.preguntas ?? []).filter(p => p.id).map(p => p.id);
+    if (idsEnviados.length > 0) {
+      const preguntasAEliminar = await this.preguntaRepository.find({
+        where: {
+          encuesta: { id: encuestaId },
+          id: Not(In(idsEnviados)),
+        },
+        relations: ['opciones'],
+      });
+
+      const idsAEliminar = preguntasAEliminar.map(p => p.id);
+      if (idsAEliminar.length > 0) {
+        await this.opcionRepository.delete({ pregunta: { id: In(idsAEliminar) } });
+        await this.preguntaRepository.delete({ id: In(idsAEliminar) });
+      }
+    }  
+
     // 4. Procesar cada pregunta del DTO
     for (const pq of dto.preguntas ?? []) {
       const esEdicion = pq.id !== undefined && pq.id !== null;
@@ -271,11 +289,14 @@ export class EncuestasService {
           continue;
         }
 
-        // 4.b) Actualizar texto si se indica
+        // 4.b) Actualizar texto y tipo SIEMPRE si se indica
         if (pq.texto !== undefined) {
           pregunta.texto = pq.texto;
-          await this.preguntaRepository.save(pregunta);
         }
+        if (pq.tipo !== undefined) {
+          pregunta.tipo = pq.tipo;
+        }
+        await this.preguntaRepository.save(pregunta);
 
         // 4.c) Eliminar opciones específicas si se indica eliminarOpciones
         if (
