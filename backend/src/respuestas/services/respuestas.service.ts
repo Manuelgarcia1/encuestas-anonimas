@@ -195,4 +195,78 @@ export class RespuestasService {
       respuestas: respuestasCompletas,
     };
   }
+
+  async obtenerResultadosPorEncuesta(tokenResultados: string) {
+    // Paso 1: Obtener encuesta con todas sus relaciones
+    const encuesta = await this.encuestaRepository.findOne({
+      where: { token_resultados: tokenResultados },
+      relations: [
+        'preguntas',
+        'preguntas.opciones',
+        'respuestas',
+        'respuestas.respuestasAbiertas',
+        'respuestas.respuestasAbiertas.pregunta',
+        'respuestas.opciones',
+        'respuestas.opciones.opcion',
+      ],
+    });
+
+    if (!encuesta) {
+      throw new NotFoundException('Encuesta no encontrada');
+    }
+
+    // Paso 2: Inicializar estructura base del resultado
+    const resultados = {
+      encuesta: {
+        id: encuesta.id,
+        nombre: encuesta.nombre,
+        totalRespuestas: encuesta.respuestas?.length || 0,
+        preguntas: [] as any[],
+      },
+    };
+
+    // Paso 3: Procesar cada pregunta para obtener sus resultados
+    for (const pregunta of encuesta.preguntas || []) {
+      const preguntaResultado = {
+        id: pregunta.id,
+        texto: pregunta.texto,
+        tipo: pregunta.tipo,
+        respuestas: [] as any[],
+      };
+
+      if (pregunta.tipo === 'ABIERTA') {
+        // Respuestas abiertas: listar los textos de respuesta
+        const respuestas = (encuesta.respuestas || [])
+          .flatMap((r) => r.respuestasAbiertas || [])
+          .filter((ra) => ra?.pregunta?.id === pregunta.id)
+          .map((ra) => ra.texto);
+
+        preguntaResultado.respuestas = respuestas;
+      } else {
+        // Respuestas con opciones: contar cuántas veces se eligió cada opción
+        preguntaResultado.respuestas = (pregunta.opciones || []).map(
+          (opcion) => {
+            const count = (encuesta.respuestas || [])
+              .flatMap((r) => r.opciones || [])
+              .filter((ro) => ro?.opcion?.id === opcion.id).length;
+
+            return {
+              opcion: opcion.texto,
+              count,
+              porcentaje:
+                resultados.encuesta.totalRespuestas > 0
+                  ? Math.round(
+                      (count / resultados.encuesta.totalRespuestas) * 100,
+                    )
+                  : 0,
+            };
+          },
+        );
+      }
+
+      resultados.encuesta.preguntas.push(preguntaResultado);
+    }
+
+    return resultados;
+  }
 }
