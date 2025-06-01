@@ -181,8 +181,8 @@
                                 } @else {
                                 <input type="checkbox" disabled class="w-4 h-4">
                                 }
-                                <input type="text" class="flex-1 border rounded-md px-3 py-1 text-sm" [value]="option"
-                                    [(ngModel)]="currentOptions[$index]" (ngModelChange)="onOptionChange($index)" />
+                                <input type="text" class="flex-1 border rounded-md px-3 py-1 text-sm"
+                                    [(ngModel)]="currentOptions[$index].texto" (ngModelChange)="onOptionChange($index)" />
                                 <button class="text-gray-400 hover:text-red-500" (click)="removeOption($index)">
                                     <i-lucide [name]="icons.Trash2" class="w-4 h-4"></i-lucide>
                                 </button>
@@ -239,12 +239,12 @@
                             [class.hover:bg-blue-700]="hasUnsavedChanges" [class.bg-gray-300]="!hasUnsavedChanges"
                             [class.text-gray-500]="!hasUnsavedChanges"
                             [class.cursor-not-allowed]="!hasUnsavedChanges || isSaving"
-                            (click)="hasUnsavedChanges && !isSaving && guardarEncuesta()"
+                            (click)="hasUnsavedChanges && !isSaving && (isEditMode ? actualizarEncuesta() : guardarEncuesta())"
                             [disabled]="!hasUnsavedChanges || isSaving">
                             @if (isSaving) {
                             <span>Guardando...</span>
                             } @else {
-                            <span>Guardar borrador</span>
+                            <span>{{ isEditMode ? 'Guardar cambios' : 'Guardar encuesta' }}</span>
                             }
                         </button>
                     </div>

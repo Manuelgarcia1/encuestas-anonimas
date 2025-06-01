@@ -49,6 +49,10 @@ export class EncuestasService {
     return this.http.get(`/api/v1/encuestas/participacion/${token}`);
   }
 
+  updateEncuesta(token: string, encuestaId: number, payload: any): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/${token}/encuesta/${encuestaId}/actualizar`, payload);
+  }
+
   enviarRespuestas(token: string, payload: EnviarRespuestasPayload): Observable<EnviarRespuestasResponse> {
     return this.http.post<EnviarRespuestasResponse>(`/api/v1/respuestas/${token}`, payload);
   }

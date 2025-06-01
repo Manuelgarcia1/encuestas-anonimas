@@ -39,7 +39,14 @@ interface Question {
   active: boolean;
   required: boolean; // Nuevo campo
   showMenu?: boolean;
-  options?: string[];
+  options?: Option[];
+  eliminarOpciones?: number[];
+}
+
+interface Option {
+  id?: number; 
+  texto: string;
+  numero: number;
 }
 
 @Component({
@@ -96,7 +103,7 @@ export class CreateComponent implements OnDestroy {
   // Estado del modal
   showModal = false;
   questions: Question[] = [];
-  currentOptions: string[] = [];
+  currentOptions: Option[] = [];
   nombreEncuesta: string = '';
 
   // Getter para obtener la pregunta activa
@@ -137,12 +144,22 @@ export class CreateComponent implements OnDestroy {
     }
   }
 
+  isEditMode = false;
+
   ngOnInit() {
     const encuestaId = this.route.snapshot.paramMap.get('id');
     const token_dashboard = this.getTokenFromCookie('td');
 
     if (encuestaId && token_dashboard) {
+      this.isEditMode = true;
       this.cargarEncuestaExistente(parseInt(encuestaId), token_dashboard);
+    } else {
+      this.draftService.questions$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(qs => {
+        this.questions = qs;
+        this.checkForChanges();
+      });
     }
 
     this.lastSavedState = this.getCurrentStateSnapshot();
@@ -187,8 +204,14 @@ export class CreateComponent implements OnDestroy {
             text: pregunta.texto,
             type: this.mapTipoBackToFront(pregunta.tipo),
             active: false,
-            required: false, // Puedes ajustar esto según tu modelo
-            options: pregunta.opciones ? pregunta.opciones.map((op: any) => op.texto) : []
+            required: false,
+            options: pregunta.opciones
+              ? pregunta.opciones.map((op: any, idx: number) => ({
+                  id: op.id,
+                  texto: op.texto,
+                  numero: op.numero ?? idx + 1
+                }))
+              : []
           }));
 
           // Activar la primera pregunta si hay preguntas
@@ -255,28 +278,25 @@ export class CreateComponent implements OnDestroy {
           q.type === 'checkbox' ||
           q.type === 'radio')
       ) {
-        this.currentOptions = q.options
-          ? [...q.options]
-          : ['Opción 1', 'Opción 2'];
+        this.currentOptions = q.options ? [...q.options] : [
+          { texto: 'Opción 1', numero: 1 },
+          { texto: 'Opción 2', numero: 2 }
+        ];
       }
     });
   }
 
   // Método para añadir una nueva opción
   addOption() {
-    if (
-      this.activeQuestion &&
-      (this.activeQuestion.type === 'multiple_choice' ||
-        this.activeQuestion.type === 'checkbox' ||
-        this.activeQuestion.type === 'radio')
-    ) {
-      const newOptionNumber = this.currentOptions.length + 1;
-      this.currentOptions.push(`Opción ${newOptionNumber}`);
-
-      // Actualizar las opciones en la pregunta activa
-      if (this.activeQuestion) {
-        this.activeQuestion.options = [...this.currentOptions];
-      }
+    if (this.activeQuestion) {
+      const newOptionNumber = (this.activeQuestion.options?.length ?? 0) + 1;
+      const newOption: Option = {
+        texto: `Opción ${newOptionNumber}`,
+        numero: newOptionNumber
+      };
+      this.activeQuestion.options = [...(this.activeQuestion.options || []), newOption];
+      this.currentOptions = [...this.activeQuestion.options];
+      this.draftService.updateQuestions(this.questions);
     }
   }
 
@@ -289,11 +309,7 @@ export class CreateComponent implements OnDestroy {
         this.activeQuestion.type === 'radio')
     ) {
       this.currentOptions.splice(index, 1);
-
-      // Actualizar las opciones en la pregunta activa
-      if (this.activeQuestion) {
-        this.activeQuestion.options = [...this.currentOptions];
-      }
+      this.activeQuestion.options = [...this.currentOptions];
     }
   }
 
@@ -329,7 +345,21 @@ export class CreateComponent implements OnDestroy {
   }
 
   // Método para borrar pregunta
+  // deleteQuestion(questionId: number) {
+  //   const updated = this.questions.filter((q) => q.id !== questionId);
+  //   this.draftService.updateQuestions(updated);
+  //   if (updated.length > 0 && !this.activeQuestion) {
+  //     this.setActiveQuestion(updated[0].id);
+  //   }
+  // }
+
+   preguntasAEliminar: number[] = [];
+
   deleteQuestion(questionId: number) {
+    const question = this.questions.find(q => q.id === questionId);
+    if (question && typeof question.id === 'number') {
+      this.preguntasAEliminar.push(question.id);
+    }
     const updated = this.questions.filter((q) => q.id !== questionId);
     this.draftService.updateQuestions(updated);
     if (updated.length > 0 && !this.activeQuestion) {
@@ -366,7 +396,10 @@ export class CreateComponent implements OnDestroy {
 
     // Inicializar opciones para preguntas que las necesiten
     if (type === 'multiple_choice' || type === 'checkbox' || type === 'radio') {
-      newQuestion.options = ['Opción 1', 'Opción 2'];
+      newQuestion.options = [
+        { texto: 'Opción 1', numero: 1 },
+        { texto: 'Opción 2', numero: 2 }
+      ];
       this.currentOptions = [...newQuestion.options];
     }
 
@@ -467,8 +500,8 @@ export class CreateComponent implements OnDestroy {
       texto: q.text,
       tipo: this.mapTipoFrontToBack(q.type),
       opciones: q.options?.map((opt, idx) => ({
-        texto: opt,
-        numero: idx + 1
+        texto: opt.texto,
+        numero: opt.numero ?? idx + 1
       })) || []
     }));
 
@@ -502,5 +535,47 @@ export class CreateComponent implements OnDestroy {
         );
       }
     });
+  }
+
+  actualizarEncuesta() {
+    const token_dashboard = this.getTokenFromCookie('td');
+    const encuestaId = Number(this.route.snapshot.paramMap.get('id'));
+
+    const payload = {
+      nombre: this.nombreEncuesta,
+      preguntas: this.questions.map((q, idx) => ({
+        ...(q.id && { id: q.id }),
+        texto: q.text,
+        tipo: this.mapTipoFrontToBack(q.type),
+        opciones: q.options?.map((opt) => ({
+          ...(opt.id && { id: opt.id }),
+          texto: opt.texto,
+          numero: opt.numero
+        })),
+        ...(q.eliminarOpciones && { eliminarOpciones: q.eliminarOpciones })
+      })),
+      eliminarPreguntas: this.preguntasAEliminar
+    };
+
+    console.log('Payload enviado:', JSON.stringify(payload, null, 2));
+
+    this.encuestasService.updateEncuesta(token_dashboard, encuestaId, payload).subscribe({
+      next: (resp) => {
+        this.showToast('¡Encuesta actualizada!');
+        this.preguntasAEliminar = [];
+      },
+      error: (err) => {
+        this.showToast('Error al actualizar encuesta', true);
+      }
+    });
+  }
+
+  eliminarOpcionDePregunta(idPregunta: number, idOpcion: number) {
+    const pregunta = this.questions.find(q => q.id === idPregunta);
+    if (pregunta) {
+      pregunta.eliminarOpciones = pregunta.eliminarOpciones || [];
+      pregunta.eliminarOpciones.push(idOpcion);
+      pregunta.options = pregunta.options?.filter(opt => opt.id !== idOpcion);
+    }
   }
 }
