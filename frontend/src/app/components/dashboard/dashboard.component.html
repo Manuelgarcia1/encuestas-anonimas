@@ -49,18 +49,18 @@
                 <div class="flex items-center gap-3 group">
                     <!-- Checkbox personalizado -->
                     <div class="relative flex items-center">
-                        <input type="checkbox" [id]="'filter-' + filter.id"
-                            class="peer opacity-0 absolute h-5 w-5 cursor-pointer">
+                        <input type="checkbox" [id]="'filter-' + filter.id" [checked]="filter.checked"
+                            (change)="toggleFilter(filter)" class="peer opacity-0 absolute h-5 w-5 cursor-pointer">
                         <div class="h-5 w-5 rounded border-2 border-gray-300 bg-white 
-                                  flex items-center justify-center transition-all duration-200
-                                  peer-checked:border-blue-500 peer-checked:bg-blue-500
-                                  group-hover:border-blue-400">
+                          flex items-center justify-center transition-all duration-200
+                          peer-checked:border-blue-500 peer-checked:bg-blue-500
+                          group-hover:border-blue-400">
                             <i-lucide [name]="icons.Check"
                                 class="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity"></i-lucide>
                         </div>
                     </div>
                     <label [for]="'filter-' + filter.id" class="text-sm text-gray-600 cursor-pointer select-none
-                                  group-hover:text-gray-800 transition-colors">
+                          group-hover:text-gray-800 transition-colors">
                         {{ filter.name }}
                     </label>
                 </div>
@@ -78,13 +78,14 @@
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <i-lucide [name]="icons.Search" class="w-5 h-5 text-gray-400"></i-lucide>
             </div>
-            <input type="text" class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            <input type="text" [(ngModel)]="searchTerm" (input)="filterForms()"
+                class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="Buscar encuestas...">
         </div>
 
         <!-- TARJETAS EN RESPONSIVE - GRID -->
         <div class="grid grid-cols-1 sm:hidden gap-4">
-            @for (form of forms; track form.id) {
+            @for (form of filteredForms; track form.id) {
             <div class="bg-white p-4 rounded-xl shadow border space-y-2" (click)="goToCreate(form.id)"
                 style="cursor:pointer">
                 <h2 class="text-lg font-semibold text-gray-800">{{ form.name }}</h2>
@@ -141,10 +142,9 @@
                 </div>
             </div>}
             <!-- MENSAJE CUANDO NO HAY ENCUESTAS -->
-            @if (forms.length === 0) {
+            @if (filteredForms.length === 0) {
             <div class="m-6 text-center text-gray-600 text-sm">
-                Aún no hay encuestas creadas, para empezar presiona el botón
-                <strong>Crear Encuesta</strong>.
+                No se encontraron encuestas que coincidan con la búsqueda.
             </div>
             }
         </div>
@@ -162,7 +162,7 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    @for (form of forms; track form.id) {
+                    @for (form of filteredForms; track form.id) {
                     <tr class="hover:bg-gray-50 relative" (click)="goToCreate(form.id)" style="cursor:pointer">
                         <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ form.name }}</td>
                         <td class="px-6 py-4 text-sm text-gray-500">-</td>
@@ -220,10 +220,9 @@
                 </tbody>
             </table>
             <!-- MENSAJE CUANDO NO HAY ENCUESTAS -->
-            @if (forms.length === 0) {
+            @if (filteredForms.length === 0) {
             <div class="m-6 text-center text-gray-600 text-sm">
-                Aún no hay encuestas creadas, para empezar presiona el botón
-                <strong>Crear Encuesta</strong>.
+                No se encontraron encuestas que coincidan con la búsqueda.
             </div>
             }
         </div>
