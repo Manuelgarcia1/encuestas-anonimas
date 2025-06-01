@@ -175,7 +175,7 @@ export class EncuestasController {
   }
 
   // Publica una encuesta cambiando su estado a PUBLICADA
-  @Put('creador/:token_dashboard/encuesta/:id/publicar')
+  @Patch('creador/:token_dashboard/encuesta/:id/publicar')
   @ApiOperation({
     summary: 'Publicar una encuesta (cambiar estado a PUBLICADA)',
   })
