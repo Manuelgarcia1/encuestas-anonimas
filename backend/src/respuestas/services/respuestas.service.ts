@@ -181,6 +181,7 @@ export class RespuestasService {
 
       return {
         respuestaId: respuesta.id,
+        fecha: respuesta.fecha_respuesta,
         respuestas: respuestasPorPregunta,
       };
     });
