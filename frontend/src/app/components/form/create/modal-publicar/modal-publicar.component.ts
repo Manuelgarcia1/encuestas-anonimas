@@ -14,7 +14,6 @@ import { switchMap } from 'rxjs/operators'; // Importa switchMap
 })
 export class ModalPublicarComponent implements OnInit {
   @Input() encuestaId!: number;
-  // surveyName se actualizará con el nombre real de la encuesta
   surveyName: string = 'Encuesta'; // Valor inicial o por defecto
   @Output() close = new EventEmitter<void>();
 
@@ -27,7 +26,7 @@ export class ModalPublicarComponent implements OnInit {
   constructor(private encuestasService: EncuestasService) { }
 
   ngOnInit() {
-    this.loadSurveyData(); // Cambiamos el nombre del método para reflejar que carga más datos
+    this.loadSurveyData();
   }
 
   private getCookie(name: string): string | null {
@@ -44,7 +43,7 @@ export class ModalPublicarComponent implements OnInit {
     if (!tokenDashboard) {
       this.showToast('No se encontró el token de dashboard. No se pueden cargar los datos de la encuesta.', true);
       this.isLoading = false;
-      this.closeModal(); // Cerramos si no hay token para operar
+      this.closeModal();
       return;
     }
 
@@ -155,7 +154,6 @@ export class ModalPublicarComponent implements OnInit {
       return;
     }
 
-    // this.surveyName ahora debería tener el nombre real de la encuesta
     const subject = `¡Tu opinión es importante! Participa en nuestra encuesta: ${this.surveyName}`;
 
     const body = `¡Hola!
@@ -173,7 +171,7 @@ Completar la encuesta te tomará solo unos minutos. Apreciamos de antemano tu ti
 ¡Muchas gracias!
 
 Saludos cordiales,
-El grupo E de Desarrollo de Aplicaciones Web 2025`; // <-- Recuerda personalizar esta firma
+El grupo E de Desarrollo de Aplicaciones Web 2025`;
 
     const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 

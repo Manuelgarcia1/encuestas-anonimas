@@ -1,4 +1,3 @@
-// header-form.component.ts
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
@@ -36,23 +35,23 @@ export class HeaderFormComponent implements OnInit {
   ) { }
   @Output() surveyStatusChanged = new EventEmitter<boolean>(); // Nuevo Output
   @Input() nombreEncuesta: string = 'Mi Formulario';
-  @Input() encuestaId!: number; // Sigue siendo útil si se edita una encuesta
+  @Input() encuestaId!: number;
 
   icons = { Home, ChevronRight, Edit, ListOrdered, Send, Link, Menu, X };
   activeTab: 'edit' | 'results' = 'edit';
   mobileMenuOpen = false;
   showPublishModal = false;
   showConfirmPublishModal = false;
-  token: string | null = null; // Este es el token del dashboard que queremos preservar
+  token: string | null = null; 
   isSurveyPublished: boolean = false;
   isLoadingSurveyStatus: boolean = true;
 
   ngOnInit(): void {
     this.token = this.getCookie('td'); // Token del dashboard
     const currentPath = this.router.url;
-    if (currentPath.includes('/results/')) { // Verificamos que sea /results/ seguido de un ID
+    if (currentPath.includes('/results/')) {
       this.activeTab = 'results';
-    } else if (currentPath.includes('/create')) { // Cubre /create y /create/:id
+    } else if (currentPath.includes('/create')) {
       this.activeTab = 'edit';
     }
 
@@ -76,7 +75,6 @@ export class HeaderFormComponent implements OnInit {
           this.isSurveyPublished = false;
         }
       } else {
-        // Para /create (sin ID)
         this.isLoadingSurveyStatus = false;
         this.isSurveyPublished = false;
       }
@@ -123,7 +121,6 @@ export class HeaderFormComponent implements OnInit {
   }
 
   navigateToDashboard() {
-    // Ahora this.token debería tener el valor de la cookie 'td' si existía.
     if (this.token) {
       this.router.navigate(['/dashboard'], { queryParams: { token: this.token } });
     } else {
@@ -136,16 +133,14 @@ export class HeaderFormComponent implements OnInit {
     this.activeTab = tab;
     this.mobileMenuOpen = false;
 
-    if (this.encuestaId) { // Solo si tenemos una encuesta activa con ID
+    if (this.encuestaId) {
       if (tab === 'results') {
         this.router.navigate(['/results', this.encuestaId]);
       } else if (tab === 'edit') {
         this.router.navigate(['/create', this.encuestaId]);
       }
     } else {
-      // Si estamos en /create (nueva encuesta sin ID guardado aún)
       if (tab === 'edit') {
-        // Ya estamos en /create o deberíamos ir a /create
         this.router.navigate(['/create']);
       } else if (tab === 'results') {
         this.showToast('Guarda la encuesta primero para ver sus resultados.', true);

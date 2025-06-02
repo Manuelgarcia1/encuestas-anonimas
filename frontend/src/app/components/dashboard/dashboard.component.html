@@ -92,7 +92,7 @@
         <div class="grid grid-cols-1 sm:hidden gap-4 mb-6">
             @for (form of displayableForms; track form.id) {
             <div class="bg-white p-5 rounded-xl shadow-lg border border-gray-200 space-y-3 relative group">
-                <div (click)="goToCreate(form.id)" class="cursor-pointer"> <!-- Click en tarjeta móvil ya estaba OK -->
+                <div (click)="goToCreate(form.id)" class="cursor-pointer">
                     <h2 class="text-base font-semibold text-gray-800 truncate" [title]="form.name">{{ form.name }}</h2>
                     <div class="flex items-center gap-2 text-xs text-gray-500">
                         <i-lucide [name]="icons.Calendar" class="w-3.5 h-3.5"></i-lucide>
@@ -150,10 +150,8 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @for (form of displayableForms; track form.id) {
-                    <!-- CAMBIO: (click) y cursor-pointer añadidos a <tr>, hover mejorado -->
                     <tr (click)="goToCreate(form.id)" class="hover:bg-gray-100 cursor-pointer group transition-colors duration-150">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <!-- CAMBIO: (click) y cursor-pointer eliminados del div, hover de texto ajustado con group-hover -->
                             <div class="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-150" [title]="form.name">
                                 {{ form.name }}
                             </div>
@@ -173,7 +171,7 @@
                                 </button>
                                 @if (menuOpenId === form.id) {
                                 <div class="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-xl z-20 border border-gray-200 py-1"
-                                    (click)="$event.stopPropagation()"> <!-- Este stopPropagation es importante -->
+                                    (click)="$event.stopPropagation()">
                                     <a (click)="goToCreate(form.id); closeAllMenus(); $event.stopPropagation()"
                                         class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer">
                                         <i-lucide [name]="icons.Edit" class="w-4 h-4 mr-2.5"></i-lucide> Editar

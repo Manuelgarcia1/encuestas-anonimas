@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { EncuestasService } from '../../services/encuestas.service';
 import {
   LucideAngularModule, Plus, Filter, Search, Calendar, FileText, MoreVertical, Edit,
-  Copy, ChevronDown, Check, ChevronLeft, ChevronRight, // Se eliminaron Trash2, Pencil
+  Copy, ChevronDown, Check, ChevronLeft, ChevronRight
 } from 'lucide-angular';
 import { HeaderDashboardComponent } from '../header/header-dashboard/header-dashboard.component';
 import { FormsModule } from '@angular/forms';
@@ -60,7 +60,6 @@ export class DashboardComponent implements OnInit {
   activeSortBy: string = 'createdAt';
   activeOrder: string = 'DESC';
 
-  // Se eliminaron Trash2 y Pencil del objeto icons
   icons = { Plus, Filter, Search, Calendar, FileText, MoreVertical, Edit, Copy, ChevronDown, Check, ChevronLeft, ChevronRight };
   menuOpenId: string | number | null = null;
 
@@ -227,9 +226,6 @@ export class DashboardComponent implements OnInit {
       queryParams: { page: this.currentPage },
       queryParamsHandling: 'merge',
     });
-    // Si no queremos recargar por navegación (porque loadForms se llamará explícitamente)
-    // no hacemos nada más. Si triggerReloadByNavigation es true (default), la navegación disparará
-    // el subscription de queryParamMap y recargará. Para los filtros, ya llamamos a loadForms.
   }
 
   handleMobileFilterChange(event: Event): void {
@@ -270,7 +266,7 @@ export class DashboardComponent implements OnInit {
   closeAllMenus() { this.menuOpenId = null; }
 
   copyLink(form: FormItem, event?: MouseEvent) {
-    event?.stopPropagation(); // Prevenir que el click se propague y cierre el menú si hay listeners en parents
+    event?.stopPropagation();
     if (form.token_respuesta) {
       navigator.clipboard.writeText(`${window.location.origin}/response/${form.token_respuesta}`)
         .then(() => alert('¡Enlace copiado!'))
@@ -283,7 +279,7 @@ export class DashboardComponent implements OnInit {
 
   goToCreate(formId: string | number) { this.router.navigate(['/create', formId]); }
 
-  // renameForm y deleteForm ya no son necesarios en el menú, se pueden eliminar o comentar
+  // renameForm y deleteForm ya no son necesarios en el menú
   /*
   renameForm(form: FormItem, event: MouseEvent) {
     event.stopPropagation();

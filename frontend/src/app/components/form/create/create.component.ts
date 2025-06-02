@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core'; // OnInit añadido
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import {
   LucideAngularModule,
   Plus,
@@ -525,7 +525,7 @@ export class CreateComponent implements OnInit, OnDestroy {
           this.isEditMode = true; 
 
           const preguntasDesdeBackend = resp.data.preguntas.map((pBack: any) => {
-            // Mapear usando el número de pregunta que el backend devuelve (debería coincidir)
+            // Mapear usando el número de pregunta que el backend devuelve
             const qOriginal = this.questions.find(qFE => qFE.numero === pBack.numero); 
             return {
               ...qOriginal, 
