@@ -138,7 +138,6 @@ export class RespuestasService {
    * respuestas abiertas y conteo/porcentaje de selección por opción.
    */
   async obtenerResultados(tokenResultados: string) {
-    // Paso 1: Obtener encuesta con todas sus relaciones
     const encuesta = await this.encuestaRepository.findOne({
       where: { token_resultados: tokenResultados },
       relations: [
@@ -149,6 +148,7 @@ export class RespuestasService {
         'respuestas.respuestasAbiertas.pregunta',
         'respuestas.opciones',
         'respuestas.opciones.opcion',
+        'respuestas.opciones.opcion.pregunta',
       ],
     });
 
@@ -156,58 +156,124 @@ export class RespuestasService {
       throw new NotFoundException('Encuesta no encontrada');
     }
 
-    // Paso 2: Inicializar estructura base del resultado
+    const respuestasCompletas = encuesta.respuestas.map((respuesta) => {
+      const respuestasPorPregunta = encuesta.preguntas.map((pregunta) => {
+        if (pregunta.tipo === 'ABIERTA') {
+          const respuestaAbierta = respuesta.respuestasAbiertas?.find(
+            (ra) => ra.pregunta?.id === pregunta.id,
+          );
+          return {
+            pregunta: pregunta.texto,
+            tipo: pregunta.tipo,
+            texto: respuestaAbierta?.texto ?? null,
+          };
+        } else {
+          const opcionesSeleccionadas = respuesta.opciones
+            ?.filter((ro) => ro.opcion?.pregunta?.id === pregunta.id)
+            .map((ro) => ro.opcion.texto);
+          return {
+            pregunta: pregunta.texto,
+            tipo: pregunta.tipo,
+            opciones: opcionesSeleccionadas,
+          };
+        }
+      });
+
+      return {
+        respuestaId: respuesta.id,
+        fecha: respuesta.fecha_respuesta,
+        respuestas: respuestasPorPregunta,
+      };
+    });
+
+    return {
+      encuesta: {
+        id: encuesta.id,
+        nombre: encuesta.nombre,
+        totalRespuestas: respuestasCompletas.length,
+      },
+      respuestas: respuestasCompletas,
+    };
+  }
+
+  async obtenerResultadosPorEncuesta(tokenResultados: string) {
+    // Paso 1: Buscar la encuesta por su token de resultados
+    // y cargar todas las relaciones necesarias para procesar los resultados
+    const encuesta = await this.encuestaRepository.findOne({
+      where: { token_resultados: tokenResultados },
+      relations: [
+        'preguntas',
+        'preguntas.opciones', // Opciones posibles por pregunta
+        'respuestas',
+        'respuestas.respuestasAbiertas', // Respuestas abiertas escritas
+        'respuestas.respuestasAbiertas.pregunta',
+        'respuestas.opciones', // Respuestas seleccionadas en preguntas cerradas
+        'respuestas.opciones.opcion', // Referencia a la opción elegida
+      ],
+    });
+
+    // Si no se encuentra la encuesta, lanzar una excepción
+    if (!encuesta) {
+      throw new NotFoundException('Encuesta no encontrada');
+    }
+
+    // Paso 2: Inicializar la estructura base del resultado
     const resultados = {
       encuesta: {
         id: encuesta.id,
         nombre: encuesta.nombre,
-        totalRespuestas: encuesta.respuestas?.length || 0,
-        preguntas: [] as any[],
+        totalRespuestas: encuesta.respuestas?.length || 0, // Total de formularios respondidos
+        preguntas: [] as any[], // Aquí se irán agregando los resultados por pregunta
       },
     };
 
-    // Paso 3: Procesar cada pregunta para obtener sus resultados
+    // Paso 3: Recorrer cada pregunta de la encuesta
     for (const pregunta of encuesta.preguntas || []) {
+      // Estructura para almacenar los resultados de una pregunta
       const preguntaResultado = {
         id: pregunta.id,
         texto: pregunta.texto,
         tipo: pregunta.tipo,
-        respuestas: [] as any[],
+        respuestas: [] as any[], // Se llenará según si es abierta o cerrada
       };
 
       if (pregunta.tipo === 'ABIERTA') {
-        // Respuestas abiertas: listar los textos de respuesta
+        // Si la pregunta es abierta, se listan los textos escritos por los encuestados
         const respuestas = (encuesta.respuestas || [])
-          .flatMap((r) => r.respuestasAbiertas || [])
-          .filter((ra) => ra?.pregunta?.id === pregunta.id)
-          .map((ra) => ra.texto);
+          .flatMap((r) => r.respuestasAbiertas || []) // Agrupa todas las respuestas abiertas
+          .filter((ra) => ra?.pregunta?.id === pregunta.id) // Filtra las de esta pregunta
+          .map((ra) => ra.texto); // Se queda solo con el texto escrito
 
+        // Se agregan al resultado de la pregunta
         preguntaResultado.respuestas = respuestas;
       } else {
-        // Respuestas con opciones: contar cuántas veces se eligió cada opción
+        // Si es una pregunta cerrada, se cuentan cuántas veces fue elegida cada opción
         preguntaResultado.respuestas = (pregunta.opciones || []).map(
           (opcion) => {
+            // Cuenta cuántas veces esta opción fue seleccionada
             const count = (encuesta.respuestas || [])
-              .flatMap((r) => r.opciones || [])
-              .filter((ro) => ro?.opcion?.id === opcion.id).length;
+              .flatMap((r) => r.opciones || []) // Agrupa todas las selecciones
+              .filter((ro) => ro?.opcion?.id === opcion.id).length; // Filtra las de esta opción
 
             return {
-              opcion: opcion.texto,
-              count,
+              opcion: opcion.texto, // Texto de la opción
+              count, // Cantidad de veces seleccionada
               porcentaje:
                 resultados.encuesta.totalRespuestas > 0
                   ? Math.round(
                       (count / resultados.encuesta.totalRespuestas) * 100,
                     )
-                  : 0,
+                  : 0, // Porcentaje sobre el total de respuestas
             };
           },
         );
       }
 
+      // Agrega el resultado de esta pregunta al array de preguntas
       resultados.encuesta.preguntas.push(preguntaResultado);
     }
 
+    // Paso final: retornar el resumen de resultados
     return resultados;
   }
 }

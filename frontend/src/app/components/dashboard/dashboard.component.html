@@ -3,17 +3,16 @@
 </app-header-dashboard>
 
 <!-- CONTENEDOR PRINCIPAL CON PADDING PARA ELEMENTOS FIXED -->
-<div class="pt-16 sm:pt-0 pb-4 min-h-screen bg-gray-50 flex flex-col sm:flex-row">
+<div class="pt-16 sm:pt-0 pb-16 min-h-screen bg-gray-100 flex flex-col sm:flex-row">
 
     <!-- TOPBAR FIXED - MOBILE -->
-    <div class="sm:hidden fixed top-12 left-0 right-0 z-30 bg-white p-4 border-b">
-        <!-- Select mejorado -->
+    <div class="sm:hidden fixed top-12 left-0 right-0 z-30 bg-white p-4 border-b shadow-md">
         <div class="relative mb-3">
-            <select
+            <select (change)="handleMobileFilterChange($event)"
                 class="w-full pl-3 pr-10 py-2.5 rounded-lg border border-gray-300 text-gray-700 bg-white appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <option selected disabled>Ordenar por</option>
-                @for (filter of filters; track filter.id) {
-                <option>{{ filter.name }}</option>
+                <option selected disabled value="">Ordenar por...</option>
+                @for (filter of filters; track filter.id) { <!-- filters array ya no tiene "Número de Respuestas" -->
+                <option [value]="filter.id">{{ filter.name }}</option>
                 }
             </select>
             <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -22,195 +21,187 @@
         </div>
 
         <button (click)="navigateToCreateForm()"
-            class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-lg transition-colors duration-200">
+            class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-lg transition-colors duration-200 shadow-sm">
             <i-lucide [name]="icons.Plus" class="w-5 h-5"></i-lucide>
             <span>Crear Encuesta</span>
         </button>
     </div>
 
     <!-- SIDEBAR - DESKTOP -->
-    <aside class="hidden sm:block w-1/5 p-4 bg-white fixed top-0 left-0 h-full pt-16">
-        <!-- Botón mejorado -->
+    <aside class="hidden sm:block w-64 p-6 bg-white fixed top-0 left-0 h-full pt-20 shadow-lg">
         <button (click)="navigateToCreateForm()"
-            class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-lg transition-colors duration-200 mb-6 shadow-sm">
+            class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg transition-colors duration-200 mb-8 shadow-md text-sm font-medium">
             <i-lucide [name]="icons.Plus" class="w-5 h-5"></i-lucide>
-            <span>Crear Encuesta</span>
+            <span>Crear Nueva Encuesta</span>
         </button>
 
-        <!-- Sección "Ordenar por" mejorada -->
-        <div class="space-y-3 p-3">
-            <h3 class="font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <i-lucide [name]="icons.Filter" class="w-4 h-4 text-blue-500"></i-lucide>
-                <span class="text-sm font-semibold text-gray-600">ORDENAR POR</span>
+        <div class="space-y-3">
+            <h3 class="font-medium text-gray-500 mb-3 text-xs uppercase tracking-wider flex items-center gap-2">
+                <i-lucide [name]="icons.Filter" class="w-4 h-4 text-gray-400"></i-lucide>
+                Ordenar por
             </h3>
-
             <div class="space-y-2">
-                @for (filter of filters; track filter.id) {
-                <div class="flex items-center gap-3 group">
-                    <!-- Checkbox personalizado -->
-                    <div class="relative flex items-center">
-                        <input type="checkbox" [id]="'filter-' + filter.id" [checked]="filter.checked"
-                            (change)="toggleFilter(filter)" class="peer opacity-0 absolute h-5 w-5 cursor-pointer">
-                        <div class="h-5 w-5 rounded border-2 border-gray-300 bg-white 
-                          flex items-center justify-center transition-all duration-200
-                          peer-checked:border-blue-500 peer-checked:bg-blue-500
-                          group-hover:border-blue-400">
-                            <i-lucide [name]="icons.Check"
-                                class="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity"></i-lucide>
-                        </div>
-                    </div>
-                    <label [for]="'filter-' + filter.id" class="text-sm text-gray-600 cursor-pointer select-none
-                          group-hover:text-gray-800 transition-colors">
+                @for (filter of filters; track filter.id) { <!-- filters array ya no tiene "Número de Respuestas" -->
+                <label class="flex items-center gap-3 p-2 rounded-md hover:bg-blue-50 cursor-pointer transition-colors"
+                    [class.bg-blue-100]="filter.checked" [class.text-blue-700]="filter.checked"
+                    [class.font-semibold]="filter.checked" [class.text-gray-600]="!filter.checked">
+                    <input type="radio" name="sortFilter" [value]="filter.id" [checked]="filter.checked"
+                        (change)="applySortFilter(filter)" class="opacity-0 absolute h-0 w-0">
+                    <span class="text-sm select-none">
                         {{ filter.name }}
-                    </label>
-                </div>
+                    </span>
+                </label>
                 }
             </div>
         </div>
     </aside>
 
     <!-- CONTENIDO PRINCIPAL CON MÁRGENES PARA ELEMENTOS FIXED -->
-    <main class="flex-1 px-6 mt-24 sm:mt-0 sm:ml-[20%] pt-16">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6">Mis Encuestas</h1>
+    <main class="flex-1 px-4 sm:px-6 lg:px-8 mt-36 sm:mt-0 sm:ml-64 pt-20">
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Mis Encuestas</h1>
+            @if (!isLoading && totalItems > 0) {
+            <p class="text-sm text-gray-500 mt-2 sm:mt-0">
+                <!-- CORREGIDO: Uso de la propiedad Math del componente -->
+                Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage,
+                totalItems) }} de {{ totalItems }} encuestas
+            </p>
+            }
+        </div>
 
-        <!-- BUSCADOR -->
         <div class="relative mb-6">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <i-lucide [name]="icons.Search" class="w-5 h-5 text-gray-400"></i-lucide>
             </div>
             <input type="text" [(ngModel)]="searchTerm" (input)="filterForms()"
-                class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                placeholder="Buscar encuestas...">
+                class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Buscar encuestas por nombre...">
         </div>
 
+        @if (isLoading) {
+        <div class="flex justify-center items-center py-10">
+            <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                </path>
+            </svg>
+        </div>
+        }@else {
         <!-- TARJETAS EN RESPONSIVE - GRID -->
-        <div class="grid grid-cols-1 sm:hidden gap-4">
-            @for (form of filteredForms; track form.id) {
-            <div class="bg-white p-4 rounded-xl shadow border space-y-2" (click)="goToCreate(form.id)"
-                style="cursor:pointer">
-                <h2 class="text-lg font-semibold text-gray-800">{{ form.name }}</h2>
-                <div class="flex items-center gap-2 text-sm text-gray-600">
-                    <i-lucide [name]="icons.Calendar" class="w-4 h-4"></i-lucide>
-                    <span>{{ form.creationDate }}</span>
+        <div class="grid grid-cols-1 sm:hidden gap-4 mb-6">
+            @for (form of displayableForms; track form.id) {
+            <div class="bg-white p-5 rounded-xl shadow-lg border border-gray-200 space-y-3 relative group">
+                <div (click)="goToCreate(form.id)" class="cursor-pointer">
+                    <h2 class="text-base font-semibold text-gray-800 truncate" [title]="form.name">{{ form.name }}</h2>
+                    <div class="flex items-center gap-2 text-xs text-gray-500">
+                        <i-lucide [name]="icons.Calendar" class="w-3.5 h-3.5"></i-lucide>
+                        <span>{{ form.creationDate }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-gray-500">
+                        <i-lucide [name]="icons.FileText" class="w-3.5 h-3.5"></i-lucide>
+                        <!-- MOSTRAR CONTEO DE RESPUESTAS -->
+                        <span>{{ form.totalRespuestas }} respuestas</span>
+                    </div>
+                    <span [class]="getStatusClasses(form.status)" class="mt-1">
+                        {{ form.status }}
+                    </span>
                 </div>
-                <div class="flex items-center gap-2 text-sm text-gray-600">
-                    <i-lucide [name]="icons.FileText" class="w-4 h-4"></i-lucide>
-                    <span>- respuestas</span>
-                </div>
-                <span [class]="getStatusClasses(form.status)">
-                    {{ form.status }}
-                </span>
-                <div class="relative flex justify-end gap-2 pt-2">
-                    <button (click)="toggleMenu(form); $event.stopPropagation()"
-                        class="text-gray-600 hover:text-gray-800">
+                <div class="absolute top-3 right-3">
+                    <button (click)="toggleMenu(form.id); $event.stopPropagation()"
+                        class="text-gray-500 hover:text-blue-600 p-1.5 rounded-full hover:bg-blue-50 transition-colors">
                         <i-lucide [name]="icons.MoreVertical" class="w-5 h-5"></i-lucide>
                     </button>
-
-                    @if (form.showMenu) {
-                    <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200"
+                    @if (menuOpenId === form.id) {
+                    <div class="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-xl z-20 border border-gray-200 py-1"
                         (click)="$event.stopPropagation()">
-                        <div class="py-1">
-                            <button
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                                (click)="closeAllMenus()">
-                                <i-lucide [name]="icons.Edit" class="w-4 h-4 mr-2"></i-lucide>
-                                Editar
-                            </button>
-                            <button
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                                (click)="closeAllMenus()">
-                                <i-lucide [name]="icons.Pencil" class="w-4 h-4 mr-2"></i-lucide>
-                                Renombrar
-                            </button>
-                            @if (form.status === 'publicada') {
-                            <button
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                                (click)="copyLink(form)">
-                                <i-lucide [name]="icons.Copy" class="w-4 h-4 mr-2"></i-lucide>
-                                Copiar link
-                            </button>
-                            }
-                            <button
-                                class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
-                                (click)="closeAllMenus()">
-                                <i-lucide [name]="icons.Trash2" class="w-4 h-4 mr-2"></i-lucide>
-                                Borrar
-                            </button>
-                        </div>
+                        <a (click)="goToCreate(form.id); closeAllMenus()"
+                            class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer">
+                            <i-lucide [name]="icons.Edit" class="w-4 h-4 mr-2.5"></i-lucide> Editar
+                        </a>
+                        <a (click)="renameForm(form, $event)"
+                            class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer">
+                            <i-lucide [name]="icons.Pencil" class="w-4 h-4 mr-2.5"></i-lucide> Renombrar
+                        </a>
+                        @if (form.status === 'publicada') {
+                        <a (click)="copyLink(form); $event.stopPropagation()"
+                            class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer">
+                            <i-lucide [name]="icons.Copy" class="w-4 h-4 mr-2.5"></i-lucide> Copiar link
+                        </a>
+                        }
+                        <a (click)="deleteForm(form, $event)"
+                            class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer">
+                            <i-lucide [name]="icons.Trash2" class="w-4 h-4 mr-2.5"></i-lucide> Borrar
+                        </a>
                     </div>
                     }
                 </div>
-            </div>}
-            <!-- MENSAJE CUANDO NO HAY ENCUESTAS -->
-            @if (filteredForms.length === 0) {
-            <div class="m-6 text-center text-gray-600 text-sm">
-                No se encontraron encuestas que coincidan con la búsqueda.
             </div>
             }
         </div>
 
         <!-- TABLA - SOLO DESKTOP -->
-        <div class="hidden sm:block bg-white rounded-lg border overflow-visible relative">
+        <div class="hidden sm:block bg-white rounded-lg border overflow-x-auto shadow-lg">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Respuestas</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha de Creación
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Nombre</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Respuestas</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha
+                            de Creación</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Estado</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">
+                            Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    @for (form of filteredForms; track form.id) {
-                    <tr class="hover:bg-gray-50 relative" (click)="goToCreate(form.id)" style="cursor:pointer">
-                        <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ form.name }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-500">-</td>
-                        <td class="px-6 py-4 text-sm text-gray-500">{{ form.creationDate }}</td>
-                        <td class="px-6 py-4">
+                    @for (form of displayableForms; track form.id) {
+                    <tr class="hover:bg-gray-50 group">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-600"
+                                (click)="goToCreate(form.id)" [title]="form.name">
+                                {{ form.name }}
+                            </div>
+                        </td>
+                        <!-- MOSTRAR CONTEO DE RESPUESTAS -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ form.totalRespuestas }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ form.creationDate }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
                             <span [class]="getStatusClasses(form.status)">
                                 {{ form.status }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-500 text-right">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                             <div class="relative">
-                                <button (click)="toggleMenu(form); $event.stopPropagation()"
-                                    class="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100">
+                                <button (click)="toggleMenu(form.id); $event.stopPropagation()"
+                                    class="text-gray-500 hover:text-blue-600 p-1.5 rounded-full hover:bg-blue-50 transition-colors">
                                     <i-lucide [name]="icons.MoreVertical" class="w-5 h-5"></i-lucide>
                                 </button>
-
-                                <!-- Menú desplegable -->
-                                @if (form.showMenu) {
-                                <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200"
+                                @if (menuOpenId === form.id) {
+                                <div class="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-xl z-20 border border-gray-200 py-1"
                                     (click)="$event.stopPropagation()">
-                                    <div class="py-1">
-                                        <button
-                                            class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                                            (click)="closeAllMenus()">
-                                            <i-lucide [name]="icons.Edit" class="w-4 h-4 mr-2"></i-lucide>
-                                            Editar
-                                        </button>
-                                        <button
-                                            class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                                            (click)="closeAllMenus()">
-                                            <i-lucide [name]="icons.Pencil" class="w-4 h-4 mr-2"></i-lucide>
-                                            Renombrar
-                                        </button>
-                                        @if (form.status === 'publicada') {
-                                        <button
-                                            class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                                            (click)="copyLink(form)">
-                                            <i-lucide [name]="icons.Copy" class="w-4 h-4 mr-2"></i-lucide>
-                                            Copiar link
-                                        </button>
-                                        }
-                                        <button
-                                            class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
-                                            (click)="closeAllMenus()">
-                                            <i-lucide [name]="icons.Trash2" class="w-4 h-4 mr-2"></i-lucide>
-                                            Borrar
-                                        </button>
-                                    </div>
+                                    <a (click)="goToCreate(form.id); closeAllMenus()"
+                                        class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer">
+                                        <i-lucide [name]="icons.Edit" class="w-4 h-4 mr-2.5"></i-lucide> Editar
+                                    </a>
+                                    <a (click)="renameForm(form, $event)"
+                                        class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer">
+                                        <i-lucide [name]="icons.Pencil" class="w-4 h-4 mr-2.5"></i-lucide> Renombrar
+                                    </a>
+                                    @if (form.status === 'publicada') {
+                                    <a (click)="copyLink(form); $event.stopPropagation()"
+                                        class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer">
+                                        <i-lucide [name]="icons.Copy" class="w-4 h-4 mr-2.5"></i-lucide> Copiar link
+                                    </a>
+                                    }
+                                    <a (click)="deleteForm(form, $event)"
+                                        class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer">
+                                        <i-lucide [name]="icons.Trash2" class="w-4 h-4 mr-2.5"></i-lucide> Borrar
+                                    </a>
                                 </div>
                                 }
                             </div>
@@ -219,12 +210,62 @@
                     }
                 </tbody>
             </table>
-            <!-- MENSAJE CUANDO NO HAY ENCUESTAS -->
-            @if (filteredForms.length === 0) {
-            <div class="m-6 text-center text-gray-600 text-sm">
-                No se encontraron encuestas que coincidan con la búsqueda.
-            </div>
-            }
         </div>
+
+        @if (displayableForms.length === 0 && !isLoading) {
+        <div class="py-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                aria-hidden="true">
+                <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No hay encuestas</h3>
+            @if (searchTerm) {
+            <p class="mt-1 text-sm text-gray-500">No se encontraron encuestas que coincidan con "{{searchTerm}}".
+                Intenta con otra búsqueda o crea una nueva.</p>
+            } @else {
+            <p class="mt-1 text-sm text-gray-500">Aún no has creado ninguna encuesta. ¡Empieza ahora!</p>
+            }
+            <div class="mt-6">
+                <button (click)="navigateToCreateForm()" type="button"
+                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <i-lucide [name]="icons.Plus" class="-ml-1 mr-2 h-5 w-5"></i-lucide>
+                    Crear Nueva Encuesta
+                </button>
+            </div>
+        </div>
+        }
+
+        <!-- PAGINADOR -->
+        @if (totalPages > 1 && !isLoading) {
+        <div class="mt-8 flex justify-center items-center space-x-1 sm:space-x-2">
+            <button (click)="previousPage()" [disabled]="currentPage === 1"
+                class="px-2.5 py-1.5 text-sm font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
+                <i-lucide [name]="icons.ChevronLeft" class="w-4 h-4 sm:mr-1"></i-lucide>
+                <span class="hidden sm:inline">Anterior</span>
+            </button>
+
+            @for (page of getPageNumbers(); track page; let i = $index) {
+            @if (page === '...') {
+            <span class="px-2 py-1.5 text-sm text-gray-500 hidden sm:inline">...</span>
+            } @else {
+            <button (click)="goToPage(page)" [class.bg-blue-600]="currentPage === page"
+                [class.text-white]="currentPage === page" [class.border-blue-600]="currentPage === page"
+                [class.bg-white]="currentPage !== page" [class.text-gray-700]="currentPage !== page"
+                [class.border-gray-300]="currentPage !== page"
+                class="px-2.5 sm:px-3 py-1.5 text-sm font-medium rounded-md border hover:bg-gray-50 transition-colors">
+                {{ page }}
+            </button>
+            }
+            }
+
+            <button (click)="nextPage()" [disabled]="currentPage === totalPages"
+                class="px-2.5 py-1.5 text-sm font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
+                <span class="hidden sm:inline">Siguiente</span>
+                <i-lucide [name]="icons.ChevronRight" class="w-4 h-4 sm:ml-1"></i-lucide>
+            </button>
+        </div>
+        }
+        }
     </main>
 </div>

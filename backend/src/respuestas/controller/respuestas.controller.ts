@@ -66,4 +66,30 @@ export class RespuestasController {
       data,
     );
   }
+
+  @Get('/resultados/:token_resultados/estadisticas')
+  @ApiOperation({ summary: 'Obtener estadísticas de una encuesta' })
+  @ApiParam({ name: 'token_resultados', description: 'Token de resultados' })
+  @SwaggerApiResponse({
+    status: 200,
+    description: 'Estadísticas obtenidas exitosamente',
+    type: SwaggerApiResponse, // Añade esto para documentación Swagger
+  })
+    @SwaggerApiResponse({
+    status: 404,
+    description: 'Token de resultados inválido',
+  })
+  async obtenerResultadosPorEncuesta(
+    @Param('token_resultados', new ParseUUIDPipe()) tokenResultados: string,
+  ): Promise<ApiResponse> {
+    const data =
+      await this.respuestasService.obtenerResultadosPorEncuesta(tokenResultados);
+
+    return new ApiResponse(
+      'success',
+      'Resultados obtenidos correctamente',
+      HttpStatus.OK,
+      data,
+    );
+  }
 }

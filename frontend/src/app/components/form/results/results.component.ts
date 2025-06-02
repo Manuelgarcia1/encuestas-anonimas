@@ -1,8 +1,39 @@
-import { Component } from '@angular/core';
+// src/app/components/form/results/results.component.ts
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, ChevronDown, ListChecks, TextCursorInput, CheckSquare, Calendar } from 'lucide-angular';
+import { ActivatedRoute, Router } from '@angular/router';
+import {
+  LucideAngularModule, ChevronDown, ListChecks, TextCursorInput,
+  CheckSquare, Calendar, BarChart3, Percent, Users, MessageSquareText, AlertCircle
+} from 'lucide-angular';
 import { HeaderFormComponent } from '../../header/header-form/header-form.component';
+import { EncuestasService } from '../../../services/encuestas.service';
+import { switchMap, catchError, tap } from 'rxjs/operators';
+import { of } from 'rxjs';
+
+//INTERFACES PARA RESPUESTAS INDIVIDUALES
+export interface RespuestaIndividualAPregunta {
+  pregunta: string; // Texto de la pregunta
+  tipo: string;     // 'OPCION_MULTIPLE_SELECCION_MULTIPLE', 'OPCION_MULTIPLE_SELECCION_SIMPLE', 'ABIERTA'
+  opciones?: string[]; // Array de strings para OPCION_MULTIPLE_*
+  texto?: string;      // String para ABIERTA
+}
+
+export interface ConjuntoDeRespuestas {
+  respuestaId: number;
+  fecha: string; 
+  respuestas: RespuestaIndividualAPregunta[];
+}
+
+export interface ApiResultadosIndividuales {
+  encuesta: {
+    id: number;
+    nombre: string;
+    totalRespuestas: number;
+  };
+  respuestas: ConjuntoDeRespuestas[];
+}
 
 @Component({
   selector: 'app-results',
@@ -11,117 +42,156 @@ import { HeaderFormComponent } from '../../header/header-form/header-form.compon
   templateUrl: './results.component.html',
   styles: ``
 })
-export class ResultsComponent {
-  // Icons
+export class ResultsComponent implements OnInit {
   icons = {
-    ListChecks,
-    TextCursorInput,
-    CheckSquare,
-    ChevronDown,
-    Calendar
+    ListChecks, TextCursorInput, CheckSquare, ChevronDown, Calendar,
+    BarChart3, Percent, Users, MessageSquareText, AlertCircle
   };
 
-  // Sample data with expanded questions and responses
-  questions = [
-    { id: 1, text: '¿Qué características te gustan de nuestra plataforma?', type: 'multiple', 
-      options: ['Usabilidad', 'Diseño', 'Rendimiento', 'Soporte', 'Precio'] },
-    { id: 2, text: '¿Cómo calificarías nuestro servicio?', type: 'simple', 
-      options: ['Excelente', 'Bueno', 'Regular', 'Malo'] },
-    { id: 3, text: '¿Qué tan frecuentemente usas nuestra plataforma?', type: 'simple',
-      options: ['Diariamente', 'Semanalmente', 'Mensualmente', 'Ocasionalmente'] },
-    { id: 4, text: '¿Qué áreas crees que deberíamos mejorar?', type: 'multiple',
-      options: ['Interfaz de usuario', 'Velocidad', 'Documentación', 'Soporte al cliente', 'Funcionalidades'] },
-    { id: 5, text: '¿Recomendarías nuestro servicio a otros?', type: 'simple',
-      options: ['Definitivamente sí', 'Probablemente sí', 'No estoy seguro', 'Probablemente no'] },
-    { id: 6, text: 'Describe tu experiencia general con la plataforma', type: 'text' },
-    { id: 7, text: '¿Qué funcionalidades adicionales te gustaría ver?', type: 'text' }
-  ];
+  encuestaId: number | null = null;
+  tokenDashboard: string | null = null;
 
-  responses = [
-    {
-      date: '28 de junio 13:07',
-      answers: [
-        ['Usabilidad', 'Diseño', 'Precio'], // Multiple selection
-        'Excelente', // Single selection
-        'Diariamente', // Single selection
-        ['Interfaz de usuario', 'Funcionalidades'], // Multiple selection
-        'Definitivamente sí', // Single selection
-        'La plataforma ha superado mis expectativas en todos los aspectos', // Text answer
-        'Me gustaría ver más opciones de personalización' // Text answer
-      ]
-    },
-    {
-      date: '27 de junio 09:15',
-      answers: [
-        ['Rendimiento', 'Soporte'],
-        'Bueno',
-        'Semanalmente',
-        ['Velocidad', 'Documentación'],
-        'Probablemente sí',
-        'Buena experiencia en general, aunque a veces es lenta',
-        'Integración con otras herramientas que uso'
-      ]
-    },
-    {
-      date: '26 de junio 16:42',
-      answers: [
-        ['Diseño'],
-        'Regular',
-        'Mensualmente',
-        ['Soporte al cliente'],
-        'No estoy seguro',
-        'La plataforma cumple con lo básico pero tiene áreas de oportunidad',
-        'Mejorar el sistema de notificaciones'
-      ]
-    },
-    {
-      date: '25 de junio 11:30',
-      answers: [
-        ['Usabilidad', 'Rendimiento', 'Soporte'],
-        'Excelente',
-        'Diariamente',
-        ['Documentación'],
-        'Definitivamente sí',
-        'La mejor plataforma que he usado en su categoría',
-        'Más opciones de exportación de datos'
-      ]
-    },
-    {
-      date: '24 de junio 14:22',
-      answers: [
-        ['Precio'],
-        'Malo',
-        'Ocasionalmente',
-        ['Interfaz de usuario', 'Velocidad', 'Soporte al cliente'],
-        'Probablemente no',
-        'No cumple con lo que necesito y es complicada de usar',
-        'Rediseño completo de la interfaz'
-      ]
-    }
-  ];
+  // Usa la nueva interfaz para los datos de la API
+  datosResultados: ApiResultadosIndividuales | null = null;
+  isLoading: boolean = true;
+  errorMessage: string | null = null;
 
-  // Filter options
-  filterOptions = [
-    { value: 'asc', label: 'Fecha ascendente' },
-    { value: 'desc', label: 'Fecha descendente' }
-  ];
+  // Estas son las preguntas que irán en el encabezado de la tabla
+  preguntasEncabezado: RespuestaIndividualAPregunta[] = [];
+
+
+  filterOptions = [{ value: 'desc', label: 'Fecha descendente' }, { value: 'asc', label: 'Fecha ascendente' }];
   selectedFilter = 'desc';
 
-  // Function to get icon based on question type
-  getQuestionIcon(type: string) {
-    switch (type) {
-      case 'simple': return this.icons.ListChecks;
-      case 'text': return this.icons.TextCursorInput;
-      case 'multiple': return this.icons.CheckSquare;
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private encuestasService: EncuestasService
+  ) { }
+
+  ngOnInit(): void {
+    this.tokenDashboard = this.getCookie('td');
+
+    this.route.paramMap.pipe(
+      switchMap(params => {
+        const idStr = params.get('id');
+        if (!idStr) {
+          this.handleErrorAndNavigate("No se proporcionó un ID de encuesta en la ruta.");
+          return of(null);
+        }
+        this.encuestaId = +idStr;
+        if (isNaN(this.encuestaId)) {
+          this.handleErrorAndNavigate("El ID de encuesta proporcionado no es válido.");
+          return of(null);
+        }
+
+        if (!this.tokenDashboard) {
+          this.handleErrorAndNavigate("No se encontró el token de autenticación del dashboard (cookie 'td').");
+          return of(null);
+        }
+        return this.loadIndividualResults();
+      })
+    ).subscribe();
+  }
+
+  private getCookie(name: string): string | null {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+    return null;
+  }
+
+  // Método modificado para cargar los resultados individuales
+  private loadIndividualResults() {
+    if (!this.encuestaId || !this.tokenDashboard) return of(null);
+
+    this.isLoading = true;
+    this.errorMessage = null;
+    this.datosResultados = null; // Limpiar datos previos
+    this.preguntasEncabezado = []; // Limpiar encabezados previos
+
+    return this.encuestasService.getEncuestaPorId(this.tokenDashboard, this.encuestaId).pipe(
+      switchMap(encuestaDetalleResponse => {
+        if (!encuestaDetalleResponse?.data?.token_resultados) {
+          this.handleError('No se pudo obtener el token de resultados para la encuesta.');
+          return of(null);
+        }
+        const tokenResultados = encuestaDetalleResponse.data.token_resultados;
+
+        return this.encuestasService.getResultadosPorTokenResultados(tokenResultados).pipe(
+          tap(resultadosResponse => {
+            if (resultadosResponse?.data) { // La estructura ahora es diferente
+              this.datosResultados = resultadosResponse.data as ApiResultadosIndividuales;
+              if (this.datosResultados && this.datosResultados.respuestas && this.datosResultados.respuestas.length > 0) {
+                this.preguntasEncabezado = this.datosResultados.respuestas[0].respuestas;
+                // Aplicar ordenamiento inicial si es necesario (ej. por fecha)
+                this.sortRespuestas();
+              } else if (this.datosResultados && (!this.datosResultados.respuestas || this.datosResultados.respuestas.length === 0)) {
+                console.log("Encuesta cargada pero sin respuestas individuales.")
+              }
+
+            } else {
+              this.handleError('No se pudieron obtener los datos de resultados o el formato es incorrecto.');
+            }
+            this.isLoading = false;
+          }),
+          catchError(err => {
+            this.handleError('Error al cargar los resultados detallados de la encuesta.', err);
+            return of(null);
+          })
+        );
+      }),
+      catchError(err => {
+        this.handleError('Error al cargar la información inicial de la encuesta (para obtener token_resultados).', err);
+        return of(null);
+      })
+    );
+  }
+
+  sortRespuestas(): void {
+    if (this.datosResultados && this.datosResultados.respuestas) {
+      this.datosResultados.respuestas.sort((a, b) => {
+        const dateA = new Date(a.fecha).getTime();
+        const dateB = new Date(b.fecha).getTime();
+        return this.selectedFilter === 'desc' ? dateB - dateA : dateA - dateB;
+      });
+    }
+  }
+
+  onFilterChange(): void {
+    this.sortRespuestas();
+  }
+
+  private handleError(message: string, error?: any): void {
+    this.errorMessage = message;
+    this.isLoading = false;
+    if (error) console.error(message, error);
+    else console.error(message);
+  }
+
+  private handleErrorAndNavigate(message: string, error?: any): void {
+    this.handleError(message, error);
+    this.router.navigate(['/dashboard']); // O a una página de error específica
+  }
+
+
+  getQuestionIcon(tipoApi: string | undefined): any {
+    if (!tipoApi) return this.icons.ListChecks;
+    switch (tipoApi) {
+      case 'OPCION_MULTIPLE_SELECCION_SIMPLE': return this.icons.ListChecks;
+      case 'OPCION_MULTIPLE_SELECCION_MULTIPLE': return this.icons.CheckSquare;
+      case 'ABIERTA': return this.icons.TextCursorInput;
       default: return this.icons.ListChecks;
     }
   }
 
-  // Function to format multiple selection answers
-  formatAnswer(answer: any, questionType: string): string {
-    if (questionType === 'multiple' && Array.isArray(answer)) {
-      return answer.join(', ');
+  // Helper para formatear la respuesta para mostrar en la celda de la tabla
+  formatAnswerForCell(respuestaPregunta: RespuestaIndividualAPregunta): string {
+    if (respuestaPregunta.tipo === 'ABIERTA') {
+      return respuestaPregunta.texto || '-';
+    } else if (respuestaPregunta.tipo === 'OPCION_MULTIPLE_SELECCION_SIMPLE' || respuestaPregunta.tipo === 'OPCION_MULTIPLE_SELECCION_MULTIPLE') {
+      return respuestaPregunta.opciones && respuestaPregunta.opciones.length > 0 ? respuestaPregunta.opciones.join(', ') : '-';
     }
-    return answer || '-';
+    return '-';
   }
 }
