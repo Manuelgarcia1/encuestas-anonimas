@@ -61,17 +61,21 @@ export class EncuestasService {
     limit: number;
     creadorEmail: string;
   }> {
+    // 🔢 Extraemos parámetros de paginación y ordenamiento del DTO
     const {
-      page = 1,
-      limit = 10,
-      sortBy = 'id',
-      order = 'ASC',
+      page = 1, // Página actual (por defecto 1)
+      limit = 10, // Cantidad de encuestas por página (por defecto 10)
+      sortBy = 'id', // Campo por el que se ordena (por defecto id)
+      order = 'ASC', // Orden (ascendente o descendente)
     } = getEncuestaDto;
 
+    // 🔐 Clave única para la cache de esta combinación de parámetros
     const cacheKey = `encuestas:${token_dashboard}:p${page}:l${limit}:s${sortBy}:${order}`;
+
+    // 🗂️ Clave del índice que contiene todos los keys de cache para este dashboard
     const indexKey = `encuestas:index:${token_dashboard}`;
 
-    // 1️⃣ Intentamos leer de cache
+    // 1️⃣ Intentamos obtener los resultados desde la cache
     const cached = this.cache.get<{
       data: Encuesta[];
       total: number;
@@ -81,34 +85,42 @@ export class EncuestasService {
     }>(cacheKey);
 
     if (cached) {
+      // Si existe en cache, lo devolvemos directamente (ahorramos llamada a la base de datos)
       return cached;
     }
 
-    // 2️⃣ Si no hay cache, vamos a BD
+    // 2️⃣ Si no está en cache, buscamos en la base de datos
+
+    // Primero obtenemos al creador por el token del dashboard
     const creador = await this.findCreador(token_dashboard);
 
+    // Luego buscamos todas las encuestas del creador, con paginación y orden
     const [data, total] = await this.encuestasRepository.findAndCount({
       where: { creador: { token_dashboard } },
-      take: limit,
-      skip: (page - 1) * limit,
+      take: limit, // Límite por página
+      skip: (page - 1) * limit, // Desplazamiento según la página
       order: { [sortBy]: order.toUpperCase() as 'ASC' | 'DESC' },
-      relations: ['respuestas']
+      relations: ['respuestas'], // Incluimos la relación con respuestas
     });
 
+    // Creamos el objeto resultado con toda la información requerida
     const result = { data, total, page, limit, creadorEmail: creador.email };
 
-    // 3️⃣ Guardamos resultado en cache por 60 segundos
+    // 3️⃣ Guardamos el resultado en la cache por 60 segundos
     this.cache.set(cacheKey, result, 60);
 
-    // 4️⃣ Guardamos el cacheKey en el índice (evita duplicados)
+    // 4️⃣ Guardamos el cacheKey en el índice de keys del dashboard, si no está aún
+    // Esto permite borrar luego todas las keys asociadas al dashboard si es necesario
     const storedKeys = (await this.cache.get<string[]>(indexKey)) ?? [];
     if (!storedKeys.includes(cacheKey)) {
       storedKeys.push(cacheKey);
       this.cache.set(indexKey, storedKeys);
     }
 
+    // 5️⃣ Devolvemos los datos obtenidos de la base
     return result;
   }
+
   async obtenerEncuestaPorTokenCreadorYId(
     token_dashboard: string,
     encuestaId: number,
@@ -256,8 +268,10 @@ export class EncuestasService {
       await this.preguntaRepository.delete({ id: In(ids) });
     }
 
-    // 3.b Eliminar preguntas que no estén en el array 
-    const idsEnviados = (dto.preguntas ?? []).filter(p => p.id).map(p => p.id);
+    // 3.b Eliminar preguntas que no estén en el array
+    const idsEnviados = (dto.preguntas ?? [])
+      .filter((p) => p.id)
+      .map((p) => p.id);
     if (idsEnviados.length > 0) {
       const preguntasAEliminar = await this.preguntaRepository.find({
         where: {
@@ -267,12 +281,14 @@ export class EncuestasService {
         relations: ['opciones'],
       });
 
-      const idsAEliminar = preguntasAEliminar.map(p => p.id);
+      const idsAEliminar = preguntasAEliminar.map((p) => p.id);
       if (idsAEliminar.length > 0) {
-        await this.opcionRepository.delete({ pregunta: { id: In(idsAEliminar) } });
+        await this.opcionRepository.delete({
+          pregunta: { id: In(idsAEliminar) },
+        });
         await this.preguntaRepository.delete({ id: In(idsAEliminar) });
       }
-    }  
+    }
 
     // 4. Procesar cada pregunta del DTO
     for (const pq of dto.preguntas ?? []) {
