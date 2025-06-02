@@ -9,7 +9,7 @@ import { RouterModule } from '@angular/router';
   templateUrl: './header-dashboard.component.html',
 })
 export class HeaderDashboardComponent {
-  @Input() creadorEmail: string | null = null; // Nueva propiedad de entrada
+  @Input() creadorEmail: string | null = null;
   @Input() token: string | null = null;
 
   icons = { Home, ChevronRight };

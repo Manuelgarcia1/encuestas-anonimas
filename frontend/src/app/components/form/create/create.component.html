@@ -1,6 +1,10 @@
 <div class="flex flex-col h-screen">
     <!-- Header -->
-    <app-header-form [nombreEncuesta]="nombreEncuesta"></app-header-form>
+    <app-header-form 
+        [nombreEncuesta]="nombreEncuesta" 
+        [encuestaId]="currentEncuestaId!" 
+        (surveyStatusChanged)="isSurveyPublished = $event">
+    </app-header-form>
 
     <div class="flex flex-1 flex-col md:flex-row overflow-hidden">
         <!-- Mobile Sidebar Toggle -->
@@ -10,54 +14,43 @@
             <i-lucide [name]="mobileSidebarOpen ? icons.ChevronUp : icons.ChevronDown" class="w-5 h-5"></i-lucide>
         </button>
 
-        <!-- Contenedor principal que envuelve sidebar y main -->
         <div class="flex flex-1 flex-col md:flex-row md:pl-4 overflow-hidden">
-            <!-- Sidebar - Lista de preguntas (Mobile) -->
-            <aside *ngIf="mobileSidebarOpen" class="md:hidden w-full bg-gray-100 p-4 overflow-y-auto shadow-sm ">
+            <!-- Sidebar (Mobile) -->
+            <aside *ngIf="mobileSidebarOpen" class="md:hidden w-full bg-gray-100 p-4 overflow-y-auto shadow-sm">
                 <div class="flex justify-between items-center mb-4">
-                    <button (click)="openAddQuestionModal()"
-                        class="flex items-center justify-center gap-1 text-sm w-full text-grisOscuro border-2 rounded-full py-1 px-2 hover:bg-white transition">
+                    <button (click)="openAddQuestionModal()" [disabled]="isSurveyPublished"
+                        class="flex items-center justify-center gap-1 text-sm w-full text-grisOscuro border-2 rounded-full py-1 px-2 hover:bg-white transition disabled:opacity-50 disabled:cursor-not-allowed">
                         <i-lucide [name]="icons.Plus" class="w-4 h-4"></i-lucide>
                         <span>Añadir</span>
                     </button>
                 </div>
-
                 <ul class="space-y-2">
                     @for (question of questions; let i = $index; track trackByPreguntaKey(i, question)) {
-                    <li (click)="setActiveQuestion(question.id); mobileSidebarOpen = false"
+                    <li (click)="setActiveQuestion(question.id, question._tempId); mobileSidebarOpen = false"
                         class="group p-3 rounded-md cursor-pointer transition-colors relative"
-                        [class.bg-blue-100]="question.active" [class.hover:bg-gray-100]="!question.active">
+                        [class.bg-blue-100]="question.active && !isSurveyPublished"
+                        [class.bg-gray-200]="question.active && isSurveyPublished"
+                        [class.hover:bg-gray-200]="!question.active && isSurveyPublished"
+                        [class.hover:bg-blue-50]="!question.active && !isSurveyPublished"
+                        [class.cursor-not-allowed]="isSurveyPublished && isEditMode">
                         <div class="flex items-start gap-2">
-                            <i-lucide [name]="questionTypeIcons[question.type]"
-                                class="w-4 h-4 mt-0.5 text-gray-500 flex-shrink-0">
-                            </i-lucide>
-                            <p class="text-gray-600 text-sm truncate max-w-[150px]">{{ question.text | truncate:20 }}
-                            </p>
+                            <i-lucide [name]="questionTypeIcons[question.type]" class="w-4 h-4 mt-0.5 text-gray-500 flex-shrink-0"></i-lucide>
+                            <span class="font-medium text-gray-700">{{ i + 1 }}.</span>
+                            <p class="text-gray-600 text-sm truncate max-w-[150px]">{{ question.text | truncate:20 }}</p>
                         </div>
-
-                        <!-- Botón de tres puntos -->
-                        <button
+                        <button *ngIf="!isSurveyPublished"
                             class="absolute right-2 top-2 p-1 text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
                             (click)="$event.stopPropagation(); question.showMenu = !question.showMenu">
                             <i-lucide [name]="icons.MoreVertical" class="w-4 h-4"></i-lucide>
                         </button>
-
-                        <!-- Menú desplegable -->
-                        @if (question.showMenu) {
-                        <div class="absolute right-0 top-8 z-10 mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-200"
-                            (click)="$event.stopPropagation()">
+                        @if (question.showMenu && !isSurveyPublished) {
+                        <div class="absolute right-0 top-8 z-10 mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-200" (click)="$event.stopPropagation()">
                             <div class="py-1">
-                                <button
-                                    class="flex items-center px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                                    (click)="duplicateQuestion(question.id); question.showMenu = false">
-                                    <i-lucide [name]="icons.Copy" class="w-4 h-4 mr-2"></i-lucide>
-                                    Duplicar
+                                <button class="flex items-center px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 w-full text-left" (click)="duplicateQuestion(question.id, question._tempId); question.showMenu = false">
+                                    <i-lucide [name]="icons.Copy" class="w-4 h-4 mr-2"></i-lucide>Duplicar
                                 </button>
-                                <button
-                                    class="flex items-center px-3 py-1 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
-                                    (click)="deleteQuestion(question.id); question.showMenu = false">
-                                    <i-lucide [name]="icons.Trash2" class="w-4 h-4 mr-2"></i-lucide>
-                                    Borrar
+                                <button class="flex items-center px-3 py-1 text-sm text-red-600 hover:bg-gray-100 w-full text-left" (click)="deleteQuestion(question.id, question._tempId); question.showMenu = false">
+                                    <i-lucide [name]="icons.Trash2" class="w-4 h-4 mr-2"></i-lucide>Borrar
                                 </button>
                             </div>
                         </div>
@@ -67,57 +60,43 @@
                 </ul>
             </aside>
 
-            <!-- Sidebar - Lista de preguntas (Desktop) -->
-            <aside
-                class="hidden md:block w-64 h-[450px] bg-gray-100 p-4 overflow-y-auto ml-2 mt-4 rounded-xl shadow-sm">
+            <!-- Sidebar (Desktop) -->
+            <aside class="hidden md:block w-64 h-[calc(100vh-10rem)] bg-gray-100 p-4 overflow-y-auto ml-2 mt-4 rounded-xl shadow-sm">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="font-semibold text-gray-700">Lista de Preguntas</h2>
-                    <button (click)="openAddQuestionModal()"
-                        class="flex items-center gap-1 text-sm text-grisOscuro border-2 rounded-full py-1 px-2 hover:bg-white transition">
+                    <button (click)="openAddQuestionModal()" [disabled]="isSurveyPublished"
+                        class="flex items-center gap-1 text-sm text-grisOscuro border-2 rounded-full py-1 px-2 hover:bg-white transition disabled:opacity-50 disabled:cursor-not-allowed">
                         <i-lucide [name]="icons.Plus" class="w-4 h-4"></i-lucide>
                         <span>Añadir</span>
                     </button>
                 </div>
-
                 <ul class="space-y-2">
                     @for (question of questions; let i = $index; track trackByPreguntaKey(i, question)) {
-                    <li (click)="setActiveQuestion(question.id)"
+                    <li (click)="setActiveQuestion(question.id, question._tempId)"
                         class="group p-3 rounded-md cursor-pointer transition-colors relative"
-                        [class.bg-blue-100]="question.active" [class.hover:bg-gray-100]="!question.active">
+                        [class.bg-blue-100]="question.active && !isSurveyPublished"
+                        [class.bg-gray-200]="question.active && isSurveyPublished"
+                        [class.hover:bg-gray-200]="!question.active && isSurveyPublished"
+                        [class.hover:bg-blue-50]="!question.active && !isSurveyPublished"
+                        [class.cursor-not-allowed]="isSurveyPublished && isEditMode">
                         <div class="flex items-start gap-2">
-                            <i-lucide [name]="questionTypeIcons[question.type]"
-                                class="w-4 h-4 mt-0.5 text-gray-500 flex-shrink-0">
-                            </i-lucide>
-                            <span class="font-medium text-gray-700">
-                                {{ i + 1 }}.
-                            </span>
-                            <p class="text-gray-600 text-sm truncate max-w-[150px]">{{ question.text | truncate:20 }}
-                            </p>
+                            <i-lucide [name]="questionTypeIcons[question.type]" class="w-4 h-4 mt-0.5 text-gray-500 flex-shrink-0"></i-lucide>
+                            <span class="font-medium text-gray-700">{{ i + 1 }}.</span>
+                            <p class="text-gray-600 text-sm truncate max-w-[150px]">{{ question.text | truncate:20 }}</p>
                         </div>
-
-                        <!-- Botón de tres puntos -->
-                        <button
+                        <button *ngIf="!isSurveyPublished"
                             class="absolute right-2 top-2 p-1 text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
                             (click)="$event.stopPropagation(); question.showMenu = !question.showMenu">
                             <i-lucide [name]="icons.MoreVertical" class="w-4 h-4"></i-lucide>
                         </button>
-
-                        <!-- Menú desplegable -->
-                        @if (question.showMenu) {
-                        <div class="absolute right-0 top-8 z-10 mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-200"
-                            (click)="$event.stopPropagation()">
+                        @if (question.showMenu && !isSurveyPublished) {
+                        <div class="absolute right-0 top-8 z-10 mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-200" (click)="$event.stopPropagation()">
                             <div class="py-1">
-                                <button
-                                    class="flex items-center px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                                    (click)="duplicateQuestion(question.id); question.showMenu = false">
-                                    <i-lucide [name]="icons.Copy" class="w-4 h-4 mr-2"></i-lucide>
-                                    Duplicar
+                                <button class="flex items-center px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 w-full text-left" (click)="duplicateQuestion(question.id, question._tempId); question.showMenu = false">
+                                    <i-lucide [name]="icons.Copy" class="w-4 h-4 mr-2"></i-lucide>Duplicar
                                 </button>
-                                <button
-                                    class="flex items-center px-3 py-1 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
-                                    (click)="deleteQuestion(question.id); question.showMenu = false">
-                                    <i-lucide [name]="icons.Trash2" class="w-4 h-4 mr-2"></i-lucide>
-                                    Borrar
+                                <button class="flex items-center px-3 py-1 text-sm text-red-600 hover:bg-gray-100 w-full text-left" (click)="deleteQuestion(question.id, question._tempId); question.showMenu = false">
+                                    <i-lucide [name]="icons.Trash2" class="w-4 h-4 mr-2"></i-lucide>Borrar
                                 </button>
                             </div>
                         </div>
@@ -127,56 +106,31 @@
                 </ul>
             </aside>
 
-            <!-- Contenido principal -->
-            <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-white border m-2 md:m-6">
+            <!-- Contenido Principal -->
+            <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-white border m-2 md:m-6 rounded-xl shadow-sm">
                 <div class="mb-6">
                     <input type="text"
-                        class="w-full border-b-2 border-gray-200 py-2 text-xl font-semibold focus:border-blue-500 outline-none"
+                        class="w-full border-b-2 border-gray-200 py-2 text-xl font-semibold focus:border-blue-500 outline-none disabled:bg-gray-100 disabled:text-gray-500"
                         placeholder="Nombre de la encuesta" [(ngModel)]="nombreEncuesta"
-                        (ngModelChange)="onNombreEncuestaChange()" />
+                        (ngModelChange)="onNombreEncuestaChange()" [disabled]="isSurveyPublished" />
                 </div>
                 @if (activeQuestion) {
                 <div class="max-w-2xl mx-auto">
-                    <!-- Barra de herramientas (actualizada) -->
                     <div class="flex justify-between items-center mb-6">
                         <div class="flex items-center gap-2">
-                            <span class="font-medium text-gray-700">
-                                {{ activeQuestionNumber }}.
-                            </span>
-                        </div>
-
-                        <!-- Toggle para pregunta obligatoria -->
-                        <div class="flex items-center gap-2">
-                            <span class="text-sm text-gray-600">Obligatoria</span>
-                            <button (click)="toggleQuestionRequired()"
-                                class="relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none"
-                                [class.bg-blue-600]="activeQuestion.required"
-                                [class.bg-gray-200]="!activeQuestion.required">
-                                <span class="inline-block w-4 h-4 transform transition-transform bg-white rounded-full"
-                                    [class.translate-x-6]="activeQuestion.required"
-                                    [class.translate-x-1]="!activeQuestion.required">
-                                </span>
-                            </button>
-                            @if (activeQuestion.required) {
-                            <i-lucide [name]="icons.Check" class="w-4 h-4 text-blue-600"></i-lucide>
-                            }
+                            <span class="font-medium text-gray-700">{{ activeQuestionNumber }}.</span>
                         </div>
                     </div>
 
-                    <!-- Editor de pregunta -->
                     <div class="space-y-4">
-                        <!-- Texto de la pregunta -->
                         <input type="text"
-                            class="w-full border-b-2 border-gray-200 py-2 text-lg focus:border-blue-500 outline-none"
+                            class="w-full border-b-2 border-gray-200 py-2 text-lg focus:border-blue-500 outline-none disabled:bg-gray-100 disabled:text-gray-500"
                             [attr.placeholder]="isInputFocused ? '' : 'Escribe tu pregunta aquí...'"
-                            [(ngModel)]="activeQuestion.text"
-                            (focus)="isInputFocused = true"
-                            (blur)="isInputFocused = false"
-                            (ngModelChange)="onQuestionTextChange()" />
+                            [(ngModel)]="activeQuestion.text" (focus)="isInputFocused = true"
+                            (blur)="isInputFocused = false" (ngModelChange)="onQuestionTextChange()"
+                            [disabled]="isSurveyPublished" />
 
-                        <!-- Opciones (para preguntas de opción múltiple) -->
-                        @if (activeQuestion.type === 'multiple_choice' || activeQuestion.type === 'checkbox' ||
-                        activeQuestion.type === 'radio') {
+                        @if (activeQuestion.type === 'multiple_choice' || activeQuestion.type === 'checkbox' || activeQuestion.type === 'radio') {
                         <div class="space-y-2">
                             @for (option of currentOptions; track $index) {
                             <div class="flex items-center gap-2">
@@ -185,88 +139,118 @@
                                 } @else {
                                 <input type="checkbox" disabled class="w-4 h-4">
                                 }
-                                <input type="text" class="flex-1 border rounded-md px-3 py-1 text-sm"
-                                    [(ngModel)]="currentOptions[$index].texto" (ngModelChange)="onOptionChange($index)" />
-                                <button class="text-gray-400 hover:text-red-500" (click)="removeOption($index)">
+                                <input type="text"
+                                    class="flex-1 border rounded-md px-3 py-1 text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                                    [(ngModel)]="currentOptions[$index].texto" (ngModelChange)="onOptionChange($index)"
+                                    [disabled]="isSurveyPublished" />
+                                <button class="text-gray-400 hover:text-red-500 disabled:opacity-50"
+                                    (click)="removeOption($index)" [disabled]="isSurveyPublished">
                                     <i-lucide [name]="icons.Trash2" class="w-4 h-4"></i-lucide>
                                 </button>
                             </div>
                             }
-
-                            <button class="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 mt-2"
-                                (click)="addOption()">
-                                <i-lucide [name]="icons.Plus" class="w-4 h-4"></i-lucide>
-                                <span>Añadir opción</span>
+                            <button
+                                class="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                (click)="addOption()" [disabled]="isSurveyPublished">
+                                <i-lucide [name]="icons.Plus" class="w-4 h-4"></i-lucide>Añadir opción
                             </button>
                         </div>
                         }
-
-                        <!-- Campo de texto (para preguntas abiertas) -->
+                        
                         @if (activeQuestion.type === 'text' || activeQuestion.type === 'email') {
                         <div class="mt-4">
-                            <textarea disabled class="w-full border rounded-md px-3 py-2 text-sm h-20"
-                                placeholder="Respuesta de texto largo..."></textarea>
+                            <textarea disabled class="w-full border rounded-md px-3 py-2 text-sm h-20 bg-gray-50" placeholder="Respuesta de texto largo..."></textarea>
                         </div>
                         }
-
-                        <!-- Campo de fecha -->
                         @if (activeQuestion.type === 'date') {
                         <div class="mt-4">
-                            <input type="date" disabled class="w-full border rounded-md px-3 py-2 text-sm">
+                            <input type="date" disabled class="w-full border rounded-md px-3 py-2 text-sm bg-gray-50">
                         </div>
                         }
-
-                        <!-- Campo de teléfono -->
-                        @if (activeQuestion.type === 'phone') {
+                         @if (activeQuestion.type === 'phone') {
                         <div class="mt-4">
-                            <input type="tel" disabled class="w-full border rounded-md px-3 py-2 text-sm"
-                                placeholder="Número de teléfono">
+                            <input type="tel" disabled class="w-full border rounded-md px-3 py-2 text-sm bg-gray-50" placeholder="Número de teléfono">
                         </div>
                         }
-
-                        <!-- Selector de imagen/video -->
                         @if (activeQuestion.type === 'image' || activeQuestion.type === 'video') {
-                        <div class="mt-4 border-2 border-dashed rounded-md p-4 text-center">
-                            <i-lucide [name]="activeQuestion.type === 'image' ? icons.Image : icons.Video"
-                                class="w-8 h-8 mx-auto text-gray-400 mb-2">
-                            </i-lucide>
-                            <p class="text-sm text-gray-500">Arrastra y suelta {{ activeQuestion.type === 'image' ? 'una
-                                imagen' : 'un video' }} aquí</p>
+                        <div class="mt-4 border-2 border-dashed rounded-md p-4 text-center bg-gray-50">
+                            <i-lucide [name]="activeQuestion.type === 'image' ? icons.Image : icons.Video" class="w-8 h-8 mx-auto text-gray-400 mb-2"></i-lucide>
+                            <p class="text-sm text-gray-500">Arrastra y suelta {{ activeQuestion.type === 'image' ? 'una imagen' : 'un video' }} aquí</p>
                         </div>
                         }
                     </div>
-
-                    <!-- En el template, modificar el botón de guardar: -->
+                    
+                    @if (!isSurveyPublished) { <!-- Solo mostrar botón de guardar si no está publicada -->
                     <div class="flex justify-center mt-10">
                         <button class="px-8 py-2 rounded-lg shadow-lg transition max-w-xs w-full text-lg"
                             [class.bg-blue-600]="hasUnsavedChanges" [class.text-white]="hasUnsavedChanges"
-                            [class.hover:bg-blue-700]="hasUnsavedChanges" [class.bg-gray-300]="!hasUnsavedChanges"
-                            [class.text-gray-500]="!hasUnsavedChanges"
+                            [class.hover:bg-blue-700]="hasUnsavedChanges" 
+                            [class.bg-gray-300]="!hasUnsavedChanges || isSaving" 
+                            [class.text-gray-500]="!hasUnsavedChanges || isSaving"
                             [class.cursor-not-allowed]="!hasUnsavedChanges || isSaving"
                             (click)="hasUnsavedChanges && !isSaving && (isEditMode ? actualizarEncuesta() : guardarEncuesta())"
                             [disabled]="!hasUnsavedChanges || isSaving">
                             @if (isSaving) {
                             <span>Guardando...</span>
                             } @else {
-                            <span>{{ isEditMode ? 'Guardar cambios' : 'Guardar encuesta' }}</span>
+                            <span>{{ isEditMode ? 'Guardar cambios' : 'Guardar borrador' }}</span>
                             }
                         </button>
                     </div>
-
+                    }
                 </div>
                 } @else {
-                <!-- Estado cuando no hay preguntas seleccionadas -->
                 <div class="max-w-2xl mx-auto text-center py-20">
-                    <p class="text-gray-500">Selecciona una pregunta para editar o crea una nueva</p>
+                    <p class="text-gray-500">
+                        @if (isSurveyPublished && isEditMode) {
+                        Esta encuesta está publicada y no se puede editar.
+                        } @else {
+                        Selecciona una pregunta para editar o crea una nueva.
+                        }
+                    </p>
+                     @if (isSurveyPublished && isEditMode) {
+                        <div class="mt-6 space-x-4">
+                             <button (click)="closeReadOnlyModalAndGoToDashboard()"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 mx-auto">
+                                <i-lucide [name]="icons.Home" class="w-4 h-4"></i-lucide>Ir al Dashboard
+                            </button>
+                        </div>
+                     }
                 </div>
                 }
             </main>
         </div>
 
-        <!-- Modal para añadir nueva pregunta -->
-        @if (showModal) {
-        <app-modal-create (questionTypeSelected)="addQuestion($event)" (closeModal)="closeModal()">
-        </app-modal-create>
+        @if (showModal && !isSurveyPublished) { <!-- Solo mostrar modal de añadir si no está publicada -->
+        <app-modal-create (questionTypeSelected)="addQuestion($event)" (closeModal)="closeModal()"></app-modal-create>
+        }
+
+        <!-- Modal de Edición Deshabilitada -->
+        @if (showReadOnlyModal) {
+        <div class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 text-center">
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 text-yellow-500 mb-4">
+                    <i-lucide [name]="icons.Lock" class="w-8 h-8"></i-lucide>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Modo Edición Deshabilitado</h3>
+                <p class="text-gray-600 mb-6">
+                    Esta encuesta ya ha sido publicada. Para mantener la integridad de los datos,
+                    la edición de su contenido (título, preguntas, opciones) está desactivada.
+                </p>
+                <p class="text-sm text-gray-500 mb-6">
+                    Puedes ver los resultados o volver al dashboard. Si necesitas realizar cambios significativos,
+                    considera duplicar esta encuesta y trabajar sobre la copia.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-3">
+                    <button (click)="closeReadOnlyModalAndGoToDashboard()" class="w-full sm:w-auto px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors flex items-center justify-center gap-2">
+                        <i-lucide [name]="icons.Home" class="w-4 h-4"></i-lucide>Dashboard
+                    </button>
+                    <button (click)="closeReadOnlyModalAndGoToResults()" class="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                        <i-lucide [name]="icons.BarChart3" class="w-4 h-4"></i-lucide>Ver Respuestas
+                    </button>
+                </div>
+            </div>
+        </div>
         }
     </div>
 </div>

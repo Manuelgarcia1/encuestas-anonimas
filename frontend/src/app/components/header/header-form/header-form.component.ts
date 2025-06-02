@@ -1,5 +1,4 @@
-// header-form.component.ts
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   LucideAngularModule,
@@ -34,25 +33,25 @@ export class HeaderFormComponent implements OnInit {
     private route: ActivatedRoute,
     private encuestasService: EncuestasService
   ) { }
-
+  @Output() surveyStatusChanged = new EventEmitter<boolean>(); // Nuevo Output
   @Input() nombreEncuesta: string = 'Mi Formulario';
-  @Input() encuestaId!: number; // Sigue siendo útil si se edita una encuesta
+  @Input() encuestaId!: number;
 
   icons = { Home, ChevronRight, Edit, ListOrdered, Send, Link, Menu, X };
   activeTab: 'edit' | 'results' = 'edit';
   mobileMenuOpen = false;
   showPublishModal = false;
   showConfirmPublishModal = false;
-  token: string | null = null; // Este es el token del dashboard que queremos preservar
+  token: string | null = null; 
   isSurveyPublished: boolean = false;
   isLoadingSurveyStatus: boolean = true;
 
   ngOnInit(): void {
     this.token = this.getCookie('td'); // Token del dashboard
     const currentPath = this.router.url;
-    if (currentPath.includes('/results/')) { // Verificamos que sea /results/ seguido de un ID
+    if (currentPath.includes('/results/')) {
       this.activeTab = 'results';
-    } else if (currentPath.includes('/create')) { // Cubre /create y /create/:id
+    } else if (currentPath.includes('/create')) {
       this.activeTab = 'edit';
     }
 
@@ -76,7 +75,6 @@ export class HeaderFormComponent implements OnInit {
           this.isSurveyPublished = false;
         }
       } else {
-        // Para /create (sin ID)
         this.isLoadingSurveyStatus = false;
         this.isSurveyPublished = false;
       }
@@ -93,6 +91,7 @@ export class HeaderFormComponent implements OnInit {
   loadSurveyStatus(): void {
     if (!this.token || !this.encuestaId) {
       this.isLoadingSurveyStatus = false;
+      this.surveyStatusChanged.emit(false); // Emitir estado por defecto
       if (!this.token) console.warn("loadSurveyStatus: No hay token para cargar estado.");
       if (!this.encuestaId) console.warn("loadSurveyStatus: No hay encuestaId para cargar estado.");
       return;
@@ -109,18 +108,19 @@ export class HeaderFormComponent implements OnInit {
           console.warn('El tipo de encuesta no se recibió o no es un string:', response.data);
         }
         this.isLoadingSurveyStatus = false;
+        this.surveyStatusChanged.emit(this.isSurveyPublished); // Emitir el estado actual
       },
       error: (err) => {
         console.error('Error al cargar el estado de la encuesta:', err);
         this.showToast('Error al cargar datos de la encuesta.', true);
         this.isLoadingSurveyStatus = false;
         this.isSurveyPublished = false;
+        this.surveyStatusChanged.emit(false); // Emitir estado en caso de error
       }
     });
   }
 
   navigateToDashboard() {
-    // Ahora this.token debería tener el valor de la cookie 'td' si existía.
     if (this.token) {
       this.router.navigate(['/dashboard'], { queryParams: { token: this.token } });
     } else {
@@ -133,16 +133,14 @@ export class HeaderFormComponent implements OnInit {
     this.activeTab = tab;
     this.mobileMenuOpen = false;
 
-    if (this.encuestaId) { // Solo si tenemos una encuesta activa con ID
+    if (this.encuestaId) {
       if (tab === 'results') {
         this.router.navigate(['/results', this.encuestaId]);
       } else if (tab === 'edit') {
         this.router.navigate(['/create', this.encuestaId]);
       }
     } else {
-      // Si estamos en /create (nueva encuesta sin ID guardado aún)
       if (tab === 'edit') {
-        // Ya estamos en /create o deberíamos ir a /create
         this.router.navigate(['/create']);
       } else if (tab === 'results') {
         this.showToast('Guarda la encuesta primero para ver sus resultados.', true);
@@ -179,6 +177,7 @@ export class HeaderFormComponent implements OnInit {
       next: (response) => {
         this.showToast('¡Encuesta publicada con éxito!');
         this.isSurveyPublished = true; // Actualizar estado
+        this.surveyStatusChanged.emit(true); // Emitir cambio de estado
         this.loadSurveyStatus(); // Recargar estado para asegurar consistencia
         this.openShareModal();
       },
