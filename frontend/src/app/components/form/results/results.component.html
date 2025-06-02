@@ -1,23 +1,9 @@
 <!-- src/app/components/form/results/results.component.html -->
 <div class="flex flex-col h-full bg-gray-50">
     <app-header-form
-        [encuestaId]="encuestaResultados?.id!"
-        [nombreEncuesta]="encuestaResultados?.nombre || 'Resultados de Encuesta'">
+        [encuestaId]="datosResultados?.encuesta?.id!"
+        [nombreEncuesta]="datosResultados?.encuesta?.nombre || 'Resultados de Encuesta'">
     </app-header-form>
-
-    <div class="bg-white px-4 sm:px-6 py-3 border-b">
-        <div class="flex justify-between items-center">
-            <h2 class="text-lg font-semibold text-negro">Resultados Agregados</h2>
-            <div class="flex items-center gap-2">
-                <select [(ngModel)]="selectedFilter"
-                    class="bg-white border border-gray-300 rounded-xl pl-3 pr-8 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
-                    @for (option of filterOptions; track option.value) {
-                    <option [value]="option.value">{{ option.label }}</option>
-                    }
-                </select>
-            </div>
-        </div>
-    </div>
 
     <div class="flex-1 overflow-auto px-4 sm:px-6 py-4">
         @if (isLoading) {
@@ -34,85 +20,74 @@
                     </div>
                 </div>
             </div>
-        } @else if (encuestaResultados) {
-            <div>
+        } @else if (datosResultados && datosResultados.encuesta) {
+            <div> <!-- Contenedor principal -->
                 <div class="mb-6 p-4 bg-white shadow rounded-lg border border-gray-200">
-                    <h1 class="text-2xl font-bold text-negro mb-1">{{ encuestaResultados.nombre }}</h1>
+                    <h1 class="text-2xl font-bold text-negro mb-1">{{ datosResultados.encuesta.nombre }}</h1>
                     <div class="flex items-center text-sm text-gray-600">
                         <i-lucide [name]="icons.Users" class="w-4 h-4 mr-2"></i-lucide>
-                        <span>Total de Respuestas Completadas: {{ encuestaResultados.totalRespuestas }}</span>
+                        <span>Total de Conjuntos de Respuestas: {{ datosResultados.encuesta.totalRespuestas  || 0 }}</span>
                     </div>
                 </div>
 
-                <div class="space-y-6">
-                    @for (pregunta of encuestaResultados.preguntas; track pregunta.id; let i = $index) {
-                    <div class="bg-white p-5 shadow rounded-lg border border-gray-200">
-                        <div class="flex items-start mb-3">
-                            <i-lucide [name]="getQuestionIcon(pregunta.tipo)" class="w-5 h-5 mr-3 text-blue-600 mt-1"></i-lucide>
-                            <h3 class="text-lg font-medium text-negro flex-1">{{ i + 1 }}. {{ pregunta.texto }}</h3>
-                        </div>
-
-                        @if (pregunta.tipo === 'OPCION_MULTIPLE_SELECCION_SIMPLE' || pregunta.tipo === 'OPCION_MULTIPLE_SELECCION_MULTIPLE') {
-                            <!-- Usamos el helper para obtener el array ya casteado -->
-                            @if (asApiOpcionResultadoArray(pregunta.respuestas); as opcionesResultado) {
-                                @if (opcionesResultado.length > 0) {
-                                    <ul class="space-y-3">
-                                        @for (opcion of opcionesResultado; track opcion.opcion) { <!-- Ahora 'opcion' es definitivamente ApiOpcionResultado -->
-                                        <li class="border-b border-gray-100 pb-3 last:border-b-0 last:pb-0">
-                                            <div class="flex justify-between items-center mb-1">
-                                                <span class="text-sm text-gray-700">{{ opcion.opcion }}</span>
-                                                <span class="text-sm font-semibold text-blue-700">
-                                                    {{ opcion.porcentaje.toFixed(0) }}%
-                                                    <span class="text-xs text-gray-500">({{ opcion.count }} resp.)</span>
-                                                </span>
+                @if (datosResultados.respuestas && datosResultados.respuestas.length > 0) {
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden border">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
+                                            <div class="flex items-center gap-1">
+                                                <i-lucide [name]="icons.Calendar" class="w-3 h-3"></i-lucide>
+                                                Fecha de respuesta
                                             </div>
-                                            <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                                <div class="bg-blue-500 h-2.5 rounded-full transition-all duration-500 ease-out"
-                                                     [style.width.%]="opcion.porcentaje"></div>
+                                        </th>
+                                        <!-- Iterar sobre las preguntas del encabezado -->
+                                        @for (preguntaHdr of preguntasEncabezado; track preguntaHdr.pregunta) {
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <div class="flex items-center gap-1" [title]="preguntaHdr.pregunta">
+                                                <i-lucide [name]="getQuestionIcon(preguntaHdr.tipo)" class="w-3 h-3"></i-lucide>
+                                                <span class="truncate max-w-xs">{{ preguntaHdr.pregunta }}</span>
                                             </div>
-                                        </li>
+                                        </th>
                                         }
-                                    </ul>
-                                } @else {
-                                    <p class="text-sm text-gray-500 italic">No hay datos de respuesta para las opciones de esta pregunta.</p>
-                                }
-                            } @else {
-                                <p class="text-sm text-gray-500 italic">Formato de respuestas inesperado o vacío para opciones.</p>
-                            }
-                        }
-                        @else if (pregunta.tipo === 'ABIERTA') {
-                            @if (asStringArray(pregunta.respuestas); as respuestasAbiertas) {
-                                @if (respuestasAbiertas.length > 0) {
-                                    <p class="text-sm text-gray-500 italic">
-                                        Respuestas abiertas (ejemplos):
-                                    </p>
-                                    <!-- <ul class="list-disc list-inside pl-5 mt-2 space-y-1">
-                                      @for(respuestaTexto of respuestasAbiertas; track $index) {
-                                        <li class="text-sm text-gray-600">"{{ respuestaTexto }}"</li>
-                                      }
-                                    </ul> -->
-                                     <p class="text-sm text-gray-500 italic">Visualización de respuestas abiertas no implementada en detalle.</p>
-                                } @else {
-                                    <p class="text-sm text-gray-500 italic">No hay respuestas abiertas para esta pregunta.</p>
-                                }
-                            } @else {
-                                <p class="text-sm text-gray-500 italic">Formato de respuestas inesperado o vacío para abiertas.</p>
-                            }
-                        }
-                        @else {
-                            <p class="text-sm text-gray-500 italic">
-                                Visualización de resultados para este tipo de pregunta ({{pregunta.tipo}}) no implementada en detalle.
-                            </p>
-                        }
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <!-- Iterar sobre cada conjunto de respuestas (cada fila de la tabla) -->
+                                    @for (conjuntoRespuesta of datosResultados.respuestas; track conjuntoRespuesta.respuestaId) {
+                                    <tr class="hover:bg-gray-50">
+                                        <td
+                                            class="px-6 py-4 whitespace-nowrap text-sm font-medium text-negro sticky left-0 bg-white z-[1]">
+                                            {{ conjuntoRespuesta.fecha | date:'medium' }}
+                                        </td>
+                                        @for (respuestaPregunta of conjuntoRespuesta.respuestas; track $index) {
+                                        <td
+                                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs overflow-hidden text-ellipsis"
+                                            [title]="formatAnswerForCell(respuestaPregunta)">
+                                            {{ formatAnswerForCell(respuestaPregunta) }}
+                                        </td>
+                                        }
+                                    </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    }
-                </div>
+                } @else {
+                    <div class="text-center py-10 bg-white shadow rounded-lg border">
+                        <i-lucide [name]="icons.BarChart3" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i-lucide>
+                        <p class="text-xl text-gray-500">No se encontraron respuestas individuales para esta encuesta.</p>
+                    </div>
+                }
             </div>
         } @else {
+            <!-- Este caso es si datosResultados es null o datosResultados.encuesta es null después de la carga -->
             <div class="text-center py-10">
-                <i-lucide [name]="icons.BarChart3" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i-lucide>
-                <p class="text-xl text-gray-500">No se encontraron resultados para esta encuesta.</p>
-                <p class="text-sm text-gray-400 mt-1">Asegúrate de que la encuesta haya recibido respuestas.</p>
+                <i-lucide [name]="icons.AlertCircle" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i-lucide>
+                <p class="text-xl text-gray-500">No se pudieron cargar los datos de la encuesta.</p>
             </div>
         }
     </div>

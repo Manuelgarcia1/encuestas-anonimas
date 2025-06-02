@@ -49,9 +49,6 @@ export class HeaderFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.token = this.getCookie('td'); // Token del dashboard
-
-    // Detectar la pestaña activa basado en la URL actual
-    // Esto necesita considerar que /results/:id también es 'results'
     const currentPath = this.router.url;
     if (currentPath.includes('/results/')) { // Verificamos que sea /results/ seguido de un ID
       this.activeTab = 'results';
@@ -61,7 +58,7 @@ export class HeaderFormComponent implements OnInit {
 
 
     this.route.params.subscribe(params => {
-      const idFromRouteString = params['id']; // 'id' puede venir de /create/:id o /results/:id
+      const idFromRouteString = params['id'];
       if (idFromRouteString) {
         const idFromRoute = +idFromRouteString;
         if (!isNaN(idFromRoute)) {
@@ -96,7 +93,7 @@ export class HeaderFormComponent implements OnInit {
   loadSurveyStatus(): void {
     if (!this.token || !this.encuestaId) {
       this.isLoadingSurveyStatus = false;
-      if (!this.token) console.warn("loadSurveyStatus: No hay token 'td' para cargar estado.");
+      if (!this.token) console.warn("loadSurveyStatus: No hay token para cargar estado.");
       if (!this.encuestaId) console.warn("loadSurveyStatus: No hay encuestaId para cargar estado.");
       return;
     }
@@ -127,9 +124,7 @@ export class HeaderFormComponent implements OnInit {
     if (this.token) {
       this.router.navigate(['/dashboard'], { queryParams: { token: this.token } });
     } else {
-      // Esto solo debería ocurrir si el usuario llega a /create sin haber pasado por un dashboard con token
-      // (lo cual es poco probable si el flujo normal es dashboard -> create)
-      console.warn('No se encontró el token de dashboard (td cookie) al intentar volver al dashboard.');
+      console.warn('No se encontró el token de dashboard al intentar volver al dashboard.');
       this.router.navigate(['/dashboard']);
     }
   }
