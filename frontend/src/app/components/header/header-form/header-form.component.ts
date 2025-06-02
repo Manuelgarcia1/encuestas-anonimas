@@ -1,5 +1,5 @@
 // header-form.component.ts
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   LucideAngularModule,
@@ -34,7 +34,7 @@ export class HeaderFormComponent implements OnInit {
     private route: ActivatedRoute,
     private encuestasService: EncuestasService
   ) { }
-
+  @Output() surveyStatusChanged = new EventEmitter<boolean>(); // Nuevo Output
   @Input() nombreEncuesta: string = 'Mi Formulario';
   @Input() encuestaId!: number; // Sigue siendo útil si se edita una encuesta
 
@@ -93,6 +93,7 @@ export class HeaderFormComponent implements OnInit {
   loadSurveyStatus(): void {
     if (!this.token || !this.encuestaId) {
       this.isLoadingSurveyStatus = false;
+      this.surveyStatusChanged.emit(false); // Emitir estado por defecto
       if (!this.token) console.warn("loadSurveyStatus: No hay token para cargar estado.");
       if (!this.encuestaId) console.warn("loadSurveyStatus: No hay encuestaId para cargar estado.");
       return;
@@ -109,12 +110,14 @@ export class HeaderFormComponent implements OnInit {
           console.warn('El tipo de encuesta no se recibió o no es un string:', response.data);
         }
         this.isLoadingSurveyStatus = false;
+        this.surveyStatusChanged.emit(this.isSurveyPublished); // Emitir el estado actual
       },
       error: (err) => {
         console.error('Error al cargar el estado de la encuesta:', err);
         this.showToast('Error al cargar datos de la encuesta.', true);
         this.isLoadingSurveyStatus = false;
         this.isSurveyPublished = false;
+        this.surveyStatusChanged.emit(false); // Emitir estado en caso de error
       }
     });
   }
@@ -179,6 +182,7 @@ export class HeaderFormComponent implements OnInit {
       next: (response) => {
         this.showToast('¡Encuesta publicada con éxito!');
         this.isSurveyPublished = true; // Actualizar estado
+        this.surveyStatusChanged.emit(true); // Emitir cambio de estado
         this.loadSurveyStatus(); // Recargar estado para asegurar consistencia
         this.openShareModal();
       },

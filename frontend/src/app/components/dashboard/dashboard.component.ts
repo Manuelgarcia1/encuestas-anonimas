@@ -9,8 +9,8 @@ import {
 import { HeaderDashboardComponent } from '../header/header-dashboard/header-dashboard.component';
 import { FormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
-import { finalize, switchMap, map, tap, catchError } from 'rxjs/operators';
-import { forkJoin, Observable, of } from 'rxjs';
+import { finalize, map, tap, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 interface EncuestaFromApi {
   id: number | string;
@@ -19,9 +19,9 @@ interface EncuestaFromApi {
   token_resultados?: string;
   tipo?: string;
   preguntas?: any[];
+  respuestas: any[];
   createdAt: string;
   updatedAt?: string;
-  // totalRespuestas?: number; // Ya no lo esperamos aquí
 }
 
 interface FormItem {
@@ -31,37 +31,37 @@ interface FormItem {
   token_resultados?: string;
   tipo?: string;
   preguntas?: any[];
+  respuestas?: any[];
   createdAt: string;
   updatedAt?: string;
   creationDate: string;
   status: string;
-  totalRespuestas: number; // Este se seguirá llenando
+  totalRespuestas: number;
 }
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [ CommonModule, LucideAngularModule, HeaderDashboardComponent, FormsModule ],
+  imports: [CommonModule, LucideAngularModule, HeaderDashboardComponent, FormsModule],
   providers: [DatePipe],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit {
-  // displayableForms contendrá las encuestas con sus conteos, listas para mostrar
   displayableForms: FormItem[] = [];
-  // forms se usará internamente para la data cruda de la página actual antes de la búsqueda
   private formsInternal: FormItem[] = [];
-
 
   searchTerm: string = '';
   creadorEmail: string | null = null;
 
-  // MODIFICADO: Eliminado el filtro por número de respuestas
+  // CAMBIO: Actualizado array de filtros.
+  // 'totalRespuestasLocal' indica ordenamiento frontend.
   filters = [
-    { id: 1, name: 'Fecha de creación', checked: true, sortBy: 'createdAt', order: 'DESC' },
-    { id: 3, name: 'Orden Alfabético', checked: false, sortBy: 'nombre', order: 'ASC' },
+    { id: 1, name: 'Fecha de creación', checked: true, sortBy: 'createdAt', order: 'DESC' }, // Ordenamiento backend
+    { id: 2, name: 'Nº Respuestas (Más a Menos)', checked: false, sortBy: 'totalRespuestasLocal', order: 'DESC' }, // Ordenamiento frontend
+    { id: 3, name: 'Orden Alfabético (A-Z)', checked: false, sortBy: 'nombre', order: 'ASC' }, // Ordenamiento backend
   ];
-  activeSortBy: string = 'createdAt'; // Valor inicial por defecto
-  activeOrder: string = 'DESC';     // Valor inicial por defecto
+  activeSortBy: string = 'createdAt'; // Default
+  activeOrder: string = 'DESC';     // Default
 
   icons = { Plus, Filter, Search, Calendar, FileText, MoreVertical, Edit, Trash2, Copy, Pencil, ChevronDown, Check, ChevronLeft, ChevronRight };
   menuOpenId: string | number | null = null;
@@ -71,7 +71,6 @@ export class DashboardComponent implements OnInit {
   totalItems: number = 0;
   totalPages: number = 0;
   isLoading: boolean = false;
-  // isLoadingResponsesCount puede fusionarse con isLoading si la UX lo permite
 
   currentDashboardToken: string | null = null;
 
@@ -82,13 +81,13 @@ export class DashboardComponent implements OnInit {
     private router: Router,
     private encuestasService: EncuestasService,
     private datePipe: DatePipe
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     const initialFilter = this.filters.find(f => f.checked);
     if (initialFilter) {
-        this.activeSortBy = initialFilter.sortBy;
-        this.activeOrder = initialFilter.order;
+      this.activeSortBy = initialFilter.sortBy;
+      this.activeOrder = initialFilter.order;
     }
 
     this.route.queryParamMap.subscribe((params) => {
@@ -100,12 +99,12 @@ export class DashboardComponent implements OnInit {
         document.cookie = `td=${token}; path=/; SameSite=Strict; Secure`;
         const targetPage = pageFromUrl ? parseInt(pageFromUrl, 10) : 1;
         this.currentPage = (isNaN(targetPage) || targetPage < 1) ? 1 : targetPage;
-        
+
         const urlNeedsUpdate = !pageFromUrl || parseInt(pageFromUrl, 10) !== this.currentPage;
         if (urlNeedsUpdate) {
-            this.updateUrlWithPage(false);
+          this.updateUrlWithPage(false);
         }
-        this.loadFormsAndResponseCounts();
+        this.loadForms();
       } else {
         console.error("Dashboard: Token no encontrado en la URL.");
         this.router.navigate(['/']);
@@ -113,103 +112,106 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  loadFormsAndResponseCounts(): void {
+  loadForms(): void {
     if (!this.currentDashboardToken) {
       console.error("No se puede cargar formularios: token de dashboard no disponible.");
       return;
     }
     this.isLoading = true;
 
+    let backendSortBy = this.activeSortBy;
+    let backendOrder = this.activeOrder;
+
+    // Si el ordenamiento es local por totalRespuestas, el backend debe usar un ordenamiento por defecto (ej. fecha)
+    // para asegurar que la paginación sea consistente.
+    if (this.activeSortBy === 'totalRespuestasLocal') {
+      backendSortBy = 'createdAt'; // O el sortBy por defecto de tu API si es diferente
+      backendOrder = 'DESC';       // O el order por defecto de tu API
+    }
+
     this.encuestasService.getEncuestasPorToken(
       this.currentDashboardToken,
       this.currentPage,
       this.itemsPerPage,
-      this.activeSortBy, 
-      this.activeOrder  
+      backendSortBy,  // Usar el sortBy para el backend
+      backendOrder    // Usar el order para el backend
     ).pipe(
-      switchMap(response => {
+      map(response => {
         if (response && response.data && Array.isArray(response.data)) {
           this.creadorEmail = response.creadorEmail || this.creadorEmail;
           this.totalItems = response.total || 0;
           this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
 
-          const encuestasBase: FormItem[] = response.data.map((encuesta: EncuestaFromApi) => ({
+          let encuestasProcesadas: FormItem[] = response.data.map((encuesta: EncuestaFromApi) => ({
             ...encuesta,
             id: encuesta.id,
             name: encuesta.nombre,
             creationDate: this.datePipe.transform(encuesta.createdAt, 'dd/MM/yyyy HH:mm') || encuesta.createdAt,
             status: encuesta.tipo?.toLowerCase() || 'borrador',
-            totalRespuestas: 0, // Inicializar, se llenará después
-            token_resultados: encuesta.token_resultados
-          } as FormItem));
+            totalRespuestas: encuesta.respuestas ? encuesta.respuestas.length : 0,
+          }));
 
-          if (encuestasBase.length === 0) {
-            this.formsInternal = []; // Usar el array interno
-            this.displayableForms = [];
-            return of([]);
+          // CAMBIO: Aplicar ordenamiento local si es el filtro activo
+          if (this.activeSortBy === 'totalRespuestasLocal' && encuestasProcesadas.length > 0) {
+            // this.activeOrder será 'DESC' para 'Más a Menos'
+            encuestasProcesadas.sort((a, b) => {
+              if (this.activeOrder === 'DESC') {
+                return b.totalRespuestas - a.totalRespuestas;
+              } else { // Aunque 'ASC' no se usa para totalRespuestasLocal ahora, es buena práctica
+                return a.totalRespuestas - b.totalRespuestas;
+              }
+            });
           }
-
-          const countObservables: Observable<FormItem>[] = encuestasBase.map((encuesta: FormItem) => {
-            if (encuesta.token_resultados) {
-              return this.encuestasService.getResultadosPorTokenResultados(encuesta.token_resultados).pipe(
-                map(resData => {
-                  const count = resData?.data?.encuesta?.totalRespuestas ?? 0;
-                  return { ...encuesta, totalRespuestas: count };
-                }),
-                catchError((err: any) => {
-                  console.error(`Error obteniendo conteo para encuesta ${encuesta.id}:`, err);
-                  return of({ ...encuesta, totalRespuestas: 0 });
-                })
-              );
-            } else {
-              return of({ ...encuesta, totalRespuestas: 0 });
-            }
-          });
-          return forkJoin(countObservables);
+          return encuestasProcesadas;
         } else {
-          this.formsInternal = [];
-          this.displayableForms = [];
+          this.creadorEmail = response.creadorEmail || this.creadorEmail;
           this.totalItems = 0;
           this.totalPages = 0;
-          return of([]);
+          return [];
         }
       }),
-      tap((encuestasConConteos: FormItem[]) => {
-        this.formsInternal = encuestasConConteos; // Guardar en el array interno
-        this.applySearchFilter(); // Aplicar solo la búsqueda
+      tap((encuestasFinales: FormItem[]) => { // encuestasFinales ya están ordenadas (por backend o localmente)
+        this.formsInternal = encuestasFinales;
+        this.applySearchFilter(); // Aplicar búsqueda sobre los datos ya ordenados
       }),
-      finalize(() => this.isLoading = false)
-    ).subscribe({
-      error: (err: any) => {
-        console.error('Error en el flujo de carga de encuestas y conteos:', err);
+      catchError((err: any) => {
+        console.error('Error obteniendo encuestas:', err);
         this.formsInternal = [];
         this.displayableForms = [];
         this.totalItems = 0;
         this.totalPages = 0;
-        this.isLoading = false;
-      },
+        return of([]);
+      }),
+      finalize(() => this.isLoading = false)
+    ).subscribe({
+      error: (err: any) => {
+        console.error('Error en la suscripción final de carga de encuestas:', err);
+        if (this.isLoading) this.isLoading = false;
+        this.formsInternal = [];
+        this.displayableForms = [];
+        this.totalItems = 0;
+        this.totalPages = 0;
+      }
     });
   }
 
-  // Solo aplica el filtro de búsqueda por término
   applySearchFilter(): void {
-    let resultsToFilter = [...this.formsInternal]; // Empezar con los datos que tienen conteos
-
+    // La búsqueda se aplica sobre formsInternal, que ya está ordenado
+    // (ya sea por el backend o localmente si activeSortBy === 'totalRespuestasLocal')
     if (!this.searchTerm.trim()) {
-      this.displayableForms = resultsToFilter;
+      this.displayableForms = [...this.formsInternal];
     } else {
       const searchTermLower = this.searchTerm.toLowerCase().trim();
-      this.displayableForms = resultsToFilter.filter(form =>
+      this.displayableForms = this.formsInternal.filter(form =>
         form.name.toLowerCase().includes(searchTermLower)
       );
     }
   }
 
-
   goToPage(page: string | number): void {
     const pageNumber = typeof page === 'string' ? parseInt(page, 10) : page;
     if (isNaN(pageNumber) || pageNumber < 1 || pageNumber > this.totalPages || pageNumber === this.currentPage) {
-        return;
+      return;
     }
     this.currentPage = pageNumber;
     this.updateUrlWithPage();
@@ -247,54 +249,73 @@ export class DashboardComponent implements OnInit {
     this.filters.forEach(f => f.checked = (f.id === selectedFilter.id));
     this.activeSortBy = selectedFilter.sortBy;
     this.activeOrder = selectedFilter.order;
-    this.currentPage = 1;
-    this.loadFormsAndResponseCounts(); // Recargar con el nuevo ordenamiento del backend
+    this.currentPage = 1; // Siempre resetear a la primera página al cambiar el filtro/orden
+
+    this.updateUrlWithPage(false); // Actualizar solo la página en la URL
+
+    this.loadForms(); // Recargará los datos y aplicará el ordenamiento 
   }
 
   filterForms(): void { // Llamado por el input de búsqueda
-    this.applySearchFilter(); // Aplicar solo búsqueda sobre los datos ya cargados/ordenados
+    this.applySearchFilter();
   }
 
   navigateToCreateForm() { this.router.navigate(['/create']); }
+
   getStatusClasses(status: string) {
     const base = 'inline-block px-2 py-1 rounded-full text-xs font-semibold';
-    switch(status?.toLowerCase()){
+    switch (status?.toLowerCase()) {
       case 'borrador': return `${base} bg-yellow-100 text-yellow-700`;
       case 'publicada': case 'activo': return `${base} bg-green-100 text-green-700`;
       case 'cerrada': case 'cerrado': return `${base} bg-red-100 text-red-700`;
       default: return `${base} bg-gray-100 text-gray-700`;
     }
   }
+
   toggleMenu(formId: string | number) { this.menuOpenId = this.menuOpenId === formId ? null : formId; }
   closeAllMenus() { this.menuOpenId = null; }
+
   copyLink(form: FormItem, event?: MouseEvent) {
     event?.stopPropagation();
-    if(form.token_respuesta){
+    if (form.token_respuesta) {
       navigator.clipboard.writeText(`${window.location.origin}/response/${form.token_respuesta}`)
         .then(() => alert('¡Enlace copiado!'))
-        .catch(e => console.error(e));
+        .catch(e => console.error('Error al copiar enlace:', e));
     } else {
       alert('Token de respuesta no encontrado.');
     }
     this.closeAllMenus();
   }
+
   goToCreate(formId: string | number) { this.router.navigate(['/create', formId]); }
-  renameForm(form: FormItem, event: MouseEvent) { event.stopPropagation(); console.log("Renombrar", form.id); this.closeAllMenus(); }
+
+  renameForm(form: FormItem, event: MouseEvent) {
+    event.stopPropagation();
+    console.log("Renombrar encuesta:", form.id);
+    this.closeAllMenus();
+  }
+
   deleteForm(form: FormItem, event: MouseEvent) {
     event.stopPropagation();
-    if(confirm(`Borrar "${form.name}"?`)){
-      console.log("Borrar", form.id);
+    if (confirm(`¿Estás seguro de que quieres borrar la encuesta "${form.name}"? Esta acción no se puede deshacer.`)) {
+      console.log("Borrar encuesta:", form.id);
+      // Lógica de borrado...
     }
     this.closeAllMenus();
   }
+
   getPageNumbers(): (number | string)[] {
     const pageCount = this.totalPages; const currentPage = this.currentPage; const delta = 1;
     const rangeWithDots: (number | string)[] = []; let l: number | undefined;
     rangeWithDots.push(1);
-    for (let i = Math.max(2, currentPage - delta); i <= Math.min(pageCount - 1, currentPage + delta); i++) { rangeWithDots.push(i); }
+    let left = Math.max(2, currentPage - delta);
+    let right = Math.min(pageCount - 1, currentPage + delta);
+    if (currentPage - delta <= 1) { right = Math.min(pageCount - 1, 1 + (delta * 2)); }
+    if (currentPage + delta >= pageCount) { left = Math.max(2, pageCount - (delta * 2)); }
+    for (let i = left; i <= right; i++) { rangeWithDots.push(i); }
     if (pageCount > 1) { rangeWithDots.push(pageCount); }
-    const uniquePages = [...new Set(rangeWithDots)].sort((a,b) => (typeof a === 'string' ? Infinity : a) - (typeof b === 'string' ? Infinity : b) );
-    const finalPages:(number | string)[] = []; l = undefined;
+    const uniquePages = [...new Set(rangeWithDots)].sort((a, b) => (typeof a === 'string' ? Infinity : Number(a)) - (typeof b === 'string' ? Infinity : Number(b)));
+    const finalPages: (number | string)[] = []; l = undefined;
     for (const page of uniquePages) {
       if (typeof page === 'number') {
         if (l !== undefined) {
