@@ -92,6 +92,7 @@ export class EncuestasService {
       take: limit,
       skip: (page - 1) * limit,
       order: { [sortBy]: order.toUpperCase() as 'ASC' | 'DESC' },
+      relations: ['respuestas']
     });
 
     const result = { data, total, page, limit, creadorEmail: creador.email };
