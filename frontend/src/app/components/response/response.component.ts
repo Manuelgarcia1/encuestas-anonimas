@@ -8,14 +8,14 @@ import { EnviarRespuestasPayload } from '../../services/encuestas.service';
 
 interface Option {
   id: number;
-  texto: string; // Cambiado de 'text' a 'texto' para coincidir con la API
+  texto: string;
 }
 
 interface Question {
   id: number;
   text: string;
   type: string;
-  options?: Option[]; // Usamos la interfaz Option definida arriba
+  options?: Option[];
   answer?: any;
 }
 
@@ -63,7 +63,7 @@ export class ResponseComponent implements OnInit {
           type: p.tipo,
           options: p.opciones ? p.opciones.map((o: any) => ({
             id: o.id,
-            texto: o.texto // Mantenemos el nombre del campo como viene del API
+            texto: o.texto
           })) : [],
           answer: p.tipo === 'OPCION_MULTIPLE_SELECCION_MULTIPLE' ? [] : null
         }));
