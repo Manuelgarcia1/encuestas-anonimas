@@ -11,7 +11,7 @@
             <select (change)="handleMobileFilterChange($event)"
                 class="w-full pl-3 pr-10 py-2.5 rounded-lg border border-gray-300 text-gray-700 bg-white appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 <option selected disabled value="">Ordenar por...</option>
-                @for (filter of filters; track filter.id) { <!-- filters array ya no tiene "Número de Respuestas" -->
+                @for (filter of filters; track filter.id) {
                 <option [value]="filter.id">{{ filter.name }}</option>
                 }
             </select>
@@ -41,7 +41,7 @@
                 Ordenar por
             </h3>
             <div class="space-y-2">
-                @for (filter of filters; track filter.id) { <!-- filters array ya no tiene "Número de Respuestas" -->
+                @for (filter of filters; track filter.id) {
                 <label class="flex items-center gap-3 p-2 rounded-md hover:bg-blue-50 cursor-pointer transition-colors"
                     [class.bg-blue-100]="filter.checked" [class.text-blue-700]="filter.checked"
                     [class.font-semibold]="filter.checked" [class.text-gray-600]="!filter.checked">
@@ -62,7 +62,6 @@
             <h1 class="text-2xl font-bold text-gray-800">Mis Encuestas</h1>
             @if (!isLoading && totalItems > 0) {
             <p class="text-sm text-gray-500 mt-2 sm:mt-0">
-                <!-- CORREGIDO: Uso de la propiedad Math del componente -->
                 Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage,
                 totalItems) }} de {{ totalItems }} encuestas
             </p>
@@ -93,7 +92,7 @@
         <div class="grid grid-cols-1 sm:hidden gap-4 mb-6">
             @for (form of displayableForms; track form.id) {
             <div class="bg-white p-5 rounded-xl shadow-lg border border-gray-200 space-y-3 relative group">
-                <div (click)="goToCreate(form.id)" class="cursor-pointer">
+                <div (click)="goToCreate(form.id)" class="cursor-pointer"> <!-- Click en tarjeta móvil ya estaba OK -->
                     <h2 class="text-base font-semibold text-gray-800 truncate" [title]="form.name">{{ form.name }}</h2>
                     <div class="flex items-center gap-2 text-xs text-gray-500">
                         <i-lucide [name]="icons.Calendar" class="w-3.5 h-3.5"></i-lucide>
@@ -101,7 +100,6 @@
                     </div>
                     <div class="flex items-center gap-2 text-xs text-gray-500">
                         <i-lucide [name]="icons.FileText" class="w-3.5 h-3.5"></i-lucide>
-                        <!-- MOSTRAR CONTEO DE RESPUESTAS -->
                         <span>{{ form.totalRespuestas }} respuestas</span>
                     </div>
                     <span [class]="getStatusClasses(form.status)" class="mt-1">
@@ -116,24 +114,16 @@
                     @if (menuOpenId === form.id) {
                     <div class="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-xl z-20 border border-gray-200 py-1"
                         (click)="$event.stopPropagation()">
-                        <a (click)="goToCreate(form.id); closeAllMenus()"
+                        <a (click)="goToCreate(form.id); closeAllMenus(); $event.stopPropagation()"
                             class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer">
                             <i-lucide [name]="icons.Edit" class="w-4 h-4 mr-2.5"></i-lucide> Editar
                         </a>
-                        <a (click)="renameForm(form, $event)"
-                            class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer">
-                            <i-lucide [name]="icons.Pencil" class="w-4 h-4 mr-2.5"></i-lucide> Renombrar
-                        </a>
                         @if (form.status === 'publicada') {
-                        <a (click)="copyLink(form); $event.stopPropagation()"
+                        <a (click)="copyLink(form, $event);"
                             class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer">
                             <i-lucide [name]="icons.Copy" class="w-4 h-4 mr-2.5"></i-lucide> Copiar link
                         </a>
                         }
-                        <a (click)="deleteForm(form, $event)"
-                            class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer">
-                            <i-lucide [name]="icons.Trash2" class="w-4 h-4 mr-2.5"></i-lucide> Borrar
-                        </a>
                     </div>
                     }
                 </div>
@@ -160,16 +150,16 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @for (form of displayableForms; track form.id) {
-                    <tr class="hover:bg-gray-50 group">
+                    <!-- CAMBIO: (click) y cursor-pointer añadidos a <tr>, hover mejorado -->
+                    <tr (click)="goToCreate(form.id)" class="hover:bg-gray-100 cursor-pointer group transition-colors duration-150">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-600"
-                                (click)="goToCreate(form.id)" [title]="form.name">
+                            <!-- CAMBIO: (click) y cursor-pointer eliminados del div, hover de texto ajustado con group-hover -->
+                            <div class="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-150" [title]="form.name">
                                 {{ form.name }}
                             </div>
                         </td>
-                        <!-- MOSTRAR CONTEO DE RESPUESTAS -->
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ form.totalRespuestas }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ form.creationDate }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 group-hover:text-gray-700 transition-colors duration-150">{{ form.totalRespuestas }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 group-hover:text-gray-700 transition-colors duration-150">{{ form.creationDate }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span [class]="getStatusClasses(form.status)">
                                 {{ form.status }}
@@ -183,25 +173,17 @@
                                 </button>
                                 @if (menuOpenId === form.id) {
                                 <div class="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-xl z-20 border border-gray-200 py-1"
-                                    (click)="$event.stopPropagation()">
-                                    <a (click)="goToCreate(form.id); closeAllMenus()"
+                                    (click)="$event.stopPropagation()"> <!-- Este stopPropagation es importante -->
+                                    <a (click)="goToCreate(form.id); closeAllMenus(); $event.stopPropagation()"
                                         class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer">
                                         <i-lucide [name]="icons.Edit" class="w-4 h-4 mr-2.5"></i-lucide> Editar
                                     </a>
-                                    <a (click)="renameForm(form, $event)"
-                                        class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer">
-                                        <i-lucide [name]="icons.Pencil" class="w-4 h-4 mr-2.5"></i-lucide> Renombrar
-                                    </a>
                                     @if (form.status === 'publicada') {
-                                    <a (click)="copyLink(form); $event.stopPropagation()"
+                                    <a (click)="copyLink(form, $event);"
                                         class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer">
                                         <i-lucide [name]="icons.Copy" class="w-4 h-4 mr-2.5"></i-lucide> Copiar link
                                     </a>
                                     }
-                                    <a (click)="deleteForm(form, $event)"
-                                        class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer">
-                                        <i-lucide [name]="icons.Trash2" class="w-4 h-4 mr-2.5"></i-lucide> Borrar
-                                    </a>
                                 </div>
                                 }
                             </div>

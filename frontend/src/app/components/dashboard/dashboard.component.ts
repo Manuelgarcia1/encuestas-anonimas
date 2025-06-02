@@ -1,10 +1,9 @@
-// src/app/components/dashboard/dashboard.component.ts
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EncuestasService } from '../../services/encuestas.service';
 import {
   LucideAngularModule, Plus, Filter, Search, Calendar, FileText, MoreVertical, Edit,
-  Trash2, Copy, Pencil, ChevronDown, Check, ChevronLeft, ChevronRight,
+  Copy, ChevronDown, Check, ChevronLeft, ChevronRight, // Se eliminaron Trash2, Pencil
 } from 'lucide-angular';
 import { HeaderDashboardComponent } from '../header/header-dashboard/header-dashboard.component';
 import { FormsModule } from '@angular/forms';
@@ -53,17 +52,16 @@ export class DashboardComponent implements OnInit {
   searchTerm: string = '';
   creadorEmail: string | null = null;
 
-  // CAMBIO: Actualizado array de filtros.
-  // 'totalRespuestasLocal' indica ordenamiento frontend.
   filters = [
-    { id: 1, name: 'Fecha de creación', checked: true, sortBy: 'createdAt', order: 'DESC' }, // Ordenamiento backend
-    { id: 2, name: 'Nº Respuestas (Más a Menos)', checked: false, sortBy: 'totalRespuestasLocal', order: 'DESC' }, // Ordenamiento frontend
-    { id: 3, name: 'Orden Alfabético (A-Z)', checked: false, sortBy: 'nombre', order: 'ASC' }, // Ordenamiento backend
+    { id: 1, name: 'Fecha de creación', checked: true, sortBy: 'createdAt', order: 'DESC' },
+    { id: 2, name: 'Nº Respuestas (Más a Menos)', checked: false, sortBy: 'totalRespuestasLocal', order: 'DESC' },
+    { id: 3, name: 'Orden Alfabético (A-Z)', checked: false, sortBy: 'nombre', order: 'ASC' },
   ];
-  activeSortBy: string = 'createdAt'; // Default
-  activeOrder: string = 'DESC';     // Default
+  activeSortBy: string = 'createdAt';
+  activeOrder: string = 'DESC';
 
-  icons = { Plus, Filter, Search, Calendar, FileText, MoreVertical, Edit, Trash2, Copy, Pencil, ChevronDown, Check, ChevronLeft, ChevronRight };
+  // Se eliminaron Trash2 y Pencil del objeto icons
+  icons = { Plus, Filter, Search, Calendar, FileText, MoreVertical, Edit, Copy, ChevronDown, Check, ChevronLeft, ChevronRight };
   menuOpenId: string | number | null = null;
 
   currentPage: number = 1;
@@ -122,19 +120,17 @@ export class DashboardComponent implements OnInit {
     let backendSortBy = this.activeSortBy;
     let backendOrder = this.activeOrder;
 
-    // Si el ordenamiento es local por totalRespuestas, el backend debe usar un ordenamiento por defecto (ej. fecha)
-    // para asegurar que la paginación sea consistente.
     if (this.activeSortBy === 'totalRespuestasLocal') {
-      backendSortBy = 'createdAt'; // O el sortBy por defecto de tu API si es diferente
-      backendOrder = 'DESC';       // O el order por defecto de tu API
+      backendSortBy = 'createdAt';
+      backendOrder = 'DESC';
     }
 
     this.encuestasService.getEncuestasPorToken(
       this.currentDashboardToken,
       this.currentPage,
       this.itemsPerPage,
-      backendSortBy,  // Usar el sortBy para el backend
-      backendOrder    // Usar el order para el backend
+      backendSortBy,
+      backendOrder
     ).pipe(
       map(response => {
         if (response && response.data && Array.isArray(response.data)) {
@@ -151,13 +147,11 @@ export class DashboardComponent implements OnInit {
             totalRespuestas: encuesta.respuestas ? encuesta.respuestas.length : 0,
           }));
 
-          // CAMBIO: Aplicar ordenamiento local si es el filtro activo
           if (this.activeSortBy === 'totalRespuestasLocal' && encuestasProcesadas.length > 0) {
-            // this.activeOrder será 'DESC' para 'Más a Menos'
             encuestasProcesadas.sort((a, b) => {
               if (this.activeOrder === 'DESC') {
                 return b.totalRespuestas - a.totalRespuestas;
-              } else { // Aunque 'ASC' no se usa para totalRespuestasLocal ahora, es buena práctica
+              } else {
                 return a.totalRespuestas - b.totalRespuestas;
               }
             });
@@ -170,9 +164,9 @@ export class DashboardComponent implements OnInit {
           return [];
         }
       }),
-      tap((encuestasFinales: FormItem[]) => { // encuestasFinales ya están ordenadas (por backend o localmente)
+      tap((encuestasFinales: FormItem[]) => {
         this.formsInternal = encuestasFinales;
-        this.applySearchFilter(); // Aplicar búsqueda sobre los datos ya ordenados
+        this.applySearchFilter();
       }),
       catchError((err: any) => {
         console.error('Error obteniendo encuestas:', err);
@@ -196,8 +190,6 @@ export class DashboardComponent implements OnInit {
   }
 
   applySearchFilter(): void {
-    // La búsqueda se aplica sobre formsInternal, que ya está ordenado
-    // (ya sea por el backend o localmente si activeSortBy === 'totalRespuestasLocal')
     if (!this.searchTerm.trim()) {
       this.displayableForms = [...this.formsInternal];
     } else {
@@ -235,6 +227,9 @@ export class DashboardComponent implements OnInit {
       queryParams: { page: this.currentPage },
       queryParamsHandling: 'merge',
     });
+    // Si no queremos recargar por navegación (porque loadForms se llamará explícitamente)
+    // no hacemos nada más. Si triggerReloadByNavigation es true (default), la navegación disparará
+    // el subscription de queryParamMap y recargará. Para los filtros, ya llamamos a loadForms.
   }
 
   handleMobileFilterChange(event: Event): void {
@@ -249,14 +244,13 @@ export class DashboardComponent implements OnInit {
     this.filters.forEach(f => f.checked = (f.id === selectedFilter.id));
     this.activeSortBy = selectedFilter.sortBy;
     this.activeOrder = selectedFilter.order;
-    this.currentPage = 1; // Siempre resetear a la primera página al cambiar el filtro/orden
+    this.currentPage = 1;
 
-    this.updateUrlWithPage(false); // Actualizar solo la página en la URL
-
-    this.loadForms(); // Recargará los datos y aplicará el ordenamiento 
+    this.updateUrlWithPage(false); 
+    this.loadForms();
   }
 
-  filterForms(): void { // Llamado por el input de búsqueda
+  filterForms(): void {
     this.applySearchFilter();
   }
 
@@ -276,7 +270,7 @@ export class DashboardComponent implements OnInit {
   closeAllMenus() { this.menuOpenId = null; }
 
   copyLink(form: FormItem, event?: MouseEvent) {
-    event?.stopPropagation();
+    event?.stopPropagation(); // Prevenir que el click se propague y cierre el menú si hay listeners en parents
     if (form.token_respuesta) {
       navigator.clipboard.writeText(`${window.location.origin}/response/${form.token_respuesta}`)
         .then(() => alert('¡Enlace copiado!'))
@@ -289,9 +283,12 @@ export class DashboardComponent implements OnInit {
 
   goToCreate(formId: string | number) { this.router.navigate(['/create', formId]); }
 
+  // renameForm y deleteForm ya no son necesarios en el menú, se pueden eliminar o comentar
+  /*
   renameForm(form: FormItem, event: MouseEvent) {
     event.stopPropagation();
     console.log("Renombrar encuesta:", form.id);
+    // Lógica de renombrar...
     this.closeAllMenus();
   }
 
@@ -303,6 +300,7 @@ export class DashboardComponent implements OnInit {
     }
     this.closeAllMenus();
   }
+  */
 
   getPageNumbers(): (number | string)[] {
     const pageCount = this.totalPages; const currentPage = this.currentPage; const delta = 1;
