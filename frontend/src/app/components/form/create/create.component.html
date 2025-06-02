@@ -24,7 +24,7 @@
 
                 <ul class="space-y-2">
                     @for (question of questions; let i = $index; track trackByPreguntaKey(i, question)) {
-                    <li (click)="setActiveQuestion(question.id); mobileSidebarOpen = false"
+                    <li (click)="setActiveQuestion(question.id ?? question._tempId); mobileSidebarOpen = false"
                         class="group p-3 rounded-md cursor-pointer transition-colors relative"
                         [class.bg-blue-100]="question.active" [class.hover:bg-gray-100]="!question.active">
                         <div class="flex items-start gap-2">
@@ -55,7 +55,7 @@
                                 </button>
                                 <button
                                     class="flex items-center px-3 py-1 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
-                                    (click)="deleteQuestion(question.id); question.showMenu = false">
+                                    (click)="deleteQuestion(question.id ?? question._tempId); question.showMenu = false">
                                     <i-lucide [name]="icons.Trash2" class="w-4 h-4 mr-2"></i-lucide>
                                     Borrar
                                 </button>
@@ -81,7 +81,7 @@
 
                 <ul class="space-y-2">
                     @for (question of questions; let i = $index; track trackByPreguntaKey(i, question)) {
-                    <li (click)="setActiveQuestion(question.id)"
+                    <li (click)="setActiveQuestion(question.id ?? question._tempId)"
                         class="group p-3 rounded-md cursor-pointer transition-colors relative"
                         [class.bg-blue-100]="question.active" [class.hover:bg-gray-100]="!question.active">
                         <div class="flex items-start gap-2">
@@ -115,7 +115,7 @@
                                 </button>
                                 <button
                                     class="flex items-center px-3 py-1 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
-                                    (click)="deleteQuestion(question.id); question.showMenu = false">
+                                    (click)="deleteQuestion(question.id ?? question._tempId); question.showMenu = false">
                                     <i-lucide [name]="icons.Trash2" class="w-4 h-4 mr-2"></i-lucide>
                                     Borrar
                                 </button>

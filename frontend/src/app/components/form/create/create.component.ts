@@ -126,11 +126,16 @@ export class CreateComponent implements OnDestroy {
     private router: Router
   ) {
     this.draftService.questions$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(qs => {
-        this.questions = qs;
-        this.checkForChanges();
-      });
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(qs => {
+      this.questions = qs;
+      // Si acabo de agregar una pregunta, activarla
+      if (this.lastAddedTempId) {
+        this.setActiveQuestion(this.lastAddedTempId);
+        this.lastAddedTempId = undefined;
+      }
+      this.checkForChanges();
+    });
   }
 
   mapTipoBackToFront(tipo: string): string {
@@ -156,6 +161,7 @@ export class CreateComponent implements OnDestroy {
       this.isEditMode = true;
       this.cargarEncuestaExistente(parseInt(encuestaId), token_dashboard);
     } else {
+      this.draftService.clearDraft();
       this.draftService.questions$
       .pipe(takeUntil(this.destroy$))
       .subscribe(qs => {
@@ -274,7 +280,7 @@ export class CreateComponent implements OnDestroy {
   // Activa una pregunta específica
   setActiveQuestion(questionId?: number) {
     this.questions.forEach((q) => {
-      q.active = q.id === questionId;
+      q.active = q.id === questionId || q._tempId === questionId;
       q.showMenu = false;
       if (
         q.active &&
@@ -321,6 +327,7 @@ export class CreateComponent implements OnDestroy {
 
   // Abre el modal para añadir nueva pregunta
   openAddQuestionModal() {
+  
     this.showModal = true;
   }
 
@@ -355,15 +362,17 @@ export class CreateComponent implements OnDestroy {
 
   deleteQuestion(questionId?: number) {
     if (questionId === undefined) return;
-    const question = this.questions.find(q => q.id === questionId);
+    const question = this.questions.find(q => q.id === questionId || q._tempId === questionId);
     if (question && question.id) {
       this.preguntasAEliminar = this.preguntasAEliminar || [];
       this.preguntasAEliminar.push(question.id);
     }
-    this.questions = this.questions.filter(q => q.id !== questionId);
+    this.questions = this.questions.filter(q => q.id !== questionId && q._tempId !== questionId);
     this.draftService.updateQuestions(this.questions);
     this.checkForChanges();
   }
+
+  private lastAddedTempId?: number;
 
   // Añade una nueva pregunta del tipo seleccionado
   addQuestion(type: string) {
@@ -379,13 +388,15 @@ export class CreateComponent implements OnDestroy {
       radio: 'Nueva pregunta con botones de radio',
     };
 
+    this.questions.forEach(q => q.active = false);
+
     const newQuestion: Question = {
       _tempId: Date.now() + Math.random(),
       text: defaultTexts[type as keyof typeof defaultTexts] || 'Nueva pregunta',
       type: type,
-      active: false,
+      active: true,
       showMenu: false,
-      required: false, // Inicializar como no requerida
+      required: false,
     };
 
     // Inicializar opciones para preguntas que las necesiten
@@ -397,8 +408,8 @@ export class CreateComponent implements OnDestroy {
       this.currentOptions = [...newQuestion.options];
     }
 
+    this.lastAddedTempId = newQuestion._tempId;
     this.draftService.addQuestion(newQuestion);
-    this.setActiveQuestion(this.questions.length > 0 ? this.questions[this.questions.length - 1].id : undefined);
     this.closeModal();
     this.mobileSidebarOpen = false;
   }
