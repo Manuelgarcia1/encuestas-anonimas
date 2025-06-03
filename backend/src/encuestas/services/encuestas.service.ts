@@ -225,9 +225,7 @@ export class EncuestasService {
     // Guardamos el cambio
     const updated = await this.encuestasRepository.save(encuesta);
 
-    // Opcional: invalidar cache de listados si usas cache
-    const page1Key = `encuestas:${token_dashboard}:p1:l10:sid:ASC`;
-    this.cache.del(page1Key);
+    this.clearCacheForEncuestas(token_dashboard);
 
     return updated.tipo;
   }
