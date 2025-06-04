@@ -10,6 +10,7 @@ import {
   Link,
   Menu,
   X,
+  BarChart3,
 } from 'lucide-angular';
 import { ModalPublicarComponent } from '../../form/create/modal-publicar/modal-publicar.component';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -33,24 +34,26 @@ export class HeaderFormComponent implements OnInit {
     private route: ActivatedRoute,
     private encuestasService: EncuestasService
   ) { }
-  @Output() surveyStatusChanged = new EventEmitter<boolean>(); // Nuevo Output
+  @Output() surveyStatusChanged = new EventEmitter<boolean>();
   @Input() nombreEncuesta: string = 'Mi Formulario';
   @Input() encuestaId!: number;
 
-  icons = { Home, ChevronRight, Edit, ListOrdered, Send, Link, Menu, X };
-  activeTab: 'edit' | 'results' = 'edit';
+  icons = { Home, ChevronRight, Edit, ListOrdered, Send, Link, Menu, X, BarChart3 }
+  activeTab: 'edit' | 'results' | 'estadisticas' = 'edit';
   mobileMenuOpen = false;
   showPublishModal = false;
   showConfirmPublishModal = false;
-  token: string | null = null; 
+  token: string | null = null;
   isSurveyPublished: boolean = false;
   isLoadingSurveyStatus: boolean = true;
 
   ngOnInit(): void {
-    this.token = this.getCookie('td'); // Token del dashboard
+    this.token = this.getCookie('td');
     const currentPath = this.router.url;
     if (currentPath.includes('/results/')) {
       this.activeTab = 'results';
+    } else if (currentPath.includes('/estadisticas/')) {
+      this.activeTab = 'estadisticas';
     } else if (currentPath.includes('/create')) {
       this.activeTab = 'edit';
     }
@@ -91,7 +94,7 @@ export class HeaderFormComponent implements OnInit {
   loadSurveyStatus(): void {
     if (!this.token || !this.encuestaId) {
       this.isLoadingSurveyStatus = false;
-      this.surveyStatusChanged.emit(false); // Emitir estado por defecto
+      this.surveyStatusChanged.emit(false);
       if (!this.token) console.warn("loadSurveyStatus: No hay token para cargar estado.");
       if (!this.encuestaId) console.warn("loadSurveyStatus: No hay encuestaId para cargar estado.");
       return;
@@ -108,14 +111,14 @@ export class HeaderFormComponent implements OnInit {
           console.warn('El tipo de encuesta no se recibió o no es un string:', response.data);
         }
         this.isLoadingSurveyStatus = false;
-        this.surveyStatusChanged.emit(this.isSurveyPublished); // Emitir el estado actual
+        this.surveyStatusChanged.emit(this.isSurveyPublished);
       },
       error: (err) => {
         console.error('Error al cargar el estado de la encuesta:', err);
         this.showToast('Error al cargar datos de la encuesta.', true);
         this.isLoadingSurveyStatus = false;
         this.isSurveyPublished = false;
-        this.surveyStatusChanged.emit(false); // Emitir estado en caso de error
+        this.surveyStatusChanged.emit(false);
       }
     });
   }
@@ -129,7 +132,8 @@ export class HeaderFormComponent implements OnInit {
     }
   }
 
-  setActiveTab(tab: 'edit' | 'results') {
+  // Se actualiza el tipo del parámetro 'tab'
+  setActiveTab(tab: 'edit' | 'results' | 'estadisticas') {
     this.activeTab = tab;
     this.mobileMenuOpen = false;
 
@@ -138,13 +142,15 @@ export class HeaderFormComponent implements OnInit {
         this.router.navigate(['/results', this.encuestaId]);
       } else if (tab === 'edit') {
         this.router.navigate(['/create', this.encuestaId]);
+      } else if (tab === 'estadisticas') {
+        this.router.navigate(['/estadisticas', this.encuestaId]);
       }
     } else {
       if (tab === 'edit') {
         this.router.navigate(['/create']);
-      } else if (tab === 'results') {
-        this.showToast('Guarda la encuesta primero para ver sus resultados.', true);
-        console.warn("Intento de navegar a resultados sin encuestaId (nueva encuesta).");
+      } else if (tab === 'results' || tab === 'estadisticas') {
+        this.showToast('Guarda la encuesta primero para ver sus resultados o estadísticas.', true);
+        console.warn(`Intento de navegar a ${tab} sin encuestaId (nueva encuesta).`);
       }
     }
   }
@@ -176,9 +182,9 @@ export class HeaderFormComponent implements OnInit {
     this.encuestasService.publicarEncuesta(this.token, this.encuestaId).subscribe({
       next: (response) => {
         this.showToast('¡Encuesta publicada con éxito!');
-        this.isSurveyPublished = true; // Actualizar estado
-        this.surveyStatusChanged.emit(true); // Emitir cambio de estado
-        this.loadSurveyStatus(); // Recargar estado para asegurar consistencia
+        this.isSurveyPublished = true;
+        this.surveyStatusChanged.emit(true);
+        this.loadSurveyStatus();
         this.openShareModal();
       },
       error: (err) => {
