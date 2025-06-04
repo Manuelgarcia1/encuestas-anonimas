@@ -74,12 +74,10 @@
                           }
                         </div>
                       } @else {
-                        <!-- Este caso debería ser menos común si la pregunta tiene 'count' y 'porcentaje' pero un array vacío de opciones -->
                         <p class="text-sm text-gray-500 italic mt-4">No hay datos de opciones para esta pregunta.</p>
                       }
                     }
 
-                    <!-- Respuestas para preguntas abiertas (sabemos que tienen respuestas porque están en preguntasVisibles) -->
                     @else if (pregunta.tipo === 'ABIERTA') {
                       <div class="mt-4 space-y-2 bg-gray-50 p-4 rounded-lg max-h-72 overflow-y-auto border border-gray-200">
                         @for (respuestaAbierta of pregunta.respuestas; track $index) {
@@ -94,7 +92,6 @@
               }
             </div>
           } @else {
-            <!-- Caso: hay totalRespuestas > 0, pero no hay preguntas visibles (ej. solo preguntas sin datos o solo abiertas sin respuestas) -->
             <div class="text-center py-12 bg-white shadow-md rounded-lg border border-gray-200">
               <i-lucide [name]="icons.BarChart3" class="w-20 h-20 text-gray-300 mx-auto mb-6"></i-lucide>
               <p class="text-xl text-gray-500">No hay preguntas con datos estadísticos para mostrar.</p>
@@ -103,7 +100,6 @@
         }
       </div>
     } @else {
-      <!-- Caso en que datosEstadisticas es null o datosEstadisticas.encuesta es null después de la carga sin error -->
       <div class="text-center py-12 bg-white shadow-md rounded-lg border border-gray-200">
         <i-lucide [name]="icons.AlertCircle" class="w-20 h-20 text-gray-300 mx-auto mb-6"></i-lucide>
         <p class="text-xl text-gray-500">No se pudieron cargar los datos de estadísticas de la encuesta.</p>

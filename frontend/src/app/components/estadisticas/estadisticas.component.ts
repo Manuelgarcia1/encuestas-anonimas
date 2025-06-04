@@ -11,7 +11,7 @@ import {
   Users,
   ClipboardList,
   Loader2,
-  ClipboardX // <--- Nuevo icono para el estado sin respuestas
+  ClipboardX
 } from 'lucide-angular';
 import { HeaderFormComponent } from '../header/header-form/header-form.component';
 import { EncuestasService } from '../../services/encuestas.service';
@@ -38,7 +38,7 @@ export class EstadisticasComponent implements OnInit {
     Users,
     ClipboardList,
     Loader2,
-    ClipboardX // <--- Añadido el icono
+    ClipboardX
   };
 
   encuestaId: number | null = null;
