@@ -11,29 +11,14 @@ import { HeaderFormComponent } from '../../header/header-form/header-form.compon
 import { EncuestasService } from '../../../services/encuestas.service';
 import { switchMap, catchError, tap } from 'rxjs/operators';
 import { of } from 'rxjs';
+import {
+  ResultadosPorTokenResultadosResponse,
+  ApiResultadosIndividuales,
+  RespuestaIndividualAPregunta,
+  ConjuntoDeRespuestas
+} from '../../../interfaces/resultados.interface';
 
-//INTERFACES PARA RESPUESTAS INDIVIDUALES
-export interface RespuestaIndividualAPregunta {
-  pregunta: string; // Texto de la pregunta
-  tipo: string;     // 'OPCION_MULTIPLE_SELECCION_MULTIPLE', 'OPCION_MULTIPLE_SELECCION_SIMPLE', 'ABIERTA'
-  opciones?: string[]; // Array de strings para OPCION_MULTIPLE_*
-  texto?: string;      // String para ABIERTA
-}
 
-export interface ConjuntoDeRespuestas {
-  respuestaId: number;
-  fecha: string; 
-  respuestas: RespuestaIndividualAPregunta[];
-}
-
-export interface ApiResultadosIndividuales {
-  encuesta: {
-    id: number;
-    nombre: string;
-    totalRespuestas: number;
-  };
-  respuestas: ConjuntoDeRespuestas[];
-}
 
 @Component({
   selector: 'app-results',
@@ -119,9 +104,9 @@ export class ResultsComponent implements OnInit {
         const tokenResultados = encuestaDetalleResponse.data.token_resultados;
 
         return this.encuestasService.getResultadosPorTokenResultados(tokenResultados).pipe(
-          tap(resultadosResponse => {
+          tap((resultadosResponse: ResultadosPorTokenResultadosResponse) => {
             if (resultadosResponse?.data) { // La estructura ahora es diferente
-              this.datosResultados = resultadosResponse.data as ApiResultadosIndividuales;
+              this.datosResultados = resultadosResponse.data;
               if (this.datosResultados && this.datosResultados.respuestas && this.datosResultados.respuestas.length > 0) {
                 this.preguntasEncabezado = this.datosResultados.respuestas[0].respuestas;
                 // Aplicar ordenamiento inicial si es necesario (ej. por fecha)
@@ -150,11 +135,13 @@ export class ResultsComponent implements OnInit {
 
   sortRespuestas(): void {
     if (this.datosResultados && this.datosResultados.respuestas) {
-      this.datosResultados.respuestas.sort((a, b) => {
-        const dateA = new Date(a.fecha).getTime();
-        const dateB = new Date(b.fecha).getTime();
-        return this.selectedFilter === 'desc' ? dateB - dateA : dateA - dateB;
-      });
+      this.datosResultados.respuestas.sort(
+        (a: ConjuntoDeRespuestas, b: ConjuntoDeRespuestas) => {
+          const dateA = new Date(a.fecha).getTime();
+          const dateB = new Date(b.fecha).getTime();
+          return this.selectedFilter === 'desc' ? dateB - dateA : dateA - dateB;
+        }
+      );
     }
   }
 
