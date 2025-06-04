@@ -73,10 +73,14 @@ export class EncuestasService {
   }
 
   enviarRespuestas(token: string, payload: EnviarRespuestasPayload): Observable<EnviarRespuestasResponse> {
-    return this.http.post<EnviarRespuestasResponse>(`/api/v1/respuestas/${token}`, payload);
+    return this.http.post<EnviarRespuestasResponse>(`${this.respuestasApiUrl}/${token}`, payload);
   }
 
   getResultadosPorTokenResultados(token_resultados: string): Observable<any> {
     return this.http.get<any>(`${this.respuestasApiUrl}/resultados/${token_resultados}`);
+  }
+
+  getEstadisticasPorTokenResultados(token_resultados: string): Observable<any> {
+    return this.http.get<any>(`${this.respuestasApiUrl}/resultados/${token_resultados}/estadisticas`);
   }
 }

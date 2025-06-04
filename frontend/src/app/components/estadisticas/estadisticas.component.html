@@ -1,0 +1,110 @@
+<div class="flex flex-col h-screen bg-gray-100">
+  <app-header-form
+    [encuestaId]="datosEstadisticas?.encuesta?.id!"
+    [nombreEncuesta]="datosEstadisticas?.encuesta?.nombre || 'Estadísticas de Encuesta'">
+  </app-header-form>
+
+  <div class="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+    @if (isLoading) {
+      <div class="flex flex-col justify-center items-center h-full text-gray-500">
+        <i-lucide [name]="icons.Loader2" class="w-12 h-12 animate-spin mb-4"></i-lucide>
+        <p class="text-xl">Cargando estadísticas...</p>
+      </div>
+    } @else if (errorMessage) {
+      <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-6 rounded-md shadow-md max-w-2xl mx-auto" role="alert">
+        <div class="flex items-center">
+          <div class="py-1"><i-lucide [name]="icons.AlertCircle" class="w-8 h-8 text-red-500 mr-4"></i-lucide></div>
+          <div>
+            <p class="font-bold text-lg">Error al cargar estadísticas</p>
+            <p class="text-sm">{{ errorMessage }}</p>
+          </div>
+        </div>
+      </div>
+    } @else if (datosEstadisticas && datosEstadisticas.encuesta) {
+      <div class="max-w-4xl mx-auto">
+        <!-- Mensaje si no hay respuestas totales -->
+        @if (datosEstadisticas.encuesta.totalRespuestas === 0) {
+          <div class="text-center py-12 bg-white shadow-md rounded-lg border border-gray-200">
+            <i-lucide [name]="icons.ClipboardX" class="w-20 h-20 text-gray-400 mx-auto mb-6"></i-lucide>
+            <p class="text-xl text-gray-600">No existen estadísticas ya que la encuesta no tiene respuestas aún.</p>
+          </div>
+        } @else {
+          <!-- Encabezado de la Encuesta (solo si hay respuestas) -->
+          <div class="mb-8 p-6 bg-white shadow-lg rounded-xl border border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ datosEstadisticas.encuesta.nombre }}</h1>
+            <div class="flex items-center text-gray-600">
+              <i-lucide [name]="icons.Users" class="w-5 h-5 mr-2 text-blue-500"></i-lucide>
+              <span class="font-medium">{{ datosEstadisticas.encuesta.totalRespuestas }}</span>
+              <span class="ml-1">respuestas totales</span>
+            </div>
+          </div>
+
+          <!-- Lista de Preguntas Visibles -->
+          @if (preguntasVisibles.length > 0) {
+            <div class="space-y-6">
+              @for (pregunta of preguntasVisibles; track pregunta.id; let i = $index) {
+                <div class="bg-white shadow-lg rounded-xl border border-gray-200 overflow-hidden">
+                  <div class="p-5 md:p-6">
+                    <div class="flex items-start mb-3">
+                      <i-lucide [name]="getQuestionIcon(pregunta.tipo)" class="w-6 h-6 text-blue-600 mr-3 mt-1 flex-shrink-0"></i-lucide>
+                      <div>
+                        <h3 class="text-xl font-semibold text-gray-800">
+                          {{ i + 1 }}. {{ pregunta.texto }}
+                        </h3>
+                        <p class="text-sm text-gray-500">{{ getQuestionTypeDescription(pregunta.tipo) }}</p>
+                      </div>
+                    </div>
+
+                    <!-- Respuestas para preguntas de opción múltiple -->
+                    @if (pregunta.tipo === 'OPCION_MULTIPLE_SELECCION_SIMPLE' || pregunta.tipo === 'OPCION_MULTIPLE_SELECCION_MULTIPLE') {
+                      @if (pregunta.respuestas && pregunta.respuestas.length > 0) {
+                        <div class="space-y-3 mt-4">
+                          @for (opcion of pregunta.respuestas; track opcion.opcion) {
+                            <div>
+                              <div class="flex justify-between items-center text-sm mb-1">
+                                <span class="text-gray-700 truncate pr-2" [title]="opcion.opcion">{{ opcion.opcion }}</span>
+                                <span class="text-gray-600 font-medium whitespace-nowrap">{{ opcion.count }} ({{ opcion.porcentaje.toFixed(0) }}%)</span>
+                              </div>
+                              <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                <div class="bg-gradient-to-r from-blue-400 to-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
+                                     [style.width.%]="opcion.porcentaje">
+                                </div>
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      } @else {
+                        <p class="text-sm text-gray-500 italic mt-4">No hay datos de opciones para esta pregunta.</p>
+                      }
+                    }
+
+                    @else if (pregunta.tipo === 'ABIERTA') {
+                      <div class="mt-4 space-y-2 bg-gray-50 p-4 rounded-lg max-h-72 overflow-y-auto border border-gray-200">
+                        @for (respuestaAbierta of pregunta.respuestas; track $index) {
+                          <p class="text-sm text-gray-700 bg-white p-2 rounded shadow-sm border border-gray-200">
+                            {{ respuestaAbierta }}
+                          </p>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="text-center py-12 bg-white shadow-md rounded-lg border border-gray-200">
+              <i-lucide [name]="icons.BarChart3" class="w-20 h-20 text-gray-300 mx-auto mb-6"></i-lucide>
+              <p class="text-xl text-gray-500">No hay preguntas con datos estadísticos para mostrar.</p>
+            </div>
+          }
+        }
+      </div>
+    } @else {
+      <div class="text-center py-12 bg-white shadow-md rounded-lg border border-gray-200">
+        <i-lucide [name]="icons.AlertCircle" class="w-20 h-20 text-gray-300 mx-auto mb-6"></i-lucide>
+        <p class="text-xl text-gray-500">No se pudieron cargar los datos de estadísticas de la encuesta.</p>
+        <p class="text-sm text-gray-400 mt-2">Inténtalo de nuevo más tarde o contacta con el soporte.</p>
+      </div>
+    }
+  </div>
+</div>
