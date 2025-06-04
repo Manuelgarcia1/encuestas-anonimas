@@ -5,7 +5,7 @@ import { CreateEncuestaDto } from '../dto/create.encuesta.dto';
 import { Encuesta } from '../interfaces/encuesta.interface';
 import { EncuestasPorTokenResponse, TokenParticipacionResponse } from '../interfaces/encuesta-response.interface';
 import { EnviarRespuestasPayload, EnviarRespuestasResponse } from '../interfaces/respuestas.interface';
-import { ResultadosPorTokenResultadosResponse } from '../interfaces/resultados.interface';
+import { ResultadosPorTokenResultadosResponse, EstadisticasPorTokenResultadosResponse } from '../interfaces/resultados.interface';
 
 @Injectable({ providedIn: 'root' })
 export class EncuestasService {
@@ -63,7 +63,7 @@ export class EncuestasService {
     return this.http.get<ResultadosPorTokenResultadosResponse>(`${this.respuestasApiUrl}/resultados/${token_resultados}`);
   }
 
-  getEstadisticasPorTokenResultados(token_resultados: string): Observable<any> {
-    return this.http.get<any>(`${this.respuestasApiUrl}/resultados/${token_resultados}/estadisticas`);
+  getEstadisticasPorTokenResultados(token_resultados: string): Observable<EstadisticasPorTokenResultadosResponse> {
+    return this.http.get<EstadisticasPorTokenResultadosResponse>(`${this.respuestasApiUrl}/resultados/${token_resultados}/estadisticas`);
   }
 }

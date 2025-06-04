@@ -10,6 +10,7 @@ export interface Pregunta {
   showMenu?: boolean;
   options?: Option[];
   numero?: number; 
+  respuestas?: string;
 }
 
 

@@ -17,6 +17,8 @@ import { HeaderFormComponent } from '../header/header-form/header-form.component
 import { EncuestasService } from '../../services/encuestas.service';
 import { switchMap, catchError, tap } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { EstadisticasPorTokenResultadosResponse } from '../../interfaces/resultados.interface';
+import { Pregunta } from '../../interfaces/pregunta.interface';
 
 @Component({
   selector: 'app-estadisticas',
@@ -43,7 +45,7 @@ export class EstadisticasComponent implements OnInit {
 
   encuestaId: number | null = null;
   tokenDashboard: string | null = null;
-  datosEstadisticas: any | null = null;
+  datosEstadisticas: EstadisticasPorTokenResultadosResponse['data'] | null = null;
   isLoading: boolean = true;
   errorMessage: string | null = null;
 
@@ -125,23 +127,23 @@ export class EstadisticasComponent implements OnInit {
   }
 
   // Getter para filtrar las preguntas que se mostrarán
-  get preguntasVisibles(): any[] {
+  get preguntasVisibles(): Pregunta[] {
     if (!this.datosEstadisticas?.encuesta?.preguntas) {
       return [];
     }
-    return this.datosEstadisticas.encuesta.preguntas.filter((pregunta: any) =>
-      pregunta.tipo !== 'ABIERTA' || (pregunta.tipo === 'ABIERTA' && pregunta.respuestas && pregunta.respuestas.length > 0)
+    return this.datosEstadisticas.encuesta.preguntas.filter((pregunta: Pregunta) =>
+      pregunta.type !== 'ABIERTA' || (pregunta.type === 'ABIERTA' && pregunta.respuestas && pregunta.respuestas.length > 0)
     );
   }
 
-  private handleError(message: string, error?: any): void {
+  private handleError(message: string, error?: unknown): void {
     this.errorMessage = message;
     this.isLoading = false;
     if (error) console.error(message, error);
     else console.error(message);
   }
 
-  private handleErrorAndNavigate(message: string, error?: any): void {
+  private handleErrorAndNavigate(message: string, error?: unknown): void {
     this.handleError(message, error);
   }
 
