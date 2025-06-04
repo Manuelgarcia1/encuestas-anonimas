@@ -10,6 +10,8 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
 import { finalize, map, tap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { Encuesta } from '../../interfaces/encuesta.interface';
+import { FiltroItem } from '../../interfaces/filtro.interface';
 
 interface EncuestaFromApi {
   id: number | string;
@@ -131,19 +133,23 @@ export class DashboardComponent implements OnInit {
       backendSortBy,
       backendOrder
     ).pipe(
+       tap(response => {
+        console.log('Respuesta cruda de getEncuestasPorToken:', response);
+      }),
       map(response => {
         if (response && response.data && Array.isArray(response.data)) {
           this.creadorEmail = response.creadorEmail || this.creadorEmail;
           this.totalItems = response.total || 0;
           this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
 
-          let encuestasProcesadas: FormItem[] = response.data.map((encuesta: EncuestaFromApi) => ({
+          let encuestasProcesadas: FormItem[] = response.data.map((encuesta: Encuesta) => ({
             ...encuesta,
-            id: encuesta.id,
+            id: encuesta.id ?? '',
             name: encuesta.nombre,
-            creationDate: this.datePipe.transform(encuesta.createdAt, 'dd/MM/yyyy HH:mm') || encuesta.createdAt,
+            creationDate: this.datePipe.transform(encuesta.createdAt, 'dd/MM/yyyy HH:mm') || encuesta.createdAt || '',
             status: encuesta.tipo?.toLowerCase() || 'borrador',
             totalRespuestas: encuesta.respuestas ? encuesta.respuestas.length : 0,
+            createdAt: encuesta.createdAt || '',
           }));
 
           if (this.activeSortBy === 'totalRespuestasLocal' && encuestasProcesadas.length > 0) {
@@ -167,7 +173,7 @@ export class DashboardComponent implements OnInit {
         this.formsInternal = encuestasFinales;
         this.applySearchFilter();
       }),
-      catchError((err: any) => {
+      catchError((err: unknown) => {
         console.error('Error obteniendo encuestas:', err);
         this.formsInternal = [];
         this.displayableForms = [];
@@ -236,7 +242,7 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  applySortFilter(selectedFilter: any): void {
+  applySortFilter(selectedFilter: FiltroItem): void {
     this.filters.forEach(f => f.checked = (f.id === selectedFilter.id));
     this.activeSortBy = selectedFilter.sortBy;
     this.activeOrder = selectedFilter.order;
