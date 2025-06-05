@@ -31,24 +31,11 @@ import { DraftQuestionsService } from '../../../services/borrador.service';
 import { FormsModule } from '@angular/forms';
 import { EncuestasService } from '../../../services/encuestas.service';
 import { Subject, takeUntil } from 'rxjs';
+import { TiposRespuestaEnum } from '../../../enums/tipos-respuesta.enum';
+import { CreateEncuestaDto } from '../../../dto/create.encuesta.dto';
+import { Pregunta } from '../../../interfaces/pregunta.interface';
+import { Option } from '../../../interfaces/opcion.interface';
 
-interface Question {
-  id?: number; 
-  _tempId?: number;
-  text: string;
-  type: string;
-  active: boolean;
-  showMenu?: boolean;
-  options?: Option[];
-  numero?: number; // Mantener para la lógica interna y creación, pero no para actualización
-}
-
-interface Option {
-  id?: number; 
-  _tempId?: number; // Agregado para consistencia si se añaden opciones a preguntas existentes
-  texto: string;
-  numero: number;
-}
 
 @Component({
   selector: 'app-create',
@@ -85,11 +72,11 @@ export class CreateComponent implements OnInit, OnDestroy {
   };
 
   showModal = false;
-  questions: Question[] = [];
+  questions: Pregunta[] = [];
   currentOptions: Option[] = [];
   nombreEncuesta: string = '';
 
-  get activeQuestion() {
+  get activeQuestion(): Pregunta | undefined {
     return this.questions.find((q) => q.active);
   }
 
@@ -151,7 +138,7 @@ export class CreateComponent implements OnInit, OnDestroy {
   // Prepara una encuesta nueva con estructura por defecto
   private initializeNewSurveyWithDefaults() {
     this.nombreEncuesta = 'Nueva Encuesta';
-    const defaultQuestion: Question = {
+    const defaultQuestion: Pregunta = {
       _tempId: Date.now() + Math.random(),
       text: 'Pregunta de opción múltiple (ejemplo)',
       type: 'radio',
@@ -193,7 +180,7 @@ export class CreateComponent implements OnInit, OnDestroy {
             this.isSurveyPublished = false;
           }
 
-          const preguntasMapeadas: Question[] = (encuestaApi.preguntas || []).map((pregunta: any, index: number) => ({
+          const preguntasMapeadas: Pregunta[] = (encuestaApi.preguntas || []).map((pregunta: any, index: number) => ({
             id: pregunta.id,
             _tempId: undefined, 
             text: pregunta.texto,
@@ -271,7 +258,7 @@ export class CreateComponent implements OnInit, OnDestroy {
   }
 
   @HostListener('window:beforeunload', ['$event'])
-  unloadNotification($event: any): void {
+  unloadNotification($event: BeforeUnloadEvent): void {
     // Solo mostrar si hay cambios y no es una encuesta publicada ya cargada
     if (this.hasUnsavedChanges && !this.isSurveyPublished) {
       $event.returnValue = true;
@@ -342,7 +329,7 @@ export class CreateComponent implements OnInit, OnDestroy {
     if (questionToDuplicate) {
       const newTempIdForDuplicated = Date.now() + Math.random();
       const newQuestionNumber = this.questions.length + 1; // Asignar número basado en la nueva posición
-      const duplicated: Question = {
+      const duplicated: Pregunta = {
         ...questionToDuplicate,
         id: undefined,
         _tempId: newTempIdForDuplicated,
@@ -390,7 +377,7 @@ export class CreateComponent implements OnInit, OnDestroy {
     if (this.isSurveyPublished) return;
     const newTempId = Date.now() + Math.random();
     const newQuestionNumber = this.questions.length + 1;
-    const newQuestion: Question = {
+    const newQuestion: Pregunta = {
       _tempId: newTempId,
       text: `Nueva pregunta (${type})`,
       type: type,
@@ -502,7 +489,7 @@ export class CreateComponent implements OnInit, OnDestroy {
     const preguntasParaBackend = this.questions.map(q => ({
       numero: q.numero,
       texto: q.text,
-      tipo: this.mapTipoFrontToBack(q.type),
+      tipo: this.mapTipoFrontToBack(q.type) as TiposRespuestaEnum,
       opciones: q.options?.map(opt => ({
         texto: opt.texto,
         numero: opt.numero 
@@ -546,7 +533,7 @@ export class CreateComponent implements OnInit, OnDestroy {
               })
             };
           });
-          this.draftService.updateQuestions(preguntasDesdeBackend as Question[]);
+          this.draftService.updateQuestions(preguntasDesdeBackend as Pregunta[]);
           this.preguntasAEliminar = []; 
         }
         this.isSaving = false;
@@ -595,7 +582,7 @@ export class CreateComponent implements OnInit, OnDestroy {
       this.showToast('Error de autenticación.', true); this.isSaving = false; return;
     }
 
-    this.encuestasService.updateEncuesta(this.tokenDashboard, this.currentEncuestaId, payload).subscribe({
+    this.encuestasService.updateEncuesta(this.tokenDashboard, this.currentEncuestaId, payload as CreateEncuestaDto).subscribe({
       next: (resp) => {
          if (resp && resp.data && resp.data.preguntas) { 
           const preguntasDesdeBackend = resp.data.preguntas.map((pBack: any) => {
@@ -620,7 +607,7 @@ export class CreateComponent implements OnInit, OnDestroy {
               })
             };
           });
-          this.draftService.updateQuestions(preguntasDesdeBackend as Question[]);
+          this.draftService.updateQuestions(preguntasDesdeBackend as Pregunta[]);
           this.preguntasAEliminar = [];
         }
         this.isSaving = false;
@@ -635,7 +622,7 @@ export class CreateComponent implements OnInit, OnDestroy {
     });
   }
 
-  trackByPreguntaKey(index: number, item: Question): any {
+  trackByPreguntaKey(index: number, item: Pregunta): any {
     return item.id ?? item._tempId ?? index;
   }
 

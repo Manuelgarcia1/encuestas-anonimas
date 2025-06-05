@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule, Check, AlertCircle, Home } from 'lucide-angular';
 import { EncuestasService } from '../../services/encuestas.service';
-import { EnviarRespuestasPayload } from '../../services/encuestas.service';
+import { EnviarRespuestasPayload } from '../../interfaces/respuestas.interface';
 
 interface Option {
   id: number;
