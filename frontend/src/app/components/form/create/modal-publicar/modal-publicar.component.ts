@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { EncuestasService } from '../../../../services/encuestas.service';
 import QRCode from 'qrcode';
 import { switchMap } from 'rxjs/operators'; // Importa switchMap
+import { TokenParticipacionResponse } from '../../../../interfaces/encuesta-response.interface';
 
 @Component({
   selector: 'app-modal-publicar',
@@ -49,7 +50,7 @@ export class ModalPublicarComponent implements OnInit {
 
     // Primero obtenemos el token de participación
     this.encuestasService.getTokenParticipacion(tokenDashboard, this.encuestaId).pipe(
-      switchMap((responseParticipacion: any) => {
+      switchMap((responseParticipacion: TokenParticipacionResponse) => {
         if (responseParticipacion && responseParticipacion.data && responseParticipacion.data.token_respuesta) {
           this.surveyLink = `http://localhost/response/${responseParticipacion.data.token_respuesta}`;
         } else {
@@ -60,7 +61,7 @@ export class ModalPublicarComponent implements OnInit {
         return this.encuestasService.getEncuestaPorId(tokenDashboard, this.encuestaId);
       })
     ).subscribe({
-      next: (responseEncuesta: any) => {
+      next: (responseEncuesta) => {
         if (responseEncuesta && responseEncuesta.data && responseEncuesta.data.nombre) {
           this.surveyName = responseEncuesta.data.nombre; // Aquí actualizamos el nombre real de la encuesta
         } else {
