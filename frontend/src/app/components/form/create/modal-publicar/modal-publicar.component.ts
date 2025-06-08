@@ -114,6 +114,68 @@ export class ModalPublicarComponent implements OnInit {
           }
         },
       });
+    this.encuestasService
+      .getTokenParticipacion(tokenDashboard, this.encuestaId)
+      .pipe(
+        switchMap((responseParticipacion: TokenParticipacionResponse) => {
+          if (
+            responseParticipacion &&
+            responseParticipacion.data &&
+            responseParticipacion.data.token_respuesta
+          ) {
+            this.surveyLink = `http://localhost/response/${responseParticipacion.data.token_respuesta}`;
+          } else {
+            // Si no hay token_respuesta, lanzamos un error para que lo capture el bloque 'error'
+            throw new Error('No se pudo obtener el token de participación.');
+          }
+          // Después de obtener el link, obtenemos los detalles de la encuesta (incluido el nombre)
+          return this.encuestasService.getEncuestaPorId(
+            tokenDashboard,
+            this.encuestaId
+          );
+        })
+      )
+      .subscribe({
+        next: (responseEncuesta) => {
+          if (
+            responseEncuesta &&
+            responseEncuesta.data &&
+            responseEncuesta.data.nombre
+          ) {
+            this.surveyName = responseEncuesta.data.nombre; // Aquí actualizamos el nombre real de la encuesta
+          } else {
+            // Si no viene el nombre, mantenemos el valor por defecto o un genérico
+            this.surveyName = 'Encuesta';
+            console.warn(
+              'Nombre de la encuesta no encontrado, usando valor por defecto.'
+            );
+          }
+          // Si llegamos aquí, surveyLink se estableció y surveyName también (o su defecto).
+          this.isLoading = false;
+        },
+        error: (err) => {
+          console.error('Error al cargar datos de la encuesta:', err);
+          // Determinar qué falló para el mensaje
+          if (!this.surveyLink) {
+            this.showToast(
+              'Error al obtener el enlace de participación.',
+              true
+            );
+          } else {
+            // El enlace se obtuvo, pero falló al obtener el nombre.
+            this.showToast(
+              'Error al obtener el nombre de la encuesta. Se usará un nombre genérico.',
+              true
+            );
+            // Mantenemos el surveyName por defecto si la obtención del nombre falló.
+          }
+          this.isLoading = false;
+          // Si el surveyLink es esencial y falla
+          if (!this.surveyLink) {
+            this.closeModal();
+          }
+        },
+      });
   }
 
   copyLink() {
