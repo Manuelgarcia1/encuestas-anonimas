@@ -86,6 +86,7 @@ export class EncuestasService {
 
     if (cached) {
       // Si existe en cache, lo devolvemos directamente (ahorramos llamada a la base de datos)
+      console.log('datos obtenidos desde cache:', cacheKey);
       return cached;
     }
 

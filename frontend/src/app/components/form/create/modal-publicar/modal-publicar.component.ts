@@ -24,7 +24,7 @@ export class ModalPublicarComponent implements OnInit {
   qrCodeImageUrl: string | null = null;
   isGeneratingQr = false;
 
-  constructor(private encuestasService: EncuestasService) { }
+  constructor(private encuestasService: EncuestasService) {}
 
   ngOnInit() {
     this.loadSurveyData();
@@ -42,61 +42,89 @@ export class ModalPublicarComponent implements OnInit {
     const tokenDashboard = this.getCookie('td');
 
     if (!tokenDashboard) {
-      this.showToast('No se encontró el token de dashboard. No se pueden cargar los datos de la encuesta.', true);
+      this.showToast(
+        'No se encontró el token de dashboard. No se pueden cargar los datos de la encuesta.',
+        true
+      );
       this.isLoading = false;
       this.closeModal();
       return;
     }
 
     // Primero obtenemos el token de participación
-    this.encuestasService.getTokenParticipacion(tokenDashboard, this.encuestaId).pipe(
-      switchMap((responseParticipacion: TokenParticipacionResponse) => {
-        if (responseParticipacion && responseParticipacion.data && responseParticipacion.data.token_respuesta) {
-          this.surveyLink = `http://localhost:4200/response/${responseParticipacion.data.token_respuesta}`;
-        } else {
-          // Si no hay token_respuesta, lanzamos un error para que lo capture el bloque 'error'
-          throw new Error('No se pudo obtener el token de participación.');
-        }
-        // Después de obtener el link, obtenemos los detalles de la encuesta (incluido el nombre)
-        return this.encuestasService.getEncuestaPorId(tokenDashboard, this.encuestaId);
-      })
-    ).subscribe({
-      next: (responseEncuesta) => {
-        if (responseEncuesta && responseEncuesta.data && responseEncuesta.data.nombre) {
-          this.surveyName = responseEncuesta.data.nombre; // Aquí actualizamos el nombre real de la encuesta
-        } else {
-          // Si no viene el nombre, mantenemos el valor por defecto o un genérico
-          this.surveyName = 'Encuesta';
-          console.warn('Nombre de la encuesta no encontrado, usando valor por defecto.');
-        }
-        // Si llegamos aquí, surveyLink se estableció y surveyName también (o su defecto).
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Error al cargar datos de la encuesta:', err);
-        // Determinar qué falló para el mensaje
-        if (!this.surveyLink) {
-          this.showToast('Error al obtener el enlace de participación.', true);
-        } else {
-          // El enlace se obtuvo, pero falló al obtener el nombre.
-          this.showToast('Error al obtener el nombre de la encuesta. Se usará un nombre genérico.', true);
-          // Mantenemos el surveyName por defecto si la obtención del nombre falló.
-        }
-        this.isLoading = false;
-        // Si el surveyLink es esencial y falla
-        if (!this.surveyLink) { this.closeModal(); }
-      }
-    });
+    this.encuestasService
+      .getTokenParticipacion(tokenDashboard, this.encuestaId)
+      .pipe(
+        switchMap((responseParticipacion: TokenParticipacionResponse) => {
+          if (
+            responseParticipacion &&
+            responseParticipacion.data &&
+            responseParticipacion.data.token_respuesta
+          ) {
+            this.surveyLink = `http://localhost/response/${responseParticipacion.data.token_respuesta}`;
+          } else {
+            // Si no hay token_respuesta, lanzamos un error para que lo capture el bloque 'error'
+            throw new Error('No se pudo obtener el token de participación.');
+          }
+          // Después de obtener el link, obtenemos los detalles de la encuesta (incluido el nombre)
+          return this.encuestasService.getEncuestaPorId(
+            tokenDashboard,
+            this.encuestaId
+          );
+        })
+      )
+      .subscribe({
+        next: (responseEncuesta) => {
+          if (
+            responseEncuesta &&
+            responseEncuesta.data &&
+            responseEncuesta.data.nombre
+          ) {
+            this.surveyName = responseEncuesta.data.nombre; // Aquí actualizamos el nombre real de la encuesta
+          } else {
+            // Si no viene el nombre, mantenemos el valor por defecto o un genérico
+            this.surveyName = 'Encuesta';
+            console.warn(
+              'Nombre de la encuesta no encontrado, usando valor por defecto.'
+            );
+          }
+          // Si llegamos aquí, surveyLink se estableció y surveyName también (o su defecto).
+          this.isLoading = false;
+        },
+        error: (err) => {
+          console.error('Error al cargar datos de la encuesta:', err);
+          // Determinar qué falló para el mensaje
+          if (!this.surveyLink) {
+            this.showToast(
+              'Error al obtener el enlace de participación.',
+              true
+            );
+          } else {
+            // El enlace se obtuvo, pero falló al obtener el nombre.
+            this.showToast(
+              'Error al obtener el nombre de la encuesta. Se usará un nombre genérico.',
+              true
+            );
+            // Mantenemos el surveyName por defecto si la obtención del nombre falló.
+          }
+          this.isLoading = false;
+          // Si el surveyLink es esencial y falla
+          if (!this.surveyLink) {
+            this.closeModal();
+          }
+        },
+      });
   }
 
   copyLink() {
     if (!this.surveyLink) return;
 
-    navigator.clipboard.writeText(this.surveyLink)
+    navigator.clipboard
+      .writeText(this.surveyLink)
       .then(() => {
         this.showToast('¡Link copiado con éxito!');
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('Error al copiar el link:', err);
         this.showToast('Error al copiar el link', true);
       });
@@ -104,7 +132,9 @@ export class ModalPublicarComponent implements OnInit {
 
   private showToast(message: string, isError: boolean = false) {
     const toast = document.createElement('div');
-    toast.className = `fixed bottom-5 right-5 p-4 rounded-md text-white shadow-lg transition-opacity duration-300 ${isError ? 'bg-red-500' : 'bg-blue-500'}`;
+    toast.className = `fixed bottom-5 right-5 p-4 rounded-md text-white shadow-lg transition-opacity duration-300 ${
+      isError ? 'bg-red-500' : 'bg-blue-500'
+    }`;
     toast.textContent = message;
     document.body.appendChild(toast);
 
@@ -123,7 +153,10 @@ export class ModalPublicarComponent implements OnInit {
     }
 
     if (!this.surveyLink) {
-      this.showToast('Primero se debe generar el enlace de participación.', true);
+      this.showToast(
+        'Primero se debe generar el enlace de participación.',
+        true
+      );
       return;
     }
 
@@ -135,10 +168,10 @@ export class ModalPublicarComponent implements OnInit {
         quality: 0.92,
         margin: 1,
         color: {
-          dark: "#000000",
-          light: "#FFFFFF"
+          dark: '#000000',
+          light: '#FFFFFF',
         },
-        width: 200
+        width: 200,
       };
       this.qrCodeImageUrl = await QRCode.toDataURL(this.surveyLink, options);
     } catch (err) {
@@ -151,7 +184,10 @@ export class ModalPublicarComponent implements OnInit {
 
   shareByEmail() {
     if (!this.surveyLink) {
-      this.showToast('Primero se debe generar el enlace de participación.', true);
+      this.showToast(
+        'Primero se debe generar el enlace de participación.',
+        true
+      );
       return;
     }
 
@@ -174,7 +210,9 @@ Completar la encuesta te tomará solo unos minutos. Apreciamos de antemano tu ti
 Saludos cordiales,
 El grupo E de Desarrollo de Aplicaciones Web 2025`;
 
-    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    const mailtoLink = `mailto:?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
 
     window.location.href = mailtoLink;
   }
