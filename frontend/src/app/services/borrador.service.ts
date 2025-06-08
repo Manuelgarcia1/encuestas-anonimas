@@ -19,11 +19,6 @@ export class DraftQuestionsService {
     this.saveDraft(questions);
   }
 
-  clearDraft() {
-    this.questionsSubject.next([]);
-    localStorage.removeItem(this.STORAGE_KEY);
-  }
-
   private saveDraft(questions: Pregunta[]) {
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(questions));
   }
