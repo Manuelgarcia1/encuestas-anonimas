@@ -28,8 +28,6 @@
 - 👤 [@Enrique Pierotti Castillo](https://github.com/pierotticastillo)
 - 👤 [@Manuel Alejandro García](https://github.com/Manuelgarcia1)
 
-**Ubicación:** `/readme.md`
-
 ## Descripción del Proyecto
 
 El sistema de **Encuestas Anónimas** es una plataforma que garantiza la privacidad de los participantes al no mostrar resultados individuales. Un **Creador** puede crear, publicar y editar todas sus encuestas y acceder a un dashboard a través de un enlace enviado por email, sin necesidad de iniciar sesión.
