@@ -26,7 +26,7 @@
 
 ### 🔗 Compartir encuesta
 
-## ![CompartirEncuestas](./assets/CompartirEncuesta.png)
+## ![CompartirEncuestas](./assets/compartirEncuesta.png)
 
 ### 👁️ Ver respuestas
 
