@@ -25,4 +25,4 @@ Este archivo centraliza la documentación del **Backend** y **Frontend** en un �
   - [Proxy y CORS en Desarrollo](#proxy-y-cors-en-desarrollo)
   - [Build y Despliegue](#build-y-despliegue)
 
-> Haz clic en el enlace de tu interés para abrir la documentación correspondiente en GitHub.
+> Haz clic en el enlace de tu interés para abrir la documentación correspondiente en GitHub. 
