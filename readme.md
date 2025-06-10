@@ -42,7 +42,6 @@ Este archivo centraliza la documentación del **Backend** y **Frontend** en un �
 
 - 🔰 **Backend**
 
-  - [Gestión de paquetes con pnpm](./docs/gestion-de-paquetes.md)
   - [Cache](./docs/cache.md)
   - [Variables de Entorno](./docs/env.md)
   - [Swagger](./docs/swagger.md)
