@@ -48,11 +48,11 @@ Este archivo centraliza la documentación del **Backend** y **Frontend** en un �
   - [Swagger](./docs/swagger.md)
 
 - 🚀 **Frontend**
-  - [Configuración de Angular y Standalone Components](#configuracion-de-angular-y-standalone-components)
-  - [Estructura de Componentes](#estructura-de-componentes)
-  - [Servicios e Inyección de Dependencias](#servicios-e-inyeccion-de-dependencias)
-  - [Rutas y Navegación](#rutas-y-navegacion)
-  - [Proxy y CORS en Desarrollo](#proxy-y-cors-en-desarrollo)
-  - [Build y Despliegue](#build-y-despliegue)
+  - [Configuración de Angular y Standalone Components](./docs/configuracion-de-angular-y-standalone-components.md)
+  - [Estructura de Componentes](./docs/estructura-de-componentes.md)
+  - [Servicios e Inyección de Dependencias](./docs/servicios-e-inyeccion-de-dependencias.md)
+  - [Rutas y Navegación](./docs/rutas-y-navegacion.md)
+  - [Proxy y CORS en Desarrollo](./docs/proxy-y-cors-en-desarrollo.md)
+  - [Build y Despliegue](./docs/build-y-despliegue.md)
 
 > Haz clic en el enlace de tu interés para abrir la documentación correspondiente en GitHub.
