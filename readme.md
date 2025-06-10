@@ -45,6 +45,7 @@ Este archivo centraliza la documentación del **Backend** y **Frontend** en un �
   - [Cache](./docs/cache.md)
   - [Variables de Entorno](./docs/env.md)
   - [Swagger](./docs/swagger.md)
+  - [Build y Despligue con PM2](./docs/build-y-desplieguePM2.md)
 
 - 🚀 **Frontend**
   - [Configuración de Angular y Standalone Components](./docs/configuracion-de-angular-y-standalone-components.md)
