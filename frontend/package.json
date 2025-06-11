@@ -5,8 +5,8 @@
     "ng": "ng",
     "start": "ng serve --proxy-config src/proxy.conf.json",
     "deploy": "pnpm run build && pnpm run nginx:limpiar && pnpm run nginx:llenar",
-    "nginx:limpiar": "del /F /Q C:\\nginx-1.27.5\\html\\* && for /d %x in (C:\\nginx-1.27.5\\html\\*) do rmdir /S /Q \"%x\"",
-"nginx:llenar": "xcopy /E /I dist\\frontend\\browser\\* C:\\nginx-1.27.5\\html\\",
+    "nginx:limpiar": "del /F /Q C:\\nginx-1.28.0\\html\\* && for /d %x in (C:\\nginx-1.28.0\\html\\*) do rmdir /S /Q \"%x\"",
+    "nginx:llenar": "xcopy /E /I dist\\frontend\\browser\\* C:\\nginx-1.28.0\\html\\",
     "build": "ng build",
     "watch": "ng serve --watch",
     "test": "ng test"
