@@ -19,10 +19,15 @@
 
 La aplicación se encuentra desplegada en los siguientes entornos:
 
+## 🚀 Enlace en Producción
+
+La aplicación se encuentra desplegada en los siguientes entornos:
+
 - 🔗 **Frontend (Render):** [https://encuestas-anonimas-frontend.onrender.com](https://encuestas-anonimas-frontend.onrender.com)
+- 🧠 **Backend (Render):** Proyecto NestJS desplegado como servicio en Render, con integración completa hacia el frontend.
 - 🐘 **Base de Datos (Neon):** Proyecto conectado a una instancia PostgreSQL en la nube mediante [Neon](https://neon.tech)
 
-> El frontend está construido con Angular y desplegado usando Render. El backend se conecta a una base de datos PostgreSQL hosteada en Neon.
+> El sistema completo (frontend Angular, backend NestJS y base de datos PostgreSQL) está 100% desplegado en la nube usando Render y Neon.
 
 
 ## 🖼️ Imágenes
