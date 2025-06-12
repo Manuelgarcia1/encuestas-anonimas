@@ -54,8 +54,6 @@ En el siguiente video, el equipo explica la generalidad del sistema de **Encuest
 
 > Se abordan temas como: estructura del proyecto, tecnologías utilizadas, flujo de uso del sistema y contribuciones destacadas de cada miembro del grupo.
 
----
-
 
 ## 🔁 Flujo de trabajo
 
