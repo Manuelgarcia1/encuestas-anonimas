@@ -46,6 +46,17 @@ El sistema de **Encuestas Anónimas** es una plataforma que garantiza la privaci
 
 Este archivo centraliza la documentación del **Backend** y **Frontend** en un único readme.md
 
+## 🎥 Video Explicativo del Proyecto
+
+En el siguiente video, el equipo explica la generalidad del sistema de **Encuestas Anónimas**, incluyendo las decisiones técnicas y los aportes individuales de cada integrante:
+
+📺 [Ver en YouTube](https://www.youtube.com/watch?v=AejfkikMHbg)
+
+> Se abordan temas como: estructura del proyecto, tecnologías utilizadas, flujo de uso del sistema y contribuciones destacadas de cada miembro del grupo.
+
+---
+
+
 ## 🔁 Flujo de trabajo
 
 - [Flujo de trabajo](./docs/flujo-de-trabajo.md)
