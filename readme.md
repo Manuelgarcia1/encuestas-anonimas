@@ -15,9 +15,6 @@
 ![PM2](https://img.shields.io/badge/PM2-2B037A?style=for-the-badge&logo=pm2&logoColor=white)
 ![NGINX](https://img.shields.io/badge/NGINX-009639?style=for-the-badge&logo=nginx&logoColor=white)
 
-## 🚀 Enlace en Producción
-
-La aplicación se encuentra desplegada en los siguientes entornos:
 
 ## 🚀 Enlace en Producción
 
