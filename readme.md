@@ -15,6 +15,16 @@
 ![PM2](https://img.shields.io/badge/PM2-2B037A?style=for-the-badge&logo=pm2&logoColor=white)
 ![NGINX](https://img.shields.io/badge/NGINX-009639?style=for-the-badge&logo=nginx&logoColor=white)
 
+## 🚀 Enlace en Producción
+
+La aplicación se encuentra desplegada en los siguientes entornos:
+
+- 🔗 **Frontend (Render):** [https://encuestas-anonimas-frontend.onrender.com](https://encuestas-anonimas-frontend.onrender.com)
+- 🐘 **Base de Datos (Neon):** Proyecto conectado a una instancia PostgreSQL en la nube mediante [Neon](https://neon.tech)
+
+> El frontend está construido con Angular y desplegado usando Render. El backend se conecta a una base de datos PostgreSQL hosteada en Neon.
+
+
 ## 🖼️ Imágenes
 
 👉 [Ver capturas del frontend](./docs/images/images.md)
