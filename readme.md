@@ -77,3 +77,6 @@ En el siguiente video, el equipo explica la generalidad del sistema de **Encuest
   - [Build y Despliegue](./docs/build-y-despliegue.md)
 
 > Haz clic en el enlace de tu interés para abrir la documentación correspondiente en GitHub.
+
+## 📝 Licencia
+Este proyecto está bajo la Licencia MIT. Para más detalles, consulte el archivo [LICENSE](./LICENSE).
